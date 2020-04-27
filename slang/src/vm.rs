@@ -2,6 +2,7 @@ use crate::instruction::Opcode;
 
 pub struct VM {
     registers: [i32; 32],
+    remainder: u32,
 
     pc: usize,
     program: Vec<u8>,
@@ -11,8 +12,10 @@ impl VM {
     pub fn new() -> VM {
         VM {
             registers: [0; 32],
-            program: Vec::new(),
+            remainder: 0,
+
             pc: 0,
+            program: Vec::new(),
         }
     }
 
@@ -49,11 +52,36 @@ impl VM {
                 self.registers[register] = value as i32;
                 true
             }
+            Opcode::ADD => {
+                let register_1 = self.registers[self.next_8_bits() as usize];
+                let register_2 = self.registers[self.next_8_bits() as usize];
+                self.registers[self.next_8_bits() as usize] = register_1 + register_2;
+                true
+            }
+            Opcode::SUB => {
+                let register_1 = self.registers[self.next_8_bits() as usize];
+                let register_2 = self.registers[self.next_8_bits() as usize];
+                self.registers[self.next_8_bits() as usize] = register_1 - register_2;
+                true
+            }
+            Opcode::MUL => {
+                let register_1 = self.registers[self.next_8_bits() as usize];
+                let register_2 = self.registers[self.next_8_bits() as usize];
+                self.registers[self.next_8_bits() as usize] = register_1 * register_2;
+                true
+            }
+            Opcode::DIV => {
+                let register_1 = self.registers[self.next_8_bits() as usize];
+                let register_2 = self.registers[self.next_8_bits() as usize];
+                self.registers[self.next_8_bits() as usize] = register_1 / register_2;
+                self.remainder = (register_1 % register_2) as u32;
+                true
+            }
             Opcode::HLT => {
                 println!("HLT received. Halting.");
                 false
             }
-            _ => {
+            Opcode::IGL => {
                 println!("Unknown opcode. Terminating");
                 false
             }
@@ -109,5 +137,50 @@ mod tests {
 
         test_vm.run_once();
         assert_eq!(test_vm.registers[0], 500);
+    }
+
+    #[test]
+    fn test_opcode_add() {
+        let mut test_vm = VM::new();
+        test_vm.registers[0] = 10;
+        test_vm.registers[1] = 8;
+        test_vm.program = vec![2, 0, 1, 2];
+
+        test_vm.run_once();
+        assert_eq!(test_vm.registers[2], 18);
+    }
+
+    #[test]
+    fn test_opcode_sub() {
+        let mut test_vm = VM::new();
+        test_vm.registers[0] = 10;
+        test_vm.registers[1] = 8;
+        test_vm.program = vec![3, 0, 1, 2];
+
+        test_vm.run_once();
+        assert_eq!(test_vm.registers[2], 2);
+    }
+
+    #[test]
+    fn test_opcode_mul() {
+        let mut test_vm = VM::new();
+        test_vm.registers[0] = 10;
+        test_vm.registers[1] = 8;
+        test_vm.program = vec![4, 0, 1, 2];
+
+        test_vm.run_once();
+        assert_eq!(test_vm.registers[2], 80);
+    }
+
+    #[test]
+    fn test_opcode_div() {
+        let mut test_vm = VM::new();
+        test_vm.registers[0] = 20;
+        test_vm.registers[1] = 8;
+        test_vm.program = vec![5, 0, 1, 2];
+
+        test_vm.run_once();
+        assert_eq!(test_vm.registers[2], 2);
+        assert_eq!(test_vm.remainder, 4);
     }
 }

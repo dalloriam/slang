@@ -2,6 +2,10 @@
 pub enum Opcode {
     HLT,
     LOAD,
+    ADD,
+    SUB,
+    MUL,
+    DIV,
     IGL,
 }
 
@@ -10,6 +14,10 @@ impl From<u8> for Opcode {
         match v {
             0 => Opcode::HLT,
             1 => Opcode::LOAD,
+            2 => Opcode::ADD,
+            3 => Opcode::SUB,
+            4 => Opcode::MUL,
+            5 => Opcode::DIV,
             _ => Opcode::IGL,
         }
     }
