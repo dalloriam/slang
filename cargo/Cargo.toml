@@ -1,0 +1,26 @@
+[package]
+name = "compile_with_bazel"
+version = "0.0.0"
+
+# Mandatory (or Cargo tooling is unhappy)
+[lib]
+path = "fake_lib.rs"
+
+[dependencies]
+serde = {version = "1.0", features = ["derive"]}
+serde_json = "1"
+
+
+[raze.crates.syn.'1.0.18']
+gen_buildrs = true
+
+[raze.crates.proc-macro2.'1.0.10']
+additional_flags = [
+    "--cfg=use_proc_macro",
+    "--cfg=span_locations"
+]
+
+[raze]
+genmode = "Remote"
+# The WORKSPACE relative path to the Cargo.toml working directory.
+workspace_path = "//cargo"
