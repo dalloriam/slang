@@ -12,7 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "restricted", # "MIT OR Apache-2.0"
+  "notice", # "MIT,Apache-2.0"
 ])
 
 load(
@@ -23,10 +23,9 @@ load(
 )
 
 
-# Unsupported target "bench" with type "bench" omitted
 
 rust_library(
-    name = "itoa",
+    name = "cfg_if",
     crate_root = "src/lib.rs",
     crate_type = "lib",
     edition = "2015",
@@ -36,9 +35,9 @@ rust_library(
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "0.4.5",
+    version = "0.1.9",
     crate_features = [
     ],
 )
 
-# Unsupported target "test" with type "test" omitted
+# Unsupported target "xcrate" with type "test" omitted

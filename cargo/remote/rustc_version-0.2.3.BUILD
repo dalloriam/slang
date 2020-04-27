@@ -12,7 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "restricted", # "MIT OR Apache-2.0"
+  "notice", # "MIT,Apache-2.0"
 ])
 
 load(
@@ -25,22 +25,19 @@ load(
 
 
 rust_library(
-    name = "serde_derive",
+    name = "rustc_version",
     crate_root = "src/lib.rs",
-    crate_type = "proc-macro",
+    crate_type = "lib",
     edition = "2015",
     srcs = glob(["**/*.rs"]),
     deps = [
-        "@raze__proc_macro2__1_0_10//:proc_macro2",
-        "@raze__quote__1_0_3//:quote",
-        "@raze__syn__1_0_18//:syn",
+        "@raze__semver__0_9_0//:semver",
     ],
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "1.0.106",
+    version = "0.2.3",
     crate_features = [
-        "default",
     ],
 )
 

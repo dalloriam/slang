@@ -3,7 +3,7 @@ use std::io::Write;
 
 use anyhow::Result;
 
-use slang::VM;
+use vm::VM;
 
 fn user_input() -> Result<String> {
     let mut s = String::new();

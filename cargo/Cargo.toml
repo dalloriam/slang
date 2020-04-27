@@ -8,17 +8,19 @@ path = "fake_lib.rs"
 
 [dependencies]
 anyhow = "1.0"
-serde = {version = "1.0", features = ["derive"]}
-serde_json = "1"
+nom = "5"
 
-
-[raze.crates.syn.'1.0.18']
+[raze.crates.nom."5.1.1"]
 gen_buildrs = true
-
-[raze.crates.proc-macro2.'1.0.10']
 additional_flags = [
-    "--cfg=use_proc_macro",
-    "--cfg=span_locations"
+    "--cfg=stable_i128"
+]
+
+[raze.crates.lexical-core.'0.6.7']
+gen_buildrs = true
+additional_flags = [
+    "--cfg=limb_width_32",
+    "--cfg=stable_i128"
 ]
 
 [raze]

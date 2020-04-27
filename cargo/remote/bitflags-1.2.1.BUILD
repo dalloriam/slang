@@ -12,7 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "restricted", # "MIT OR Apache-2.0"
+  "notice", # "MIT,Apache-2.0"
 ])
 
 load(
@@ -23,25 +23,22 @@ load(
 )
 
 
-# Unsupported target "compiletest" with type "test" omitted
 
 rust_library(
-    name = "quote",
+    name = "bitflags",
     crate_root = "src/lib.rs",
     crate_type = "lib",
-    edition = "2018",
+    edition = "2015",
     srcs = glob(["**/*.rs"]),
     deps = [
-        "@raze__proc_macro2__1_0_10//:proc_macro2",
     ],
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "1.0.3",
+    version = "1.2.1",
     crate_features = [
         "default",
-        "proc-macro",
     ],
 )
 
-# Unsupported target "test" with type "test" omitted
+# Unsupported target "build-script-build" with type "custom-build" omitted

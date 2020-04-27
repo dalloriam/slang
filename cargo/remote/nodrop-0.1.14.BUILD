@@ -12,7 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "restricted", # "MIT OR Apache-2.0"
+  "notice", # "MIT,Apache-2.0"
 ])
 
 load(
@@ -25,7 +25,7 @@ load(
 
 
 rust_library(
-    name = "unicode_xid",
+    name = "nodrop",
     crate_root = "src/lib.rs",
     crate_type = "lib",
     edition = "2015",
@@ -35,9 +35,8 @@ rust_library(
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "0.2.0",
+    version = "0.1.14",
     crate_features = [
-        "default",
     ],
 )
 

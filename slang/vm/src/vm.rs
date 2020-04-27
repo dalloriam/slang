@@ -1,4 +1,4 @@
-use crate::instruction::Opcode;
+use instructor::Opcode;
 
 pub struct VM {
     registers: [i32; 32],

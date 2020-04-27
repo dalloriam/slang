@@ -12,7 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "restricted", # "MIT OR Apache-2.0"
+  "notice", # "MIT,Apache-2.0"
 ])
 
 load(
@@ -23,26 +23,29 @@ load(
 )
 
 
-# Unsupported target "build-script-build" with type "custom-build" omitted
+# Unsupported target "arraystring" with type "bench" omitted
 
 rust_library(
-    name = "serde",
+    name = "arrayvec",
     crate_root = "src/lib.rs",
     crate_type = "lib",
     edition = "2015",
     srcs = glob(["**/*.rs"]),
     deps = [
-        "@raze__serde_derive__1_0_106//:serde_derive",
+        "@raze__nodrop__0_1_14//:nodrop",
     ],
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "1.0.106",
+    version = "0.4.12",
     crate_features = [
+        "array-sizes-33-128",
         "default",
-        "derive",
-        "serde_derive",
         "std",
     ],
 )
 
+# Unsupported target "build-script-build" with type "custom-build" omitted
+# Unsupported target "extend" with type "bench" omitted
+# Unsupported target "serde" with type "test" omitted
+# Unsupported target "tests" with type "test" omitted

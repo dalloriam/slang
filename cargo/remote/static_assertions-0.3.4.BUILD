@@ -25,23 +25,18 @@ load(
 
 
 rust_library(
-    name = "serde_json",
+    name = "static_assertions",
     crate_root = "src/lib.rs",
     crate_type = "lib",
-    edition = "2018",
+    edition = "2015",
     srcs = glob(["**/*.rs"]),
     deps = [
-        "@raze__itoa__0_4_5//:itoa",
-        "@raze__ryu__1_0_4//:ryu",
-        "@raze__serde__1_0_106//:serde",
     ],
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "1.0.51",
+    version = "0.3.4",
     crate_features = [
-        "default",
-        "std",
     ],
 )
 

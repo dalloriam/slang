@@ -13,10 +13,6 @@ alias(
     actual = "@raze__anyhow__1_0_28//:anyhow",
 )
 alias(
-    name = "serde",
-    actual = "@raze__serde__1_0_106//:serde",
-)
-alias(
-    name = "serde_json",
-    actual = "@raze__serde_json__1_0_51//:serde_json",
+    name = "nom",
+    actual = "@raze__nom__5_1_1//:nom",
 )

@@ -9,6 +9,6 @@ rust_binary(
     edition = "2018",
     deps = [
         "//cargo:anyhow",
-        "//slang",
+        "//slang/vm",
     ],
 )

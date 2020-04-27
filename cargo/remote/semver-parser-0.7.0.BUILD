@@ -12,7 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "restricted", # "MIT OR Apache-2.0"
+  "notice", # "MIT,Apache-2.0"
 ])
 
 load(
@@ -23,29 +23,20 @@ load(
 )
 
 
-# Unsupported target "build-script-build" with type "custom-build" omitted
-# Unsupported target "features" with type "test" omitted
-# Unsupported target "marker" with type "test" omitted
 
 rust_library(
-    name = "proc_macro2",
+    name = "semver_parser",
     crate_root = "src/lib.rs",
     crate_type = "lib",
-    edition = "2018",
+    edition = "2015",
     srcs = glob(["**/*.rs"]),
     deps = [
-        "@raze__unicode_xid__0_2_0//:unicode_xid",
     ],
     rustc_flags = [
         "--cap-lints=allow",
-        "--cfg=use_proc_macro",
-        "--cfg=span_locations",
     ],
-    version = "1.0.10",
+    version = "0.7.0",
     crate_features = [
-        "default",
-        "proc-macro",
     ],
 )
 
-# Unsupported target "test" with type "test" omitted
