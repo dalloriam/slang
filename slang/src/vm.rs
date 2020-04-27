@@ -21,6 +21,18 @@ impl VM {
         }
     }
 
+    pub fn program(&self) -> &[u8] {
+        &self.program
+    }
+
+    pub fn registers(&self) -> &[i32; 32] {
+        &self.registers
+    }
+
+    pub fn add_byte(&mut self, b: u8) {
+        self.program.push(b);
+    }
+
     fn decode_opcode(&mut self) -> Opcode {
         let opcode = Opcode::from(self.program[self.pc]);
         self.pc += 1;

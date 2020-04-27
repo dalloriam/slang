@@ -8,6 +8,7 @@ rust_library(
         "src/**/.rs",
         "src/*.rs",
     ]),
+    edition = "2018",
     deps = [],
 )
 

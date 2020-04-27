@@ -17,6 +17,15 @@ def _new_git_repository(name, **kwargs):
 def raze_fetch_remote_crates():
 
     _new_http_archive(
+        name = "raze__anyhow__1_0_28",
+        url = "https://crates-io.s3-us-west-1.amazonaws.com/crates/anyhow/anyhow-1.0.28.crate",
+        type = "tar.gz",
+        strip_prefix = "anyhow-1.0.28",
+
+        build_file = Label("//cargo/remote:anyhow-1.0.28.BUILD"),
+    )
+
+    _new_http_archive(
         name = "raze__itoa__0_4_5",
         url = "https://crates-io.s3-us-west-1.amazonaws.com/crates/itoa/itoa-0.4.5.crate",
         type = "tar.gz",
