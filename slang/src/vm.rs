@@ -50,42 +50,50 @@ impl VM {
                 let register = self.next_8_bits() as usize;
                 let value = self.next_16_bits() as u16;
                 self.registers[register] = value as i32;
-                true
             }
             Opcode::ADD => {
                 let register_1 = self.registers[self.next_8_bits() as usize];
                 let register_2 = self.registers[self.next_8_bits() as usize];
                 self.registers[self.next_8_bits() as usize] = register_1 + register_2;
-                true
             }
             Opcode::SUB => {
                 let register_1 = self.registers[self.next_8_bits() as usize];
                 let register_2 = self.registers[self.next_8_bits() as usize];
                 self.registers[self.next_8_bits() as usize] = register_1 - register_2;
-                true
             }
             Opcode::MUL => {
                 let register_1 = self.registers[self.next_8_bits() as usize];
                 let register_2 = self.registers[self.next_8_bits() as usize];
                 self.registers[self.next_8_bits() as usize] = register_1 * register_2;
-                true
             }
             Opcode::DIV => {
                 let register_1 = self.registers[self.next_8_bits() as usize];
                 let register_2 = self.registers[self.next_8_bits() as usize];
                 self.registers[self.next_8_bits() as usize] = register_1 / register_2;
                 self.remainder = (register_1 % register_2) as u32;
-                true
+            }
+            Opcode::JMP => {
+                let target_idx = self.registers[self.next_8_bits() as usize];
+                self.pc = target_idx as usize;
+            }
+            Opcode::JMPF => {
+                let value = self.registers[self.next_8_bits() as usize];
+                self.pc += value as usize;
+            }
+            Opcode::JMPB => {
+                let value = self.registers[self.next_8_bits() as usize];
+                self.pc -= value as usize;
             }
             Opcode::HLT => {
                 println!("HLT received. Halting.");
-                false
+                return false;
             }
             Opcode::IGL => {
                 println!("Unknown opcode. Terminating");
-                false
+                return false;
             }
         }
+        true
     }
 
     pub fn run_once(&mut self) {
@@ -182,5 +190,34 @@ mod tests {
         test_vm.run_once();
         assert_eq!(test_vm.registers[2], 2);
         assert_eq!(test_vm.remainder, 4);
+    }
+
+    #[test]
+    fn test_opcode_jmp() {
+        let mut test_vm = VM::new();
+        test_vm.registers[0] = 10;
+        test_vm.program = vec![6, 0, 0, 0];
+        test_vm.run_once();
+
+        assert_eq!(test_vm.pc, 10);
+    }
+
+    #[test]
+    fn test_opcode_jmpf() {
+        let mut test_vm = VM::new();
+        test_vm.registers[0] = 2;
+        test_vm.program = vec![7, 0, 1, 0, 6, 0, 0, 0];
+        test_vm.run_once();
+        assert_eq!(test_vm.pc, 4);
+    }
+
+    #[test]
+    fn test_opcode_jmpb() {
+        let mut test_vm = VM::new();
+        test_vm.pc = 2;
+        test_vm.registers[0] = 4;
+        test_vm.program = vec![7, 0, 8, 0, 6, 0, 0, 0];
+        test_vm.run_once();
+        assert_eq!(test_vm.pc, 0);
     }
 }
