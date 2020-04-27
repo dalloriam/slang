@@ -8,4 +8,6 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0"
+
+assembler = {path = "../slang/assembler"}
 vm = {path = "../slang/vm"}

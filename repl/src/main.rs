@@ -14,17 +14,6 @@ fn user_input() -> Result<String> {
     Ok(String::from(s.trim()))
 }
 
-fn parse_hex(i: &str) -> Result<Vec<u8>> {
-    let split = i.split(' ').collect::<Vec<&str>>();
-    let mut results = vec![];
-
-    for hex_string in split {
-        results.push(u8::from_str_radix(&hex_string, 16)?);
-    }
-
-    Ok(results)
-}
-
 fn run_command(vm: &mut VM, cmd: &str) -> Result<bool> {
     match cmd {
         ".program" => {
@@ -45,7 +34,8 @@ fn run_command(vm: &mut VM, cmd: &str) -> Result<bool> {
 
         _ => {
             // Convert the hex to bytes, load it in the VM, and execute the instruction.
-            parse_hex(cmd)?.iter().for_each(|b| vm.add_byte(*b));
+            let program = assembler::parse_program(cmd)?;
+            program.get_bytecode().iter().for_each(|b| vm.add_byte(*b));
             vm.run_once();
         }
     }
