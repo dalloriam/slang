@@ -5,6 +5,7 @@ pub struct VM {
     registers: [i32; 32],
     remainder: u32,
     equal_flag: bool,
+    heap: Vec<u8>,
 
     pc: usize,
     program: Vec<u8>,
@@ -16,6 +17,7 @@ impl VM {
             registers: [0; 32],
             remainder: 0,
             equal_flag: false,
+            heap: Vec::new(),
 
             pc: 0,
             program: Vec::new(),
@@ -141,6 +143,11 @@ impl VM {
                 if self.equal_flag {
                     self.pc = target as usize;
                 }
+            }
+            Opcode::ALOC => {
+                let amt_to_alloc = self.registers[self.next_8_bits() as usize];
+                let new_heap_size = self.heap.len() as i32 + amt_to_alloc;
+                self.heap.resize(new_heap_size as usize, 0);
             }
             Opcode::HLT => {
                 println!("HLT received. Halting.");
@@ -393,5 +400,17 @@ mod tests {
         test_vm.program = vec![15, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0];
         test_vm.run_once();
         assert_eq!(test_vm.pc, 7);
+    }
+
+    #[test]
+    fn test_opcode_aloc() {
+        let mut test_vm = VM::new();
+
+        test_vm.registers[0] = 1024;
+        test_vm.program = vec![16, 0, 0, 0]; // Allocate 1kb.
+
+        assert_eq!(test_vm.heap.len(), 0);
+        test_vm.run_once();
+        assert_eq!(test_vm.heap.len(), 1024);
     }
 }

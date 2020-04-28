@@ -16,6 +16,7 @@ pub enum Opcode {
     GTQ,
     LTQ,
     JEQ,
+    ALOC,
     IGL,
 }
 
@@ -38,6 +39,7 @@ impl<'a> From<&'a str> for Opcode {
             "gtq" => Opcode::GTQ,
             "ltq" => Opcode::LTQ,
             "jeq" => Opcode::JEQ,
+            "aloc" => Opcode::ALOC,
             _ => Opcode::IGL,
         }
     }
@@ -62,6 +64,7 @@ impl From<u8> for Opcode {
             13 => Opcode::GTQ,
             14 => Opcode::LTQ,
             15 => Opcode::JEQ,
+            16 => Opcode::ALOC,
             _ => Opcode::IGL,
         }
     }
