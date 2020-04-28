@@ -23,3 +23,14 @@ impl Instruction {
         Instruction::write_operand(&self.operand_3, w);
     }
 }
+
+impl Default for Instruction {
+    fn default() -> Instruction {
+        Instruction {
+            opcode: Opcode::IGL,
+            operand_1: None,
+            operand_2: None,
+            operand_3: None,
+        }
+    }
+}

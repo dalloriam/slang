@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_rust//rust:rust.bzl", "rust_library", "rust_test")
+load("@io_bazel_rules_rust//rust:rust.bzl", "rust_doc", "rust_library", "rust_test")
 
 rust_library(
     name = "vm",
@@ -13,6 +13,11 @@ rust_library(
 )
 
 rust_test(
-    name = "vm_test",
+    name = "test",
     crate = ":vm",
+)
+
+rust_doc(
+    name = "doc",
+    dep = ":vm",
 )

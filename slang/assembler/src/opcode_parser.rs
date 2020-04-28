@@ -1,22 +1,33 @@
 use instructor::Opcode;
 
-use nom::{bytes::complete::tag, combinator::map, IResult};
+use nom::{character::complete::alpha1, combinator::map, sequence::delimited, IResult};
 
-pub fn load(input: &str) -> IResult<&str, Opcode> {
-    map(tag("load"), |_f| Opcode::LOAD)(input)
+use crate::common::whitespace;
+
+pub fn opcode(input: &str) -> IResult<&str, Opcode> {
+    map(delimited(whitespace, alpha1, whitespace), |code| {
+        Opcode::from(code)
+    })(input)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{load, Opcode};
+    use super::{opcode, Opcode};
 
     #[test]
     fn test_opcode_load() {
-        // Test valid opcode.
-        let (_rest, opcode) = load("load").unwrap();
-        assert_eq!(opcode, Opcode::LOAD);
+        {
+            // Test valid opcode.
+            let (rest, op) = opcode("load ").unwrap();
+            assert_eq!(op, Opcode::LOAD);
+            assert_eq!(rest, "");
+        }
 
-        // Test invalid opcode.
-        assert!(load("aold").is_err());
+        {
+            // Test invalid opcode.
+            let (rest, op) = opcode("aold").unwrap();
+            assert_eq!(op, Opcode::IGL);
+            assert_eq!(rest, "");
+        }
     }
 }

@@ -19,6 +19,30 @@ pub enum Opcode {
     IGL,
 }
 
+impl<'a> From<&'a str> for Opcode {
+    fn from(v: &'a str) -> Self {
+        match v {
+            "hlt" => Opcode::HLT,
+            "load" => Opcode::LOAD,
+            "add" => Opcode::ADD,
+            "sub" => Opcode::SUB,
+            "mul" => Opcode::MUL,
+            "div" => Opcode::DIV,
+            "jmp" => Opcode::JMP,
+            "jmpf" => Opcode::JMPF,
+            "jmpb" => Opcode::JMPB,
+            "eq" => Opcode::EQ,
+            "neq" => Opcode::NEQ,
+            "gt" => Opcode::GT,
+            "lt" => Opcode::LT,
+            "gtq" => Opcode::GTQ,
+            "ltq" => Opcode::LTQ,
+            "jeq" => Opcode::JEQ,
+            _ => Opcode::IGL,
+        }
+    }
+}
+
 impl From<u8> for Opcode {
     fn from(v: u8) -> Self {
         match v {

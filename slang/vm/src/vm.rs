@@ -1,5 +1,6 @@
 use instructor::Opcode;
 
+#[derive(Default)]
 pub struct VM {
     registers: [i32; 32],
     remainder: u32,

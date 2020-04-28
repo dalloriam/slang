@@ -7,7 +7,6 @@ mod operand_parser;
 mod program_parser;
 mod register_parser;
 
-use instructor::Opcode;
 pub use instructor::Program;
 
 #[derive(Debug)]
