@@ -2,15 +2,12 @@ use instructor::Program;
 
 use nom::{branch::alt, combinator::map, multi::many1, IResult};
 
+use crate::directive_parser::directive;
 use crate::instruction_parser as instruction;
 
 pub fn program(i: &str) -> IResult<&str, Program> {
     map(
-        many1(alt((
-            instruction::instruction_reg_reg_reg,
-            instruction::instruction_reg_int,
-            instruction::instruction_simple,
-        ))),
+        many1(alt((instruction::instruction, directive))),
         |instructions| Program { instructions },
     )(i)
 }
@@ -26,31 +23,31 @@ mod tests {
         let expected_program = Program {
             instructions: vec![
                 Instruction {
-                    opcode: Opcode::LOAD,
+                    opcode: Some(Opcode::LOAD),
                     operand_1: Some(Operand::Register(0)),
                     operand_2: Some(Operand::Integer(100)),
                     ..Default::default()
                 },
                 Instruction {
-                    opcode: Opcode::LOAD,
+                    opcode: Some(Opcode::LOAD),
                     operand_1: Some(Operand::Register(1)),
                     operand_2: Some(Operand::Integer(25)),
                     ..Default::default()
                 },
                 Instruction {
-                    opcode: Opcode::ADD,
+                    opcode: Some(Opcode::ADD),
                     operand_1: Some(Operand::Register(0)),
                     operand_2: Some(Operand::Register(1)),
                     operand_3: Some(Operand::Register(2)),
+                    ..Default::default()
                 },
                 Instruction {
-                    opcode: Opcode::HLT,
+                    opcode: Some(Opcode::HLT),
                     ..Default::default()
                 },
             ],
         };
-        let (rest, actual_program) =
-            program("load $0 #100\nload $1 #25\nadd $0 $1 $2\nhlt").unwrap();
+        let (rest, actual_program) = program("ld $0 #100\nld $1 #25\nadd $0 $1 $2\nhlt").unwrap();
         assert_eq!(rest, "");
         assert_eq!(expected_program, actual_program);
     }

@@ -44,6 +44,15 @@ def raze_fetch_remote_crates():
     )
 
     _new_http_archive(
+        name = "raze__byteorder__1_3_4",
+        url = "https://crates-io.s3-us-west-1.amazonaws.com/crates/byteorder/byteorder-1.3.4.crate",
+        type = "tar.gz",
+        strip_prefix = "byteorder-1.3.4",
+
+        build_file = Label("//cargo/remote:byteorder-1.3.4.BUILD"),
+    )
+
+    _new_http_archive(
         name = "raze__cfg_if__0_1_9",
         url = "https://crates-io.s3-us-west-1.amazonaws.com/crates/cfg-if/cfg-if-0.1.9.crate",
         type = "tar.gz",

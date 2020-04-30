@@ -17,6 +17,8 @@ pub enum Opcode {
     LTQ,
     JEQ,
     ALOC,
+    INC,
+    DEC,
     IGL,
 }
 
@@ -24,7 +26,7 @@ impl<'a> From<&'a str> for Opcode {
     fn from(v: &'a str) -> Self {
         match v {
             "hlt" => Opcode::HLT,
-            "load" => Opcode::LOAD,
+            "ld" => Opcode::LOAD,
             "add" => Opcode::ADD,
             "sub" => Opcode::SUB,
             "mul" => Opcode::MUL,
@@ -40,6 +42,8 @@ impl<'a> From<&'a str> for Opcode {
             "ltq" => Opcode::LTQ,
             "jeq" => Opcode::JEQ,
             "aloc" => Opcode::ALOC,
+            "inc" => Opcode::INC,
+            "dec" => Opcode::DEC,
             _ => Opcode::IGL,
         }
     }
@@ -65,6 +69,8 @@ impl From<u8> for Opcode {
             14 => Opcode::LTQ,
             15 => Opcode::JEQ,
             16 => Opcode::ALOC,
+            17 => Opcode::INC,
+            18 => Opcode::DEC,
             _ => Opcode::IGL,
         }
     }

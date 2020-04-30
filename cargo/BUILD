@@ -13,6 +13,10 @@ alias(
     actual = "@raze__anyhow__1_0_28//:anyhow",
 )
 alias(
+    name = "byteorder",
+    actual = "@raze__byteorder__1_3_4//:byteorder",
+)
+alias(
     name = "nom",
     actual = "@raze__nom__5_1_1//:nom",
 )

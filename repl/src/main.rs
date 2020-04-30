@@ -1,13 +1,15 @@
+use std::fs;
 use std::io;
 use std::io::Write;
 
 use anyhow::Result;
 
+use assembler::Assembler;
 use vm::VM;
 
-fn user_input() -> Result<String> {
+fn user_input(prompt: &str) -> Result<String> {
     let mut s = String::new();
-    print!(">> ");
+    print!("{}", prompt);
     io::stdout().flush()?;
     io::stdin().read_line(&mut s)?;
 
@@ -16,16 +18,37 @@ fn user_input() -> Result<String> {
 
 fn run_command(vm: &mut VM, cmd: &str) -> Result<bool> {
     match cmd {
+        ".load" => {
+            vm.erase_program();
+            let inpt = user_input("Enter path to file: ")?;
+            println!("Loading bytecode from {}...", inpt);
+
+            let data = fs::read(&inpt)?;
+            let source_code = String::from_utf8(data)?;
+
+            let mut asm = Assembler::new();
+            let program = asm.assemble(&source_code);
+            vm.load_bytecode(program);
+            println!("Program loaded.")
+        }
         ".program" => {
             println!("Instructions currently in VM memory:");
             for instruction in vm.program() {
                 println!("{}", instruction);
             }
         }
-        ".registers" => {
+        ".reg" => {
             println!("Current VM state:");
             println!("{:#?}", vm.registers());
             println!("End of listing");
+        }
+        ".run" => {
+            println!("Running to end of program...");
+            vm.run();
+        }
+        ".unl" => {
+            println!("Unloading program...");
+            vm.erase_program();
         }
         ".exit" => {
             println!("Shutting down...");
@@ -34,8 +57,9 @@ fn run_command(vm: &mut VM, cmd: &str) -> Result<bool> {
 
         _ => {
             // Convert the hex to bytes, load it in the VM, and execute the instruction.
-            let program = assembler::parse_program(cmd)?;
-            program.get_bytecode().iter().for_each(|b| vm.add_byte(*b));
+            let mut asm = Assembler::new();
+            let program = asm.assemble(cmd);
+            vm.load_bytecode(program);
             vm.run_once();
         }
     }
@@ -48,7 +72,7 @@ fn repl_loop() -> Result<()> {
     let mut vm = VM::new();
 
     loop {
-        let inpt = user_input()?;
+        let inpt = user_input(">> ")?;
 
         match run_command(&mut vm, &inpt) {
             Ok(v) => {

@@ -1,4 +1,5 @@
 mod instruction;
+mod label_converter;
 mod opcode;
 mod operand;
 mod program;
@@ -6,6 +7,7 @@ mod program;
 pub const INSTRUCTION_LENGTH_BYTES: usize = 4;
 
 pub use instruction::Instruction;
+pub use label_converter::LabelConverter;
 pub use opcode::Opcode;
 pub use operand::Operand;
 pub use program::Program;

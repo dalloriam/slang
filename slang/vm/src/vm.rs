@@ -28,12 +28,17 @@ impl VM {
         &self.program
     }
 
+    pub fn erase_program(&mut self) {
+        self.program.clear();
+        self.pc = 0;
+    }
+
     pub fn registers(&self) -> &[i32; 32] {
         &self.registers
     }
 
-    pub fn add_byte(&mut self, b: u8) {
-        self.program.push(b);
+    pub fn load_bytecode(&mut self, mut bytecode: Vec<u8>) {
+        self.program.append(&mut bytecode)
     }
 
     fn decode_opcode(&mut self) -> Opcode {
@@ -59,6 +64,7 @@ impl VM {
 
     fn execute_instruction(&mut self) -> bool {
         if self.pc >= self.program.len() {
+            println!("End of program reached.");
             return false;
         }
 
@@ -91,14 +97,28 @@ impl VM {
             }
             Opcode::JMP => {
                 let target_idx = self.registers[self.next_8_bits() as usize];
+
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+
                 self.pc = target_idx as usize;
             }
             Opcode::JMPF => {
                 let value = self.registers[self.next_8_bits() as usize];
+
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+
                 self.pc += value as usize;
             }
             Opcode::JMPB => {
                 let value = self.registers[self.next_8_bits() as usize];
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+
                 self.pc -= value as usize;
             }
             Opcode::EQ => {
@@ -140,6 +160,10 @@ impl VM {
             Opcode::JEQ => {
                 let register = self.next_8_bits() as usize;
                 let target = self.registers[register];
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+
                 if self.equal_flag {
                     self.pc = target as usize;
                 }
@@ -148,9 +172,31 @@ impl VM {
                 let amt_to_alloc = self.registers[self.next_8_bits() as usize];
                 let new_heap_size = self.heap.len() as i32 + amt_to_alloc;
                 self.heap.resize(new_heap_size as usize, 0);
+
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+            }
+            Opcode::INC => {
+                self.registers[self.next_8_bits() as usize] += 1;
+
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+            }
+            Opcode::DEC => {
+                self.registers[self.next_8_bits() as usize] -= 1;
+
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
             }
             Opcode::HLT => {
                 println!("HLT received. Halting.");
+                for _i in 0..3 {
+                    // Eat remaining instruction bytes.
+                    self.next_8_bits();
+                }
                 return false;
             }
             Opcode::IGL => {
@@ -191,7 +237,7 @@ mod tests {
         let test_bytes = vec![0, 0, 0, 0];
         test_vm.program = test_bytes;
         test_vm.run_once();
-        assert_eq!(test_vm.pc, 1);
+        assert_eq!(test_vm.pc, 4);
     }
 
     #[test]
@@ -273,14 +319,14 @@ mod tests {
         test_vm.registers[0] = 2;
         test_vm.program = vec![7, 0, 1, 0, 6, 0, 0, 0];
         test_vm.run_once();
-        assert_eq!(test_vm.pc, 4);
+        assert_eq!(test_vm.pc, 6);
     }
 
     #[test]
     fn test_opcode_jmpb() {
         let mut test_vm = VM::new();
         test_vm.pc = 2;
-        test_vm.registers[0] = 4;
+        test_vm.registers[0] = 6;
         test_vm.program = vec![7, 0, 8, 0, 6, 0, 0, 0];
         test_vm.run_once();
         assert_eq!(test_vm.pc, 0);
@@ -412,5 +458,25 @@ mod tests {
         assert_eq!(test_vm.heap.len(), 0);
         test_vm.run_once();
         assert_eq!(test_vm.heap.len(), 1024);
+    }
+
+    #[test]
+    fn test_opcode_inc() {
+        let mut test_vm = VM::new();
+        test_vm.program = vec![17, 0, 0, 0];
+
+        assert_eq!(test_vm.registers[0], 0);
+        test_vm.run_once();
+        assert_eq!(test_vm.registers[0], 1);
+    }
+
+    #[test]
+    fn test_opcode_dec() {
+        let mut test_vm = VM::new();
+        test_vm.program = vec![18, 0, 0, 0];
+
+        test_vm.registers[0] = 10;
+        test_vm.run_once();
+        assert_eq!(test_vm.registers[0], 9);
     }
 }

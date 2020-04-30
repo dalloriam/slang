@@ -18,7 +18,7 @@ mod tests {
     fn test_opcode_load() {
         {
             // Test valid opcode.
-            let (rest, op) = opcode("load ").unwrap();
+            let (rest, op) = opcode("ld ").unwrap();
             assert_eq!(op, Opcode::LOAD);
             assert_eq!(rest, "");
         }
