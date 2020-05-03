@@ -33,7 +33,7 @@ fn parse_program(src: &str) -> Result<Program, ParseError> {
 
     if rest != "" {
         Err(ParseError {
-            message: String::from("Incomplete parse"),
+            message: format!("Incomplete parse: {}", rest),
         })
     } else {
         Ok(program)

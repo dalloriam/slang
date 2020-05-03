@@ -2,20 +2,21 @@ use instructor::Instruction;
 
 use nom::{combinator::map, combinator::opt, sequence::tuple, IResult};
 
-use crate::{opcode_parser as opcode, operand_parser as operand};
+use crate::{label_parser as label, opcode_parser as opcode, operand_parser as operand};
 
 pub fn instruction(i: &str) -> IResult<&str, Instruction> {
     let comb_tuple = tuple((
+        opt(label::label_declaration),
         opcode::opcode,
         opt(operand::operand),
         opt(operand::operand),
         opt(operand::operand),
     ));
 
-    map(comb_tuple, |(opc, op1, op2, op3)| Instruction {
+    map(comb_tuple, |(lbl, opc, op1, op2, op3)| Instruction {
         opcode: Some(opc),
         directive: None,
-        label: None,
+        label: lbl,
         operand_1: op1,
         operand_2: op2,
         operand_3: op3,

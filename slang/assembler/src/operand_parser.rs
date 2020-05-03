@@ -8,10 +8,14 @@ use nom::{
     IResult,
 };
 
-use crate::common::whitespace;
+use crate::{common::whitespace, label_parser as label};
 
 pub fn operand(i: &str) -> IResult<&str, Operand> {
-    alt((integer, register))(i)
+    alt((
+        integer,
+        register,
+        map(label::label_usage, |lbl| Operand::Label(lbl)),
+    ))(i)
 }
 
 fn integer(i: &str) -> IResult<&str, Operand> {
