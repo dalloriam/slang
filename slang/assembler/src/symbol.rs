@@ -53,12 +53,12 @@ impl LabelConverter for SymbolTable {
 
 #[cfg(test)]
 mod tests {
-    use crate::symbol::{Symbol, SymbolTable, SymbolType};
+    use crate::symbol::{LabelConverter, Symbol, SymbolTable, SymbolType};
 
     #[test]
     fn test_symbol_table() {
         let mut sym = SymbolTable::new();
-        let new_symbol = Symbol::new(String::from("somelabel"), SymbolTable::Label, 12);
+        let new_symbol = Symbol::new(String::from("somelabel"), SymbolType::Label, 12);
 
         sym.add(new_symbol);
         assert_eq!(sym.symbols.len(), 1);

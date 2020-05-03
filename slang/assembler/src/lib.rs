@@ -1,6 +1,6 @@
 use std::fmt;
 
-mod assembler;
+mod asm;
 mod common;
 mod directive_parser;
 mod instruction_parser;
@@ -10,7 +10,7 @@ mod operand_parser;
 mod program_parser;
 mod symbol;
 
-pub use assembler::Assembler;
+pub use asm::Assembler;
 pub use instructor::Program;
 
 #[derive(Debug)]

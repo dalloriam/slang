@@ -53,7 +53,5 @@ impl Assembler {
             }
             Err(e) => panic!(e.to_string()),
         }
-
-        Vec::new()
     }
 }
