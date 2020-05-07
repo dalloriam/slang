@@ -13,7 +13,6 @@ package(default_visibility = [
 
 licenses([
   "notice", # "MIT"
-  "unencumbered", # "Unlicense"
 ])
 
 load(
@@ -24,10 +23,11 @@ load(
 )
 
 
-# Unsupported target "build-script-build" with type "custom-build" omitted
+# Unsupported target "benches" with type "bench" omitted
+# Unsupported target "lib" with type "test" omitted
 
 rust_library(
-    name = "memchr",
+    name = "strsim",
     crate_root = "src/lib.rs",
     crate_type = "lib",
     edition = "2015",
@@ -37,11 +37,8 @@ rust_library(
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "2.3.3",
+    version = "0.10.0",
     crate_features = [
-        "default",
-        "std",
-        "use_std",
     ],
 )
 

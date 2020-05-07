@@ -1,5 +1,5 @@
 [package]
-name = "repl"
+name = "slang"
 version = "0.1.0"
 authors = ["William Dussault <dalloriam@gmail.com>"]
 edition = "2018"
@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0"
+clap = "3.0.0-beta.1"
 
 assembler = {path = "../slang/assembler"}
 vm = {path = "../slang/vm"}

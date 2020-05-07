@@ -24,24 +24,20 @@ load(
 )
 
 
-# Unsupported target "build-script-build" with type "custom-build" omitted
 
 rust_library(
-    name = "memchr",
+    name = "winapi_util",
     crate_root = "src/lib.rs",
     crate_type = "lib",
-    edition = "2015",
+    edition = "2018",
     srcs = glob(["**/*.rs"]),
     deps = [
     ],
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "2.3.3",
+    version = "0.1.5",
     crate_features = [
-        "default",
-        "std",
-        "use_std",
     ],
 )
 

@@ -12,8 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "notice", # "MIT"
-  "unencumbered", # "Unlicense"
+  "restricted", # "MIT OR Apache-2.0"
 ])
 
 load(
@@ -24,24 +23,21 @@ load(
 )
 
 
-# Unsupported target "build-script-build" with type "custom-build" omitted
 
 rust_library(
-    name = "memchr",
+    name = "heck",
     crate_root = "src/lib.rs",
     crate_type = "lib",
     edition = "2015",
     srcs = glob(["**/*.rs"]),
     deps = [
+        "@raze__unicode_segmentation__1_6_0//:unicode_segmentation",
     ],
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "2.3.3",
+    version = "0.3.1",
     crate_features = [
-        "default",
-        "std",
-        "use_std",
     ],
 )
 

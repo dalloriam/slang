@@ -6,6 +6,9 @@ mod program;
 
 pub const INSTRUCTION_LENGTH_BYTES: usize = 4;
 
+pub const ELIS_HEADER_PREFIX: [u8; 4] = [69, 76, 73, 83];
+pub const ELIS_HEADER_LENGTH: usize = 64;
+
 pub use instruction::Instruction;
 pub use label_converter::LabelConverter;
 pub use opcode::Opcode;

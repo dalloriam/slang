@@ -12,8 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "notice", # "MIT"
-  "unencumbered", # "Unlicense"
+  "restricted", # "MIT OR Apache-2.0"
 ])
 
 load(
@@ -24,24 +23,26 @@ load(
 )
 
 
-# Unsupported target "build-script-build" with type "custom-build" omitted
 
 rust_library(
-    name = "memchr",
+    name = "clap_derive",
     crate_root = "src/lib.rs",
-    crate_type = "lib",
-    edition = "2015",
+    crate_type = "proc-macro",
+    edition = "2018",
     srcs = glob(["**/*.rs"]),
     deps = [
+        "@raze__heck__0_3_1//:heck",
+        "@raze__proc_macro_error__0_4_12//:proc_macro_error",
+        "@raze__proc_macro2__1_0_12//:proc_macro2",
+        "@raze__quote__1_0_4//:quote",
+        "@raze__syn__1_0_18//:syn",
     ],
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "2.3.3",
+    version = "3.0.0-beta.1",
     crate_features = [
         "default",
-        "std",
-        "use_std",
     ],
 )
 

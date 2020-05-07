@@ -12,8 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "notice", # "MIT"
-  "unencumbered", # "Unlicense"
+  "notice", # "MIT,Apache-2.0"
 ])
 
 load(
@@ -24,24 +23,22 @@ load(
 )
 
 
-# Unsupported target "build-script-build" with type "custom-build" omitted
 
 rust_library(
-    name = "memchr",
+    name = "hermit_abi",
     crate_root = "src/lib.rs",
     crate_type = "lib",
     edition = "2015",
     srcs = glob(["**/*.rs"]),
     deps = [
+        "@raze__libc__0_2_69//:libc",
     ],
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "2.3.3",
+    version = "0.1.12",
     crate_features = [
         "default",
-        "std",
-        "use_std",
     ],
 )
 

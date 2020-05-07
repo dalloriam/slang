@@ -51,4 +51,36 @@ mod tests {
         assert_eq!(rest, "");
         assert_eq!(expected_program, actual_program);
     }
+
+    #[test]
+    fn parse_program_with_directive() {
+        let source = ".data\nhello: .asciiz \"Hello, world\"\n.code\nhlt";
+
+        let expected_program = Program {
+            instructions: vec![
+                Instruction {
+                    directive: Some(String::from("data")),
+                    ..Default::default()
+                },
+                Instruction {
+                    label: Some(String::from("hello")),
+                    directive: Some(String::from("asciiz")),
+                    operand_1: Some(Operand::Str(String::from("Hello, world"))),
+                    ..Default::default()
+                },
+                Instruction {
+                    directive: Some(String::from("code")),
+                    ..Default::default()
+                },
+                Instruction {
+                    opcode: Some(Opcode::HLT),
+                    ..Default::default()
+                },
+            ],
+        };
+
+        let (rest, actual_program) = program(source).unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(expected_program, actual_program);
+    }
 }

@@ -1,5 +1,3 @@
-use std::fmt;
-
 mod asm;
 mod common;
 mod directive_parser;
@@ -12,30 +10,3 @@ mod symbol;
 
 pub use asm::Assembler;
 pub use instructor::Program;
-
-#[derive(Debug)]
-pub struct ParseError {
-    pub message: String,
-}
-
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for ParseError {}
-
-fn parse_program(src: &str) -> Result<Program, ParseError> {
-    let (rest, program) = program_parser::program(src).map_err(|_e| ParseError {
-        message: String::from("Parse Error"),
-    })?;
-
-    if rest != "" {
-        Err(ParseError {
-            message: format!("Incomplete parse: {}", rest),
-        })
-    } else {
-        Ok(program)
-    }
-}

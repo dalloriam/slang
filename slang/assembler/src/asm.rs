@@ -1,10 +1,36 @@
-use instructor::Program;
+use std::fmt;
 
-use crate::symbol::SymbolType;
-use crate::{
-    parse_program,
-    symbol::{Symbol, SymbolTable},
-};
+use instructor::{Program, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX};
+
+use crate::program_parser;
+use crate::symbol::{Symbol, SymbolTable, SymbolType};
+
+#[derive(Debug)]
+pub struct ParseError {
+    pub message: String,
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for ParseError {}
+
+fn parse_program(src: &str) -> Result<Program, ParseError> {
+    let (rest, program) = program_parser::program(src).map_err(|_e| ParseError {
+        message: String::from("Parse Error"),
+    })?;
+
+    if rest != "" {
+        Err(ParseError {
+            message: format!("Incomplete parse: {}", rest),
+        })
+    } else {
+        Ok(program)
+    }
+}
 
 #[derive(Debug)]
 pub struct Assembler {
@@ -37,6 +63,11 @@ impl Assembler {
     fn phase_two(&mut self, program: &Program) -> Vec<u8> {
         // TODO: Pre-allocate for program size.
         let mut compiled_prg = Vec::new();
+        compiled_prg.extend_from_slice(&ELIS_HEADER_PREFIX);
+        for _i in 4..ELIS_HEADER_LENGTH {
+            compiled_prg.push(0 as u8);
+        }
+
         for instruction in program.instructions.iter() {
             instruction.write_bytes(&mut compiled_prg, &self.symbols);
         }

@@ -7,6 +7,7 @@ pub enum Operand {
     Integer(i32),
     Register(u8),
     Label(String),
+    Str(String),
 }
 
 impl Operand {
@@ -32,6 +33,7 @@ impl Operand {
                 w.push(wtr[0]);
                 2
             }
+            Operand::Str(s) => unimplemented!(),
         }
     }
 }

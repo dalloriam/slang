@@ -12,8 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "notice", # "MIT"
-  "unencumbered", # "Unlicense"
+  "notice", # "MIT,Apache-2.0"
 ])
 
 load(
@@ -24,10 +23,10 @@ load(
 )
 
 
-# Unsupported target "build-script-build" with type "custom-build" omitted
+# Unsupported target "context" with type "example" omitted
 
 rust_library(
-    name = "memchr",
+    name = "quick_error",
     crate_root = "src/lib.rs",
     crate_type = "lib",
     edition = "2015",
@@ -37,11 +36,8 @@ rust_library(
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "2.3.3",
+    version = "1.2.3",
     crate_features = [
-        "default",
-        "std",
-        "use_std",
     ],
 )
 

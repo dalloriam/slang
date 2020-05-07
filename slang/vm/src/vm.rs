@@ -1,4 +1,4 @@
-use instructor::Opcode;
+use instructor::{Opcode, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX};
 
 #[derive(Default)]
 pub struct VM {
@@ -207,11 +207,21 @@ impl VM {
         true
     }
 
+    fn parse_header(&mut self) -> bool {
+        if self.program.len() <= ELIS_HEADER_LENGTH {
+            return false;
+        }
+        self.pc = 64;
+        self.program[0..4] == ELIS_HEADER_PREFIX
+    }
+
     pub fn run_once(&mut self) {
         self.execute_instruction();
     }
 
     pub fn run(&mut self) {
+        assert!(self.parse_header()); // TODO: Handle invalid header properly.
+
         let mut keepalive = true;
         while keepalive {
             keepalive = self.execute_instruction();

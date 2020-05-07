@@ -12,8 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "notice", # "MIT"
-  "unencumbered", # "Unlicense"
+  "notice", # "MIT,Apache-2.0"
 ])
 
 load(
@@ -27,7 +26,7 @@ load(
 # Unsupported target "build-script-build" with type "custom-build" omitted
 
 rust_library(
-    name = "memchr",
+    name = "winapi",
     crate_root = "src/lib.rs",
     crate_type = "lib",
     edition = "2015",
@@ -37,11 +36,19 @@ rust_library(
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "2.3.3",
+    version = "0.3.8",
     crate_features = [
-        "default",
+        "consoleapi",
+        "errhandlingapi",
+        "fileapi",
+        "minwinbase",
+        "minwindef",
+        "processenv",
         "std",
-        "use_std",
+        "winbase",
+        "wincon",
+        "winerror",
+        "winnt",
     ],
 )
 

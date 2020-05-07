@@ -12,8 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "notice", # "MIT"
-  "unencumbered", # "Unlicense"
+  "notice", # "MIT,Apache-2.0"
 ])
 
 load(
@@ -24,24 +23,23 @@ load(
 )
 
 
-# Unsupported target "build-script-build" with type "custom-build" omitted
+# Unsupported target "datetime_format" with type "bench" omitted
+# Unsupported target "datetime_parse" with type "bench" omitted
 
 rust_library(
-    name = "memchr",
+    name = "humantime",
     crate_root = "src/lib.rs",
     crate_type = "lib",
     edition = "2015",
     srcs = glob(["**/*.rs"]),
     deps = [
+        "@raze__quick_error__1_2_3//:quick_error",
     ],
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "2.3.3",
+    version = "1.3.0",
     crate_features = [
-        "default",
-        "std",
-        "use_std",
     ],
 )
 

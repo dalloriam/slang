@@ -67,7 +67,7 @@ fn run_command(vm: &mut VM, cmd: &str) -> Result<bool> {
     Ok(true)
 }
 
-fn repl_loop() -> Result<()> {
+pub fn repl_loop() -> Result<()> {
     println!("SLang VM v0.1.0 REPL");
     let mut vm = VM::new();
 
@@ -86,10 +86,4 @@ fn repl_loop() -> Result<()> {
         }
     }
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = repl_loop() {
-        eprintln!("REPL Error: {}", e.to_string());
-    }
 }

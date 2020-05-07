@@ -2,6 +2,7 @@ use instructor::Operand;
 
 use nom::{
     branch::alt,
+    bytes::complete::take_till,
     character::complete::{char, digit1},
     combinator::{map, map_res},
     sequence::{delimited, preceded},
@@ -15,7 +16,19 @@ pub fn operand(i: &str) -> IResult<&str, Operand> {
         integer,
         register,
         map(label::label_usage, |lbl| Operand::Label(lbl)),
+        string,
     ))(i)
+}
+
+fn string(i: &str) -> IResult<&str, Operand> {
+    map(
+        delimited(
+            whitespace,
+            delimited(char('"'), take_till(|c| c == '"'), char('"')),
+            whitespace,
+        ),
+        |s| Operand::Str(String::from(s)),
+    )(i)
 }
 
 fn integer(i: &str) -> IResult<&str, Operand> {
@@ -40,10 +53,10 @@ fn register(i: &str) -> IResult<&str, Operand> {
 
 #[cfg(test)]
 mod tests {
-    use super::{integer, register, Operand};
+    use super::{integer, operand, register, string, Operand};
 
     #[test]
-    fn parse_integer_operand() {
+    fn parse_integer() {
         {
             let (rest, reg) = integer("#10 ").unwrap();
             assert_eq!(reg, Operand::Integer(10));
@@ -74,6 +87,23 @@ mod tests {
 
         {
             assert!(register("$400").is_err());
+        }
+    }
+
+    #[test]
+    fn parse_string() {
+        let (rest, s) = string("\"hello\"").unwrap();
+        assert_eq!(s, Operand::Str(String::from("hello")));
+        assert_eq!(rest, "");
+    }
+
+    #[test]
+    fn parse_operand() {
+        // TODO: Convert this test to a macro test.
+        {
+            let (rest, op) = operand("\"hello world\"").unwrap();
+            assert_eq!(rest, "");
+            assert_eq!(op, Operand::Str(String::from("hello world")));
         }
     }
 }

@@ -12,8 +12,7 @@ package(default_visibility = [
 ])
 
 licenses([
-  "notice", # "MIT"
-  "unencumbered", # "Unlicense"
+  "restricted", # "MIT OR Apache-2.0"
 ])
 
 load(
@@ -24,24 +23,25 @@ load(
 )
 
 
-# Unsupported target "build-script-build" with type "custom-build" omitted
+# Unsupported target "compiletest" with type "test" omitted
 
 rust_library(
-    name = "memchr",
+    name = "quote",
     crate_root = "src/lib.rs",
     crate_type = "lib",
-    edition = "2015",
+    edition = "2018",
     srcs = glob(["**/*.rs"]),
     deps = [
+        "@raze__proc_macro2__1_0_12//:proc_macro2",
     ],
     rustc_flags = [
         "--cap-lints=allow",
     ],
-    version = "2.3.3",
+    version = "1.0.4",
     crate_features = [
         "default",
-        "std",
-        "use_std",
+        "proc-macro",
     ],
 )
 
+# Unsupported target "test" with type "test" omitted
