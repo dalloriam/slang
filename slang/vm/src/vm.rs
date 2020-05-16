@@ -1,3 +1,5 @@
+use byteorder::{LittleEndian, ReadBytesExt};
+
 use instructor::{Opcode, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX};
 
 #[derive(Default)]
@@ -38,7 +40,21 @@ impl VM {
     }
 
     pub fn load_bytecode(&mut self, mut bytecode: Vec<u8>) {
-        self.program.append(&mut bytecode)
+        // TODO: Errors.
+
+        // Validate the bytecode header.
+        // TODO: Refactor header parsing to other method.
+        assert!(bytecode.len() >= ELIS_HEADER_LENGTH);
+        assert_eq!(bytecode[0..4], ELIS_HEADER_PREFIX);
+        let ro_section_size = (&bytecode[4..8]).read_u32::<LittleEndian>().unwrap() as usize;
+
+        // TODO: Bounds check.
+        let ro_section = &bytecode[ELIS_HEADER_LENGTH..ELIS_HEADER_LENGTH + ro_section_size];
+        println!("RO Section: {:x?}", ro_section);
+
+        let mut new_program = Vec::new();
+        new_program.extend_from_slice(&bytecode[ELIS_HEADER_LENGTH + ro_section_size..]);
+        self.program = new_program;
     }
 
     fn decode_opcode(&mut self) -> Opcode {
@@ -70,11 +86,13 @@ impl VM {
 
         match self.decode_opcode() {
             Opcode::LOAD => {
+                println!("LOAD");
                 let register = self.next_8_bits() as usize;
                 let value = self.next_16_bits() as u16;
                 self.registers[register] = value as i32;
             }
             Opcode::ADD => {
+                println!("ADD");
                 let register_1 = self.registers[self.next_8_bits() as usize];
                 let register_2 = self.registers[self.next_8_bits() as usize];
                 self.registers[self.next_8_bits() as usize] = register_1 + register_2;
@@ -96,10 +114,11 @@ impl VM {
                 self.remainder = (register_1 % register_2) as u32;
             }
             Opcode::JMP => {
-                let target_idx = self.registers[self.next_8_bits() as usize];
+                // Short label jump.
+                let target_idx = self.next_16_bits() as u16;
+                println!("JMP to {}", target_idx);
 
-                // Eat last two bytes.
-                self.next_8_bits();
+                // Eat last byte.
                 self.next_8_bits();
 
                 self.pc = target_idx as usize;
@@ -121,13 +140,23 @@ impl VM {
 
                 self.pc -= value as usize;
             }
+            Opcode::RJMP => {
+                // Long absolute jump.
+                let value = self.registers[self.next_8_bits() as usize];
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+                self.pc = value as usize;
+            }
             Opcode::EQ => {
+                println!("EQ");
                 let register_1 = self.registers[self.next_8_bits() as usize];
                 let register_2 = self.registers[self.next_8_bits() as usize];
                 self.equal_flag = register_1 == register_2;
                 self.next_8_bits();
             }
             Opcode::NEQ => {
+                println!("NEQ");
                 let register_1 = self.registers[self.next_8_bits() as usize];
                 let register_2 = self.registers[self.next_8_bits() as usize];
                 self.equal_flag = register_1 != register_2;
@@ -158,10 +187,10 @@ impl VM {
                 self.next_8_bits();
             }
             Opcode::JEQ => {
-                let register = self.next_8_bits() as usize;
-                let target = self.registers[register];
-                // Eat last two bytes.
-                self.next_8_bits();
+                println!("JEQ");
+                let target = self.next_16_bits() as u16;
+
+                // Eat last byte.
                 self.next_8_bits();
 
                 if self.equal_flag {
@@ -200,19 +229,11 @@ impl VM {
                 return false;
             }
             Opcode::IGL => {
-                println!("Unknown opcode. Terminating");
+                println!("Illegal opcode. Terminating");
                 return false;
             }
         }
         true
-    }
-
-    fn parse_header(&mut self) -> bool {
-        if self.program.len() <= ELIS_HEADER_LENGTH {
-            return false;
-        }
-        self.pc = 64;
-        self.program[0..4] == ELIS_HEADER_PREFIX
     }
 
     pub fn run_once(&mut self) {
@@ -220,8 +241,6 @@ impl VM {
     }
 
     pub fn run(&mut self) {
-        assert!(self.parse_header()); // TODO: Handle invalid header properly.
-
         let mut keepalive = true;
         while keepalive {
             keepalive = self.execute_instruction();
@@ -316,8 +335,7 @@ mod tests {
     #[test]
     fn test_opcode_jmp() {
         let mut test_vm = VM::new();
-        test_vm.registers[0] = 10;
-        test_vm.program = vec![6, 0, 0, 0];
+        test_vm.program = vec![6, 0, 10, 0];
         test_vm.run_once();
 
         assert_eq!(test_vm.pc, 10);
@@ -451,9 +469,8 @@ mod tests {
     #[test]
     fn test_opcode_jeq() {
         let mut test_vm = VM::new();
-        test_vm.registers[0] = 7;
         test_vm.equal_flag = true;
-        test_vm.program = vec![15, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0];
+        test_vm.program = vec![15, 0, 7, 0, 16, 0, 0, 0, 16, 0, 0, 0];
         test_vm.run_once();
         assert_eq!(test_vm.pc, 7);
     }

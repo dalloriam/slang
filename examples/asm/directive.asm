@@ -1,4 +1,4 @@
 .data
 hello: .asciiz "Hello everyone!"
-.code
+.text
 hlt

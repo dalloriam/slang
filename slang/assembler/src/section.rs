@@ -1,13 +1,15 @@
-#[derive(Copy, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Section {
-    Code,
+    Text,
+    Data,
     Unknown,
 }
 
 impl From<&str> for Section {
     fn from(s: &str) -> Section {
         match s {
-            "code" => Section::Code,
+            "text" => Section::Text,
+            "data" => Section::Data,
             _ => Section::Unknown,
         }
     }

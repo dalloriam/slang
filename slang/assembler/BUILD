@@ -10,6 +10,7 @@ rust_library(
     ]),
     edition = "2018",
     deps = [
+        "//cargo:byteorder",
         "//cargo:nom",
         "//cargo:snafu",
         "//slang/instructor",

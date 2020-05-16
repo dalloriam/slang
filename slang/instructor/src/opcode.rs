@@ -6,8 +6,13 @@ pub enum Opcode {
     SUB,
     MUL,
     DIV,
+    // Short label jump.
     JMP,
+
+    // Short relative jump forwards.
     JMPF,
+
+    // Short relative jump backwards
     JMPB,
     EQ,
     NEQ,
@@ -19,6 +24,8 @@ pub enum Opcode {
     ALOC,
     INC,
     DEC,
+    // Long absolute jump
+    RJMP,
     IGL,
 }
 
@@ -44,6 +51,7 @@ impl<'a> From<&'a str> for Opcode {
             "aloc" => Opcode::ALOC,
             "inc" => Opcode::INC,
             "dec" => Opcode::DEC,
+            "rjmp" => Opcode::RJMP,
             _ => Opcode::IGL,
         }
     }
@@ -71,6 +79,7 @@ impl From<u8> for Opcode {
             16 => Opcode::ALOC,
             17 => Opcode::INC,
             18 => Opcode::DEC,
+            19 => Opcode::RJMP,
             _ => Opcode::IGL,
         }
     }

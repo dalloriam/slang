@@ -26,6 +26,9 @@ impl Operand {
                 2
             }
             Operand::Label(s) => {
+                // TODO: This truncates the u32 offset to an u16. This effectively
+                // reduces the jump range to ~16k instructions, which obviously won't cut it.
+                // This will need to be seriously revised before going further.
                 let mut wtr = Vec::with_capacity(2);
                 let offset = converter.offset_of(&s).unwrap(); // TODO: Handle error;
                 wtr.write_u32::<LittleEndian>(offset).unwrap(); // TODO: Handle.
@@ -33,7 +36,9 @@ impl Operand {
                 w.push(wtr[0]);
                 2
             }
-            Operand::Str(s) => unimplemented!(),
+            Operand::Str(s) => panic!(
+                "String operands should never be written. They should be stripped beforehand."
+            ),
         }
     }
 }

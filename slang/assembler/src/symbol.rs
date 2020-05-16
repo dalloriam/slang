@@ -3,6 +3,7 @@ use instructor::LabelConverter;
 #[derive(Debug)]
 pub enum SymbolType {
     Label,
+    Str,
 }
 
 #[derive(Debug)]

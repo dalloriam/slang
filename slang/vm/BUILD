@@ -9,7 +9,10 @@ rust_library(
         "src/*.rs",
     ]),
     edition = "2018",
-    deps = ["//slang/instructor"],
+    deps = [
+        "//cargo:byteorder",
+        "//slang/instructor",
+    ],
 )
 
 rust_test(
