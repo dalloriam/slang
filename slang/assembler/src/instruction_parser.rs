@@ -42,7 +42,7 @@ mod tests {
 
     #[test]
     fn parse_instruction_reg_int() {
-        let (rest, instr) = instruction("ld $0 #100\n").unwrap();
+        let (rest, instr) = instruction("ld $0 100\n").unwrap();
 
         let expected_instruction = Instruction {
             opcode: Some(Opcode::LOAD),

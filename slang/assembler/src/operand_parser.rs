@@ -34,7 +34,7 @@ fn string(i: &str) -> IResult<&str, Operand> {
 fn integer(i: &str) -> IResult<&str, Operand> {
     map(
         map_res(
-            delimited(whitespace, preceded(char('#'), digit1), whitespace),
+            delimited(whitespace, digit1, whitespace),
             |int_val: &str| int_val.parse::<i32>(),
         ),
         |i_val| Operand::Integer(i_val),
@@ -64,13 +64,13 @@ mod tests {
     #[test]
     fn parse_integer() {
         {
-            let (rest, reg) = integer("#10 ").unwrap();
+            let (rest, reg) = integer("10 ").unwrap();
             assert_eq!(reg, Operand::Integer(10));
             assert_eq!(rest, "");
         }
 
         {
-            let (_rest, reg) = integer("#400").unwrap();
+            let (_rest, reg) = integer("400").unwrap();
             assert_eq!(reg, Operand::Integer(400));
         }
 
