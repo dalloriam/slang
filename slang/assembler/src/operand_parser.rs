@@ -2,7 +2,7 @@ use instructor::Operand;
 
 use nom::{
     branch::alt,
-    bytes::complete::take_till,
+    bytes::complete::{tag, take_till},
     character::complete::{char, digit1},
     combinator::{map, map_res},
     sequence::{delimited, preceded},
@@ -43,10 +43,16 @@ fn integer(i: &str) -> IResult<&str, Operand> {
 
 fn register(i: &str) -> IResult<&str, Operand> {
     map(
-        map_res(
-            delimited(whitespace, preceded(char('$'), digit1), whitespace),
-            |byte_val: &str| byte_val.parse::<u8>(),
-        ),
+        alt((
+            map_res(
+                delimited(whitespace, preceded(char('$'), digit1), whitespace),
+                |byte_val: &str| byte_val.parse::<u8>(), // TODO: Validate that the specified register is 0-31
+            ),
+            map(
+                delimited(whitespace, preceded(char('$'), tag("v0")), whitespace),
+                |_val| 32 as u8,
+            ),
+        )),
         |i_val| Operand::Register(i_val),
     )(i)
 }

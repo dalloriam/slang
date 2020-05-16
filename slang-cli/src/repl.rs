@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::fs;
 use std::io;
 use std::io::Write;
@@ -39,7 +40,9 @@ fn run_command(vm: &mut VM, cmd: &str) -> Result<bool> {
         }
         ".reg" => {
             println!("Current VM state:");
-            println!("{:#?}", vm.registers());
+            let slice_ref: [i32; 32] = vm.registers()[0..32].try_into().unwrap();
+            println!("{:#?}", slice_ref);
+            // TODO: Print special registers also.
             println!("End of listing");
         }
         ".run" => {

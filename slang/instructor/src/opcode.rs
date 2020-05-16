@@ -26,6 +26,7 @@ pub enum Opcode {
     DEC,
     // Long absolute jump
     RJMP,
+    SYSC,
     IGL,
 }
 
@@ -52,6 +53,7 @@ impl<'a> From<&'a str> for Opcode {
             "inc" => Opcode::INC,
             "dec" => Opcode::DEC,
             "rjmp" => Opcode::RJMP,
+            "syscall" => Opcode::SYSC,
             _ => Opcode::IGL,
         }
     }
@@ -80,6 +82,7 @@ impl From<u8> for Opcode {
             17 => Opcode::INC,
             18 => Opcode::DEC,
             19 => Opcode::RJMP,
+            20 => Opcode::SYSC,
             _ => Opcode::IGL,
         }
     }

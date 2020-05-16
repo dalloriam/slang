@@ -1,10 +1,14 @@
 use byteorder::{LittleEndian, ReadBytesExt};
 
-use instructor::{Opcode, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX};
+use instructor::{Opcode, SysCall, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX};
 
-#[derive(Default)]
+const REGISTER_COUNT: usize = 33;
+const SYSCALL_REGISTER: usize = 32;
+
 pub struct VM {
-    registers: [i32; 32],
+    // Registers 0-31 are regular registers. Reg 32 is the syscall register.
+    registers: [i32; REGISTER_COUNT],
+
     remainder: u32,
     equal_flag: bool,
     heap: Vec<u8>,
@@ -16,7 +20,7 @@ pub struct VM {
 impl VM {
     pub fn new() -> VM {
         VM {
-            registers: [0; 32],
+            registers: [0; REGISTER_COUNT],
             remainder: 0,
             equal_flag: false,
             heap: Vec::new(),
@@ -35,7 +39,7 @@ impl VM {
         self.pc = 0;
     }
 
-    pub fn registers(&self) -> &[i32; 32] {
+    pub fn registers(&self) -> &[i32; 33] {
         &self.registers
     }
 
@@ -217,6 +221,33 @@ impl VM {
                 self.registers[self.next_8_bits() as usize] -= 1;
 
                 // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+            }
+            Opcode::SYSC => {
+                // Execute a syscall.
+                let call_id = SysCall::from(self.registers[SYSCALL_REGISTER]);
+                match call_id {
+                    SysCall::NOP => {}
+                    SysCall::PRINT => {
+                        // Print something
+                        println!("Print syscall");
+                    }
+                    SysCall::EXIT => {
+                        println!("Exit syscall");
+                        return false;
+                    }
+                    _ => {
+                        println!(
+                            "Illegal Syscall ({}). Terminating.",
+                            self.registers[SYSCALL_REGISTER]
+                        );
+                        return false;
+                    }
+                }
+
+                // Eat last three bytes.
+                self.next_8_bits();
                 self.next_8_bits();
                 self.next_8_bits();
             }
@@ -505,5 +536,19 @@ mod tests {
         test_vm.registers[0] = 10;
         test_vm.run_once();
         assert_eq!(test_vm.registers[0], 9);
+    }
+}
+
+impl Default for VM {
+    fn default() -> VM {
+        return VM {
+            registers: [0; REGISTER_COUNT],
+            remainder: 0,
+            equal_flag: false,
+            heap: Vec::new(),
+
+            pc: 0,
+            program: Vec::new(),
+        };
     }
 }
