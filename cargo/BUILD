@@ -32,3 +32,7 @@ alias(
     name = "nom",
     actual = "@raze__nom__5_1_1//:nom",
 )
+alias(
+    name = "snafu",
+    actual = "@raze__snafu__0_6_8//:snafu",
+)

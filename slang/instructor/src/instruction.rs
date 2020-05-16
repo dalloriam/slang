@@ -24,6 +24,10 @@ impl Instruction {
         }
     }
 
+    pub fn has_operands(&self) -> bool {
+        self.operand_1.is_some() || self.operand_2.is_some() || self.operand_3.is_some();
+    }
+
     pub fn is_label(&self) -> bool {
         self.label.is_some()
     }

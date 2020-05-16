@@ -18,3 +18,6 @@ lint:
 
 test:
     @just _bzl test //...
+
+run +args="":
+    ./bazel-bin/slang-cli/slang_cli {{args}}

@@ -11,6 +11,7 @@ rust_library(
     edition = "2018",
     deps = [
         "//cargo:nom",
+        "//cargo:snafu",
         "//slang/instructor",
     ],
 )
