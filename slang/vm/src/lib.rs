@@ -1,3 +1,5 @@
+mod constants;
+mod heap;
 mod loader;
 mod syscall;
 mod vm;

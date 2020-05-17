@@ -10,6 +10,10 @@ pub enum SysCall {
     /// Exit. Terminates the process.
     EXIT,
 
+    /// Allocate. Allocates the amount of memory specified in $0.
+    /// Writes the start address of the allocated memory in $v0.
+    ALLOC,
+
     /// Illegal syscall. Panics.
     IGL,
 }
@@ -20,6 +24,7 @@ impl From<i32> for SysCall {
             0 => SysCall::NOP,
             1 => SysCall::CPRINT,
             2 => SysCall::EXIT,
+            3 => SysCall::ALLOC,
             _ => SysCall::IGL,
         }
     }

@@ -4,10 +4,9 @@ use instructor::{Opcode, SysCall};
 
 use snafu::{ResultExt, Snafu};
 
+use crate::constants::{REGISTER_COUNT, SYSCALL_REGISTER};
+use crate::heap::Heap;
 use crate::syscall::execute_syscall;
-
-const REGISTER_COUNT: usize = 33;
-const SYSCALL_REGISTER: usize = 32;
 
 #[derive(Debug, Snafu)]
 pub enum VMError {
@@ -25,7 +24,7 @@ pub struct VM {
     equal_flag: bool,
 
     stack: Vec<i32>,
-    heap: Vec<u8>,
+    heap: Heap,
 
     pc: usize,
     program: Vec<u8>,
@@ -39,7 +38,7 @@ impl VM {
             remainder: 0,
             equal_flag: false,
             stack: Vec::new(),
-            heap: Vec::new(),
+            heap: Heap::new(),
 
             pc: 0,
             program: Vec::new(),
@@ -59,6 +58,22 @@ impl VM {
         // TODO: Make this transparent. Make it so it returns regular registers (0-31).
         // Return the other special registers from other methods.
         &self.registers
+    }
+
+    pub fn registers_mut(&mut self) -> &mut [i32; 33] {
+        &mut self.registers
+    }
+
+    pub fn ro_block(&self) -> &[u8] {
+        &self.ro_block
+    }
+
+    pub fn heap(&self) -> &Heap {
+        &self.heap
+    }
+
+    pub fn heap_mut(&mut self) -> &mut Heap {
+        &mut self.heap
     }
 
     pub fn load_bytecode(&mut self, bytecode: Vec<u8>) -> Result<()> {
@@ -222,8 +237,7 @@ impl VM {
             Opcode::SYSC => {
                 // Execute a syscall.
                 let call_id = SysCall::from(self.registers[SYSCALL_REGISTER]);
-                let should_continue =
-                    execute_syscall(call_id, &self.ro_block, &mut self.registers[0..32]);
+                let should_continue = execute_syscall(call_id, self);
 
                 if !should_continue {
                     return false;
@@ -593,7 +607,7 @@ impl Default for VM {
             remainder: 0,
             equal_flag: false,
             stack: Vec::new(),
-            heap: Vec::new(),
+            heap: Heap::new(),
 
             pc: 0,
             program: Vec::new(),
