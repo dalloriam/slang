@@ -75,6 +75,9 @@ pub enum Opcode {
     /// Move - Copies the value from the first register to the second.
     MOV,
 
+    /// Load constant word - Loads a word (i32) from the readonly section.
+    LCW,
+
     /// Illegal Instruction.
     IGL,
 }
@@ -106,6 +109,7 @@ impl<'a> From<&'a str> for Opcode {
             "push" => Opcode::PUSH,
             "pop" => Opcode::POP,
             "move" => Opcode::MOV,
+            "lcw" => Opcode::LCW,
             _ => Opcode::IGL,
         }
     }
@@ -138,6 +142,7 @@ impl From<u8> for Opcode {
             21 => Opcode::PUSH,
             22 => Opcode::POP,
             23 => Opcode::MOV,
+            24 => Opcode::LCW,
             _ => Opcode::IGL,
         }
     }

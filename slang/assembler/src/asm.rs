@@ -36,6 +36,8 @@ pub enum AssemblerError {
         source: io::Error,
     },
 
+    InvalidWordDeclaration,
+
     #[snafu(display("Symbol '{}' defined multiple times", name))]
     SymbolAlreadyDefined {
         name: String,
@@ -103,6 +105,38 @@ impl Assembler {
 
         self.sections.push(section);
         self.current_section = Some(section);
+
+        Ok(())
+    }
+
+    fn process_word_directive(&mut self, ins: &Instruction) -> Result<()> {
+        if self.current_phase != AssemblerPhase::First {
+            return Ok(());
+        }
+
+        match ins.operand_1.as_ref() {
+            None => {
+                // Word constant was empty.
+                // Typed: ".word"
+            }
+            Some(Operand::Integer(w)) => {
+                match ins.label_name() {
+                    Some(label_name) => {
+                        // Got a label name and a word value.
+                        self.symbols
+                            .update_offset(label_name, self.readonly_block.len() as u32);
+
+                        // 4 other bytes for the length of the data block.
+                        self.readonly_block.write_i32::<LittleEndian>(*w).unwrap();
+                    }
+                    _ => {
+                        // Got no label, we can ditch the word
+                        return Ok(());
+                    }
+                }
+            }
+            Some(_) => return Err(AssemblerError::InvalidWordDeclaration),
+        }
 
         Ok(())
     }
@@ -187,6 +221,9 @@ impl Assembler {
                         "asciiz" => {
                             // Null-terminated ascii string.
                             self.process_asciiz_directive(instruction)?;
+                        }
+                        "word" => {
+                            self.process_word_directive(instruction)?;
                         }
                         _ => {
                             return Err(AssemblerError::UnknownDirective { name: name.clone() });
