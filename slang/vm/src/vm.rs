@@ -2,6 +2,8 @@ use instructor::{Opcode, SysCall};
 
 use snafu::{ResultExt, Snafu};
 
+use crate::syscall::execute_syscall;
+
 const REGISTER_COUNT: usize = 33;
 const SYSCALL_REGISTER: usize = 32;
 
@@ -19,6 +21,8 @@ pub struct VM {
 
     remainder: u32,
     equal_flag: bool,
+
+    stack: Vec<i32>,
     heap: Vec<u8>,
 
     pc: usize,
@@ -32,6 +36,7 @@ impl VM {
             ro_block: Vec::new(),
             remainder: 0,
             equal_flag: false,
+            stack: Vec::new(),
             heap: Vec::new(),
 
             pc: 0,
@@ -128,18 +133,18 @@ impl VM {
                 self.pc = target_idx as usize;
             }
             Opcode::JMPF => {
-                let value = self.registers[self.next_8_bits() as usize];
+                let value = self.next_16_bits() as u16;
 
-                // Eat last two bytes.
-                self.next_8_bits();
+                // Eat last byte.
                 self.next_8_bits();
 
+                // TODO: Overflow protection.
                 self.pc += value as usize;
             }
             Opcode::JMPB => {
-                let value = self.registers[self.next_8_bits() as usize];
-                // Eat last two bytes.
-                self.next_8_bits();
+                let value = self.next_16_bits() as u16;
+
+                // Eat last byte.
                 self.next_8_bits();
 
                 self.pc -= value as usize;
@@ -224,46 +229,38 @@ impl VM {
             Opcode::SYSC => {
                 // Execute a syscall.
                 let call_id = SysCall::from(self.registers[SYSCALL_REGISTER]);
-                match call_id {
-                    SysCall::NOP => {}
-                    SysCall::PRINT => {
-                        // Print something.
-                        // Expects the RO offset of the string in $0.
-                        let data_slice = self.ro_block.as_slice();
+                let should_continue =
+                    execute_syscall(call_id, &self.ro_block, &mut self.registers[0..32]);
 
-                        let start_offset = self.registers[0] as usize;
-                        let mut end_offset = start_offset;
-                        while end_offset < data_slice.len() && data_slice[end_offset] != 0 {
-                            end_offset += 1;
-                        }
-
-                        // The VM expects the string to be UTF-8 encoded.
-                        let result = std::str::from_utf8(&data_slice[start_offset..end_offset]);
-                        match result {
-                            Ok(s) => {
-                                print!("{}", s);
-                            }
-                            Err(e) => {
-                                eprintln!("Error decoding string for prts instruction: {:#?}", e);
-                                return false;
-                            }
-                        };
-                    }
-                    SysCall::EXIT => {
-                        return false;
-                    }
-                    _ => {
-                        println!(
-                            "Illegal Syscall ({}). Terminating.",
-                            self.registers[SYSCALL_REGISTER]
-                        );
-                        return false;
-                    }
+                if !should_continue {
+                    return false;
                 }
 
                 // Eat last three bytes.
                 self.next_8_bits();
                 self.next_8_bits();
+                self.next_8_bits();
+            }
+            Opcode::PUSH => {
+                let value = self.registers[self.next_8_bits() as usize];
+                self.stack.push(value);
+
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+            }
+            Opcode::POP => {
+                let value = self.stack.pop().unwrap_or(0);
+                self.registers[self.next_8_bits() as usize] = value;
+
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+            }
+            Opcode::MOV => {
+                let value = self.registers[self.next_8_bits() as usize];
+                self.registers[self.next_8_bits() as usize] = value;
+                // Eat last byte.
                 self.next_8_bits();
             }
             Opcode::HLT => {
@@ -390,8 +387,7 @@ mod tests {
     #[test]
     fn test_opcode_jmpf() {
         let mut test_vm = VM::new();
-        test_vm.registers[0] = 2;
-        test_vm.program = vec![7, 0, 1, 0, 6, 0, 0, 0];
+        test_vm.program = vec![7, 0, 2, 0, 6, 0, 0, 0];
         test_vm.run_once();
         assert_eq!(test_vm.pc, 6);
     }
@@ -552,6 +548,40 @@ mod tests {
         test_vm.run_once();
         assert_eq!(test_vm.registers[0], 9);
     }
+
+    #[test]
+    fn test_opcode_push() {
+        let mut test_vm = VM::new();
+        assert!(test_vm.stack.is_empty());
+        test_vm.registers[0] = 12;
+        test_vm.program = vec![21, 0, 0, 0];
+        test_vm.run_once();
+        assert_eq!(test_vm.stack, vec![12]);
+    }
+
+    #[test]
+    fn test_opcode_pop() {
+        let mut test_vm = VM::new();
+        test_vm.stack = vec![18, 32];
+
+        test_vm.program = vec![22, 0, 0, 0];
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers[0], 32);
+        assert_eq!(test_vm.stack, vec![18]);
+    }
+
+    #[test]
+    fn test_opcode_mov() {
+        let mut test_vm = VM::new();
+        test_vm.registers[1] = 18;
+
+        assert_eq!(test_vm.registers[0], 0);
+        test_vm.program = vec![23, 1, 0, 0];
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers[0], 18);
+    }
 }
 
 impl Default for VM {
@@ -561,6 +591,7 @@ impl Default for VM {
             ro_block: Vec::new(),
             remainder: 0,
             equal_flag: false,
+            stack: Vec::new(),
             heap: Vec::new(),
 
             pc: 0,

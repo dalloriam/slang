@@ -10,6 +10,9 @@ _clippy target:
     @echo lint {{target}}
     @cd {{target}} && cargo check && cargo clippy
 
+doc target +args="":
+    @cd {{target}} && cargo doc {{args}}
+
 lint:
     @just _clippy slang-cli
     @just _clippy slang/vm

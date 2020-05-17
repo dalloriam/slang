@@ -1,13 +1,31 @@
 use crate::{LabelConverter, Opcode, Operand};
 
+/// A single Slang instruction.
 #[derive(Debug, PartialEq)]
 pub struct Instruction {
+    /// The opcode of this instruction.
+    ///
+    /// Can be `None` if the current instruction is a label declaration
+    /// or a directive.
     pub opcode: Option<Opcode>,
-    pub directive: Option<String>,
+
+    /// The directive of this instruction.
+    ///
+    /// Can be `None` if the current instruction is an opcode.
+    pub directive: Option<String>, // TODO: Parse directives as enums also.
+
+    /// The label of this instruction.
+    ///
+    /// `None` if no label specified.
     pub label: Option<String>,
 
+    /// The optional first operand of the instruction.
     pub operand_1: Option<Operand>,
+
+    /// The optional second operand of the instruction.
     pub operand_2: Option<Operand>,
+
+    /// The optional third operand of the instruction.
     pub operand_3: Option<Operand>, // Each instruction is max 4 bytes.
 }
 
@@ -24,14 +42,39 @@ impl Instruction {
         }
     }
 
+    /// Returns whether the instruction has at least one operand.
+    ///
+    /// # Examples
+    /// ```
+    /// use instructor::{Instruction, Operand};
+    ///
+    /// let instruction_b = Instruction{
+    ///     operand_1: Some(Operand::Register(1)),
+    ///     ..Default::default()
+    /// };
+    /// assert!(instruction_b.has_operands());
+    /// ```
     pub fn has_operands(&self) -> bool {
         self.operand_1.is_some() || self.operand_2.is_some() || self.operand_3.is_some()
     }
 
+    /// Returns whether or not the instruction has a label.
+    ///
+    /// # Examples
+    /// ```
+    /// use instructor::Instruction;
+    ///
+    /// let instruction = Instruction{
+    ///     label: Some(String::from("hello")),
+    ///     ..Default::default()
+    /// };
+    /// assert!(instruction.is_label());
+    /// ```
     pub fn is_label(&self) -> bool {
         self.label.is_some()
     }
 
+    /// Returns the label name.
     pub fn label_name(&self) -> Option<&String> {
         self.label.as_ref()
     }
