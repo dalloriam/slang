@@ -2,6 +2,8 @@ use instructor::{Opcode, SysCall};
 
 use snafu::{ResultExt, Snafu};
 
+use crate::syscall::execute_syscall;
+
 const REGISTER_COUNT: usize = 33;
 const SYSCALL_REGISTER: usize = 32;
 
@@ -224,41 +226,11 @@ impl VM {
             Opcode::SYSC => {
                 // Execute a syscall.
                 let call_id = SysCall::from(self.registers[SYSCALL_REGISTER]);
-                match call_id {
-                    SysCall::NOP => {}
-                    SysCall::PRINT => {
-                        // Print something.
-                        // Expects the RO offset of the string in $0.
-                        let data_slice = self.ro_block.as_slice();
+                let should_continue =
+                    execute_syscall(call_id, &self.ro_block, &mut self.registers[0..32]);
 
-                        let start_offset = self.registers[0] as usize;
-                        let mut end_offset = start_offset;
-                        while end_offset < data_slice.len() && data_slice[end_offset] != 0 {
-                            end_offset += 1;
-                        }
-
-                        // The VM expects the string to be UTF-8 encoded.
-                        let result = std::str::from_utf8(&data_slice[start_offset..end_offset]);
-                        match result {
-                            Ok(s) => {
-                                print!("{}", s);
-                            }
-                            Err(e) => {
-                                eprintln!("Error decoding string for prts instruction: {:#?}", e);
-                                return false;
-                            }
-                        };
-                    }
-                    SysCall::EXIT => {
-                        return false;
-                    }
-                    _ => {
-                        println!(
-                            "Illegal Syscall ({}). Terminating.",
-                            self.registers[SYSCALL_REGISTER]
-                        );
-                        return false;
-                    }
+                if !should_continue {
+                    return false;
                 }
 
                 // Eat last three bytes.
@@ -266,6 +238,8 @@ impl VM {
                 self.next_8_bits();
                 self.next_8_bits();
             }
+            Opcode::PUSH => unimplemented!(),
+            Opcode::POP => unimplemented!(),
             Opcode::HLT => {
                 println!("HLT received. Halting.");
                 for _i in 0..3 {
