@@ -21,6 +21,8 @@ pub struct VM {
 
     remainder: u32,
     equal_flag: bool,
+
+    stack: Vec<i32>,
     heap: Vec<u8>,
 
     pc: usize,
@@ -34,6 +36,7 @@ impl VM {
             ro_block: Vec::new(),
             remainder: 0,
             equal_flag: false,
+            stack: Vec::new(),
             heap: Vec::new(),
 
             pc: 0,
@@ -238,8 +241,28 @@ impl VM {
                 self.next_8_bits();
                 self.next_8_bits();
             }
-            Opcode::PUSH => unimplemented!(),
-            Opcode::POP => unimplemented!(),
+            Opcode::PUSH => {
+                let value = self.registers[self.next_8_bits() as usize];
+                self.stack.push(value);
+
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+            }
+            Opcode::POP => {
+                let value = self.stack.pop().unwrap_or(0);
+                self.registers[self.next_8_bits() as usize] = value;
+
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+            }
+            Opcode::MOV => {
+                let value = self.registers[self.next_8_bits() as usize];
+                self.registers[self.next_8_bits() as usize] = value;
+                // Eat last byte.
+                self.next_8_bits();
+            }
             Opcode::HLT => {
                 println!("HLT received. Halting.");
                 for _i in 0..3 {
@@ -525,6 +548,40 @@ mod tests {
         test_vm.run_once();
         assert_eq!(test_vm.registers[0], 9);
     }
+
+    #[test]
+    fn test_opcode_push() {
+        let mut test_vm = VM::new();
+        assert!(test_vm.stack.is_empty());
+        test_vm.registers[0] = 12;
+        test_vm.program = vec![21, 0, 0, 0];
+        test_vm.run_once();
+        assert_eq!(test_vm.stack, vec![12]);
+    }
+
+    #[test]
+    fn test_opcode_pop() {
+        let mut test_vm = VM::new();
+        test_vm.stack = vec![18, 32];
+
+        test_vm.program = vec![22, 0, 0, 0];
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers[0], 32);
+        assert_eq!(test_vm.stack, vec![18]);
+    }
+
+    #[test]
+    fn test_opcode_mov() {
+        let mut test_vm = VM::new();
+        test_vm.registers[1] = 18;
+
+        assert_eq!(test_vm.registers[0], 0);
+        test_vm.program = vec![23, 1, 0, 0];
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers[0], 18);
+    }
 }
 
 impl Default for VM {
@@ -534,6 +591,7 @@ impl Default for VM {
             ro_block: Vec::new(),
             remainder: 0,
             equal_flag: false,
+            stack: Vec::new(),
             heap: Vec::new(),
 
             pc: 0,

@@ -72,6 +72,9 @@ pub enum Opcode {
     /// Stack pop - Pops the first value off the stack and writes it to the first register.
     POP,
 
+    /// Move - Copies the value from the first register to the second.
+    MOV,
+
     /// Illegal Instruction.
     IGL,
 }
@@ -102,6 +105,7 @@ impl<'a> From<&'a str> for Opcode {
             "syscall" => Opcode::SYSC,
             "push" => Opcode::PUSH,
             "pop" => Opcode::POP,
+            "move" => Opcode::MOV,
             _ => Opcode::IGL,
         }
     }
@@ -133,6 +137,7 @@ impl From<u8> for Opcode {
             20 => Opcode::SYSC,
             21 => Opcode::PUSH,
             22 => Opcode::POP,
+            23 => Opcode::MOV,
             _ => Opcode::IGL,
         }
     }
