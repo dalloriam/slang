@@ -123,6 +123,8 @@ impl Assembler {
                     Some(label_name) => {
                         // Got a label name and a string literal.
                         // Let's insert it in the ro table.
+                        self.symbols
+                            .update_offset(label_name, self.readonly_block.len() as u32);
 
                         for byte in s.as_bytes() {
                             self.readonly_block.push(*byte)
@@ -142,7 +144,9 @@ impl Assembler {
         }
 
         // For asciiz directives, the first operand is the string constant itself.
-        if let Some(Operand::Str(str_val)) = &ins.operand_1 {
+        if let Some(Operand::Str(_str_val)) = &ins.operand_1 {
+            // What to do here?
+            // TODO: Might be able to remove this whole block...
         } else {
             return Err(AssemblerError::InvalidAsciizDeclaration);
         }
