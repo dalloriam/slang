@@ -1,7 +1,7 @@
 use instructor::SysCall;
 
-fn syscall_print(ro_block: &[u8], registers: &mut [i32]) -> bool {
-    // Print something.
+fn syscall_cprint(ro_block: &[u8], registers: &mut [i32]) -> bool {
+    // Print a constant.
     // Expects the RO offset of the string in $0.
 
     let start_offset = registers[0] as usize;
@@ -29,7 +29,7 @@ fn syscall_print(ro_block: &[u8], registers: &mut [i32]) -> bool {
 pub fn execute_syscall(syscall: SysCall, ro_block: &[u8], registers: &mut [i32]) -> bool {
     match syscall {
         SysCall::NOP => true,
-        SysCall::PRINT => syscall_print(ro_block, registers),
+        SysCall::CPRINT => syscall_cprint(ro_block, registers),
         SysCall::EXIT => false,
         _ => {
             eprintln!("Illegal Syscall. Terminating.",);

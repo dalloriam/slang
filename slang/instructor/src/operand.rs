@@ -2,11 +2,19 @@ use byteorder::{LittleEndian, WriteBytesExt};
 
 use crate::LabelConverter;
 
+/// Operand Types.
 #[derive(Debug, PartialEq)]
 pub enum Operand {
+    /// Integer literal operand.
     Integer(i32),
+
+    /// Register operand.
     Register(u8),
+
+    /// Label operand.
     Label(String),
+
+    /// String operand.
     Str(String),
 }
 

@@ -130,18 +130,18 @@ impl VM {
                 self.pc = target_idx as usize;
             }
             Opcode::JMPF => {
-                let value = self.registers[self.next_8_bits() as usize];
+                let value = self.next_16_bits() as u16;
 
-                // Eat last two bytes.
-                self.next_8_bits();
+                // Eat last byte.
                 self.next_8_bits();
 
+                // TODO: Overflow protection.
                 self.pc += value as usize;
             }
             Opcode::JMPB => {
-                let value = self.registers[self.next_8_bits() as usize];
-                // Eat last two bytes.
-                self.next_8_bits();
+                let value = self.next_16_bits() as u16;
+
+                // Eat last byte.
                 self.next_8_bits();
 
                 self.pc -= value as usize;
@@ -364,8 +364,7 @@ mod tests {
     #[test]
     fn test_opcode_jmpf() {
         let mut test_vm = VM::new();
-        test_vm.registers[0] = 2;
-        test_vm.program = vec![7, 0, 1, 0, 6, 0, 0, 0];
+        test_vm.program = vec![7, 0, 2, 0, 6, 0, 0, 0];
         test_vm.run_once();
         assert_eq!(test_vm.pc, 6);
     }

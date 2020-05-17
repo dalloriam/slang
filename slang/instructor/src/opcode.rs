@@ -1,34 +1,78 @@
+/// All available Opcodes.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Opcode {
+    /// Halt - Stops the VM immediately.
+    #[deprecated(note = "Use an exit syscall instead")]
     HLT,
+
+    /// Load - Loads a 32-bit integer in a register.
     LOAD,
+
+    /// Add - Adds the values of the first two registers, storing the result in the third.
     ADD,
+
+    /// Substract - Subtracts the value of the second register from the first, storing the result in the third.
     SUB,
+
+    /// Multiply - Multiplies the values of the first two registers, storing the result in the third.
     MUL,
+
+    /// Divide - Divide the value of the first register by the value of the second, storing the integer result in the third register,
+    /// and the remainder in the `$r0` register.
     DIV,
-    // Short label jump.
+
+    /// Short Absolute Jump - Jump to the label or offset specified as an argument.
     JMP,
 
-    // Short relative jump forwards.
+    /// Short Relative Jump (fwd) - Jump {x} instructions forward.
     JMPF,
 
-    // Short relative jump backwards
+    /// Short Relative Jump (bwd) - Jump {x} instructions backwards.
     JMPB,
+
+    /// Equal - Checks the values of the two provided registers for equality.
     EQ,
+
+    /// Not Equal - Complement of `EQ`
     NEQ,
+
+    /// Greater Than - Checks if the value of the first register is greater than the value of the second.
     GT,
+
+    /// Lower Than - Checks if the value of the first register is lower than the value of the second.
     LT,
+
+    /// Greater Than or Equal - Checks if the value of the first register is greater than or equal to the value of the second.
     GTQ,
+
+    /// Lower Than or Equal - Checks if the value of the first register is lower than or equal to the value of the second.
     LTQ,
+
+    /// Short jump if equal - If the result of the previous comparison was true, jump to the offset or label specified.
     JEQ,
+
+    /// Allocation - Resizes the heap to the value of the first register.
     ALOC,
+
+    /// Increment - Increments the value of the specified register by one.
     INC,
+
+    /// Decrement - Decrements the value of the specified register by one.
     DEC,
-    // Long absolute jump
+
+    /// Long absolute jump - Jumps to the offset stored in the specified register.
     RJMP,
+
+    /// Syscall - Executes the syscall currently stored in the $v0 virtual register.
     SYSC,
+
+    /// Stack push - Pushes the value of the first register on the stack.
     PUSH,
+
+    /// Stack pop - Pops the first value off the stack and writes it to the first register.
     POP,
+
+    /// Illegal Instruction.
     IGL,
 }
 
