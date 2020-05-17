@@ -205,15 +205,6 @@ impl VM {
                     self.pc = target as usize;
                 }
             }
-            Opcode::ALOC => {
-                let amt_to_alloc = self.registers[self.next_8_bits() as usize];
-                let new_heap_size = self.heap.len() as i32 + amt_to_alloc;
-                self.heap.resize(new_heap_size as usize, 0);
-
-                // Eat last two bytes.
-                self.next_8_bits();
-                self.next_8_bits();
-            }
             Opcode::INC => {
                 self.registers[self.next_8_bits() as usize] += 1;
 
@@ -528,21 +519,9 @@ mod tests {
     }
 
     #[test]
-    fn test_opcode_aloc() {
-        let mut test_vm = VM::new();
-
-        test_vm.registers[0] = 1024;
-        test_vm.program = vec![16, 0, 0, 0]; // Allocate 1kb.
-
-        assert_eq!(test_vm.heap.len(), 0);
-        test_vm.run_once();
-        assert_eq!(test_vm.heap.len(), 1024);
-    }
-
-    #[test]
     fn test_opcode_inc() {
         let mut test_vm = VM::new();
-        test_vm.program = vec![17, 0, 0, 0];
+        test_vm.program = vec![16, 0, 0, 0];
 
         assert_eq!(test_vm.registers[0], 0);
         test_vm.run_once();
@@ -552,7 +531,7 @@ mod tests {
     #[test]
     fn test_opcode_dec() {
         let mut test_vm = VM::new();
-        test_vm.program = vec![18, 0, 0, 0];
+        test_vm.program = vec![17, 0, 0, 0];
 
         test_vm.registers[0] = 10;
         test_vm.run_once();
@@ -564,7 +543,7 @@ mod tests {
         let mut test_vm = VM::new();
         assert!(test_vm.stack.is_empty());
         test_vm.registers[0] = 12;
-        test_vm.program = vec![21, 0, 0, 0];
+        test_vm.program = vec![20, 0, 0, 0];
         test_vm.run_once();
         assert_eq!(test_vm.stack, vec![12]);
     }
@@ -574,7 +553,7 @@ mod tests {
         let mut test_vm = VM::new();
         test_vm.stack = vec![18, 32];
 
-        test_vm.program = vec![22, 0, 0, 0];
+        test_vm.program = vec![21, 0, 0, 0];
         test_vm.run_once();
 
         assert_eq!(test_vm.registers[0], 32);
@@ -587,7 +566,7 @@ mod tests {
         test_vm.registers[1] = 18;
 
         assert_eq!(test_vm.registers[0], 0);
-        test_vm.program = vec![23, 1, 0, 0];
+        test_vm.program = vec![22, 1, 0, 0];
         test_vm.run_once();
 
         assert_eq!(test_vm.registers[0], 18);
@@ -599,7 +578,7 @@ mod tests {
         test_vm.ro_block = vec![0, 0, 0, 0, 10, 0, 0, 0];
 
         assert_eq!(test_vm.registers[0], 0);
-        test_vm.program = vec![24, 0, 0, 4];
+        test_vm.program = vec![23, 0, 0, 4];
         test_vm.run_once();
 
         assert_eq!(test_vm.registers[0], 10);

@@ -51,9 +51,6 @@ pub enum Opcode {
     /// Short jump if equal - If the result of the previous comparison was true, jump to the offset or label specified.
     JEQ,
 
-    /// Allocation - Resizes the heap to the value of the first register.
-    ALOC,
-
     /// Increment - Increments the value of the specified register by one.
     INC,
 
@@ -101,7 +98,6 @@ impl<'a> From<&'a str> for Opcode {
             "gtq" => Opcode::GTQ,
             "ltq" => Opcode::LTQ,
             "jeq" => Opcode::JEQ,
-            "aloc" => Opcode::ALOC,
             "inc" => Opcode::INC,
             "dec" => Opcode::DEC,
             "rjmp" => Opcode::RJMP,
@@ -134,15 +130,14 @@ impl From<u8> for Opcode {
             13 => Opcode::GTQ,
             14 => Opcode::LTQ,
             15 => Opcode::JEQ,
-            16 => Opcode::ALOC,
-            17 => Opcode::INC,
-            18 => Opcode::DEC,
-            19 => Opcode::RJMP,
-            20 => Opcode::SYSC,
-            21 => Opcode::PUSH,
-            22 => Opcode::POP,
-            23 => Opcode::MOV,
-            24 => Opcode::LCW,
+            16 => Opcode::INC,
+            17 => Opcode::DEC,
+            18 => Opcode::RJMP,
+            19 => Opcode::SYSC,
+            20 => Opcode::PUSH,
+            21 => Opcode::POP,
+            22 => Opcode::MOV,
+            23 => Opcode::LCW,
             _ => Opcode::IGL,
         }
     }

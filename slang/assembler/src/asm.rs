@@ -119,12 +119,13 @@ impl Assembler {
                 // Word constant was empty.
                 // Typed: ".word"
             }
+            // TODO: Enforce that the readonly block size doesn't exceed the 16-bit addressable space.
             Some(Operand::Integer(w)) => {
                 match ins.label_name() {
                     Some(label_name) => {
                         // Got a label name and a word value.
                         self.symbols
-                            .update_offset(label_name, self.readonly_block.len() as u32);
+                            .update_offset(label_name, self.readonly_block.len() as u16);
 
                         // 4 other bytes for the length of the data block.
                         self.readonly_block.write_i32::<LittleEndian>(*w).unwrap();
@@ -157,7 +158,7 @@ impl Assembler {
                         // Got a label name and a string literal.
                         // Let's insert it in the ro table.
                         self.symbols
-                            .update_offset(label_name, self.readonly_block.len() as u32);
+                            .update_offset(label_name, self.readonly_block.len() as u16);
 
                         for byte in s.as_bytes() {
                             self.readonly_block.push(*byte)
@@ -237,7 +238,7 @@ impl Assembler {
 
             if instruction.opcode.is_some() {
                 // Only offset instructions that will be in the final program.
-                current_label_offset += INSTRUCTION_LENGTH_BYTES as u32;
+                current_label_offset += INSTRUCTION_LENGTH_BYTES as u16;
             }
         }
         Ok(())
