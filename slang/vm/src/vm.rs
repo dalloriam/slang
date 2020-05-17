@@ -1,3 +1,5 @@
+use byteorder::{LittleEndian, ReadBytesExt};
+
 use instructor::{Opcode, SysCall};
 
 use snafu::{ResultExt, Snafu};
@@ -262,6 +264,14 @@ impl VM {
                 self.registers[self.next_8_bits() as usize] = value;
                 // Eat last byte.
                 self.next_8_bits();
+            }
+            Opcode::LCW => {
+                // Load constant word.
+                let register_index = self.next_8_bits() as usize;
+                let offset = self.next_16_bits() as usize;
+                self.registers[register_index] = (&self.ro_block[offset..offset + 4])
+                    .read_i32::<LittleEndian>()
+                    .unwrap();
             }
             Opcode::HLT => {
                 println!("HLT received. Halting.");
@@ -581,6 +591,18 @@ mod tests {
         test_vm.run_once();
 
         assert_eq!(test_vm.registers[0], 18);
+    }
+
+    #[test]
+    fn test_opcode_lcw() {
+        let mut test_vm = VM::new();
+        test_vm.ro_block = vec![0, 0, 0, 0, 10, 0, 0, 0];
+
+        assert_eq!(test_vm.registers[0], 0);
+        test_vm.program = vec![24, 0, 0, 4];
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers[0], 10);
     }
 }
 
