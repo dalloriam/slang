@@ -1,5 +1,3 @@
-use std::io;
-
 use instructor::Operand;
 
 use nom::{

@@ -2,7 +2,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 
 use instructor::{ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX};
 
-use snafu::{ensure, ResultExt, Snafu};
+use snafu::{ensure, Snafu};
 
 #[derive(Debug, Snafu)]
 pub enum LoadError {

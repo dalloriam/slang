@@ -1,8 +1,6 @@
-use byteorder::{LittleEndian, ReadBytesExt};
+use instructor::{Opcode, SysCall};
 
-use instructor::{Opcode, SysCall, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX};
-
-use snafu::{ensure, ResultExt, Snafu};
+use snafu::{ResultExt, Snafu};
 
 const REGISTER_COUNT: usize = 33;
 const SYSCALL_REGISTER: usize = 32;
@@ -56,7 +54,7 @@ impl VM {
         &self.registers
     }
 
-    pub fn load_bytecode(&mut self, mut bytecode: Vec<u8>) -> Result<()> {
+    pub fn load_bytecode(&mut self, bytecode: Vec<u8>) -> Result<()> {
         let program = crate::loader::Program::new(bytecode).context(LoadingFailed)?;
 
         // TODO: Use program struct directly instead of unpacking.

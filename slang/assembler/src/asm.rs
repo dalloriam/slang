@@ -1,4 +1,3 @@
-use std::fmt;
 use std::io;
 
 use byteorder::{LittleEndian, WriteBytesExt};
@@ -199,7 +198,7 @@ impl Assembler {
                 }
             }
 
-            if (instruction.opcode.is_some()) {
+            if instruction.opcode.is_some() {
                 // Only offset instructions that will be in the final program.
                 current_label_offset += INSTRUCTION_LENGTH_BYTES as u32;
             }
