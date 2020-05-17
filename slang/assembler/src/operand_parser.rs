@@ -2,14 +2,22 @@ use instructor::Operand;
 
 use nom::{
     branch::alt,
-    bytes::complete::take_till,
+    bytes::complete::{tag, take_till},
     character::complete::{char, digit1},
     combinator::{map, map_res},
     sequence::{delimited, preceded},
     IResult,
 };
 
+use snafu::{ResultExt, Snafu};
+
 use crate::{common::whitespace, label_parser as label};
+
+#[derive(Debug, Snafu)]
+enum ParseError {
+    InvalidRegisterNumber { source: std::num::ParseIntError },
+    InvalidRegisterRange,
+}
 
 pub fn operand(i: &str) -> IResult<&str, Operand> {
     alt((
@@ -34,7 +42,7 @@ fn string(i: &str) -> IResult<&str, Operand> {
 fn integer(i: &str) -> IResult<&str, Operand> {
     map(
         map_res(
-            delimited(whitespace, preceded(char('#'), digit1), whitespace),
+            delimited(whitespace, digit1, whitespace),
             |int_val: &str| int_val.parse::<i32>(),
         ),
         |i_val| Operand::Integer(i_val),
@@ -43,10 +51,22 @@ fn integer(i: &str) -> IResult<&str, Operand> {
 
 fn register(i: &str) -> IResult<&str, Operand> {
     map(
-        map_res(
-            delimited(whitespace, preceded(char('$'), digit1), whitespace),
-            |byte_val: &str| byte_val.parse::<u8>(),
-        ),
+        alt((
+            map_res(
+                delimited(whitespace, preceded(char('$'), digit1), whitespace),
+                |byte_val: &str| {
+                    let v = byte_val.parse::<u8>().context(InvalidRegisterNumber)?;
+                    if v > 31 {
+                        return Err(ParseError::InvalidRegisterRange);
+                    }
+                    return Ok(v);
+                },
+            ),
+            map(
+                delimited(whitespace, preceded(char('$'), tag("v0")), whitespace),
+                |_val| 32 as u8,
+            ),
+        )),
         |i_val| Operand::Register(i_val),
     )(i)
 }
@@ -58,13 +78,13 @@ mod tests {
     #[test]
     fn parse_integer() {
         {
-            let (rest, reg) = integer("#10 ").unwrap();
+            let (rest, reg) = integer("10 ").unwrap();
             assert_eq!(reg, Operand::Integer(10));
             assert_eq!(rest, "");
         }
 
         {
-            let (_rest, reg) = integer("#400").unwrap();
+            let (_rest, reg) = integer("400").unwrap();
             assert_eq!(reg, Operand::Integer(400));
         }
 
@@ -84,9 +104,17 @@ mod tests {
             let (_rest, reg) = register(" $18").unwrap();
             assert_eq!(reg, Operand::Register(18));
         }
-
         {
             assert!(register("$400").is_err());
+        }
+        {
+            assert!(register("$32").is_err());
+        }
+        {
+            // Test parsing of special register $v0 (used for syscalls).
+            let (rest, reg) = register("$v0").unwrap();
+            assert_eq!(reg, Operand::Register(32));
+            assert_eq!(rest, "");
         }
     }
 

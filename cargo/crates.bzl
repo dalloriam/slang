@@ -107,6 +107,15 @@ def raze_fetch_remote_crates():
     )
 
     _new_http_archive(
+        name = "raze__doc_comment__0_3_3",
+        url = "https://crates-io.s3-us-west-1.amazonaws.com/crates/doc-comment/doc-comment-0.3.3.crate",
+        type = "tar.gz",
+        strip_prefix = "doc-comment-0.3.3",
+
+        build_file = Label("//cargo/remote:doc-comment-0.3.3.BUILD"),
+    )
+
+    _new_http_archive(
         name = "raze__env_logger__0_7_1",
         url = "https://crates-io.s3-us-west-1.amazonaws.com/crates/env_logger/env_logger-0.7.1.crate",
         type = "tar.gz",
@@ -320,6 +329,24 @@ def raze_fetch_remote_crates():
         strip_prefix = "semver-parser-0.7.0",
 
         build_file = Label("//cargo/remote:semver-parser-0.7.0.BUILD"),
+    )
+
+    _new_http_archive(
+        name = "raze__snafu__0_6_8",
+        url = "https://crates-io.s3-us-west-1.amazonaws.com/crates/snafu/snafu-0.6.8.crate",
+        type = "tar.gz",
+        strip_prefix = "snafu-0.6.8",
+
+        build_file = Label("//cargo/remote:snafu-0.6.8.BUILD"),
+    )
+
+    _new_http_archive(
+        name = "raze__snafu_derive__0_6_8",
+        url = "https://crates-io.s3-us-west-1.amazonaws.com/crates/snafu-derive/snafu-derive-0.6.8.crate",
+        type = "tar.gz",
+        strip_prefix = "snafu-derive-0.6.8",
+
+        build_file = Label("//cargo/remote:snafu-derive-0.6.8.BUILD"),
     )
 
     _new_http_archive(

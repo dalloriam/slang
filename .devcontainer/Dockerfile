@@ -11,6 +11,7 @@ RUN apt-get update \
     && apt-get -y install git iproute2 procps lsb-release \
     && apt-get -y install curl pkg-config zip g++ zlib1g-dev unzip python \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && cargo install cargo-raze \
     #
     # Clean up
     && apt-get autoremove -y \

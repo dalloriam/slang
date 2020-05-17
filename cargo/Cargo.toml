@@ -13,6 +13,7 @@ clap = "3.0.0-beta.1"
 env_logger = "0.7"
 log = {version = "0.4.8", features = ["std"]}
 nom = "5"
+snafu = "0.6.8"
 
 [raze.crates.nom."5.1.1"]
 gen_buildrs = true
@@ -54,6 +55,13 @@ gen_buildrs = true
 additional_flags = [
     "--cfg=atomic_cas",
 ]
+
+[raze.crates.snafu.'0.6.8']
+gen_buildrs = true
+additional_flags = [
+    "--cfg=use_proc_macro"
+]
+data_attr = "glob([\"src/**\", \"README.md\"])"
 
 [raze]
 genmode = "Remote"

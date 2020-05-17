@@ -38,6 +38,23 @@ impl SymbolTable {
     pub fn add(&mut self, s: Symbol) {
         self.symbols.push(s)
     }
+
+    pub fn update_offset(&mut self, symbol_name: &str, offset: u32) {
+        for symbol in self.symbols.iter_mut() {
+            if &symbol.name == symbol_name {
+                symbol.offset = offset;
+            }
+        }
+    }
+
+    pub fn has_symbol(&self, s: &str) -> bool {
+        for symbol in self.symbols.iter() {
+            if &symbol.name == s {
+                return true;
+            }
+        }
+        false
+    }
 }
 
 impl LabelConverter for SymbolTable {

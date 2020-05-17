@@ -47,7 +47,7 @@ mod tests {
                 },
             ],
         };
-        let (rest, actual_program) = program("ld $0 #100\nld $1 #25\nadd $0 $1 $2\nhlt").unwrap();
+        let (rest, actual_program) = program("ld $0 100\nld $1 25\nadd $0 $1 $2\nhlt").unwrap();
         assert_eq!(rest, "");
         assert_eq!(expected_program, actual_program);
     }

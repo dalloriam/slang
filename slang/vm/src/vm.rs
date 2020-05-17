@@ -1,8 +1,22 @@
-use instructor::{Opcode, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX};
+use instructor::{Opcode, SysCall};
 
-#[derive(Default)]
+use snafu::{ResultExt, Snafu};
+
+const REGISTER_COUNT: usize = 33;
+const SYSCALL_REGISTER: usize = 32;
+
+#[derive(Debug, Snafu)]
+pub enum VMError {
+    LoadingFailed { source: crate::loader::LoadError },
+}
+
+type Result<T> = std::result::Result<T, VMError>;
+
 pub struct VM {
-    registers: [i32; 32],
+    // Registers 0-31 are regular registers. Reg 32 is the syscall register.
+    registers: [i32; REGISTER_COUNT],
+    ro_block: Vec<u8>,
+
     remainder: u32,
     equal_flag: bool,
     heap: Vec<u8>,
@@ -14,7 +28,8 @@ pub struct VM {
 impl VM {
     pub fn new() -> VM {
         VM {
-            registers: [0; 32],
+            registers: [0; REGISTER_COUNT],
+            ro_block: Vec::new(),
             remainder: 0,
             equal_flag: false,
             heap: Vec::new(),
@@ -33,12 +48,20 @@ impl VM {
         self.pc = 0;
     }
 
-    pub fn registers(&self) -> &[i32; 32] {
+    pub fn registers(&self) -> &[i32; 33] {
+        // TODO: Make this transparent. Make it so it returns regular registers (0-31).
+        // Return the other special registers from other methods.
         &self.registers
     }
 
-    pub fn load_bytecode(&mut self, mut bytecode: Vec<u8>) {
-        self.program.append(&mut bytecode)
+    pub fn load_bytecode(&mut self, bytecode: Vec<u8>) -> Result<()> {
+        let program = crate::loader::Program::new(bytecode).context(LoadingFailed)?;
+
+        // TODO: Use program struct directly instead of unpacking.
+        self.program = program.program_text;
+        self.ro_block = program.ro_block;
+
+        Ok(())
     }
 
     fn decode_opcode(&mut self) -> Opcode {
@@ -96,10 +119,10 @@ impl VM {
                 self.remainder = (register_1 % register_2) as u32;
             }
             Opcode::JMP => {
-                let target_idx = self.registers[self.next_8_bits() as usize];
+                // Short label jump.
+                let target_idx = self.next_16_bits() as u16;
 
-                // Eat last two bytes.
-                self.next_8_bits();
+                // Eat last byte.
                 self.next_8_bits();
 
                 self.pc = target_idx as usize;
@@ -120,6 +143,14 @@ impl VM {
                 self.next_8_bits();
 
                 self.pc -= value as usize;
+            }
+            Opcode::RJMP => {
+                // Long absolute jump.
+                let value = self.registers[self.next_8_bits() as usize];
+                // Eat last two bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+                self.pc = value as usize;
             }
             Opcode::EQ => {
                 let register_1 = self.registers[self.next_8_bits() as usize];
@@ -158,10 +189,9 @@ impl VM {
                 self.next_8_bits();
             }
             Opcode::JEQ => {
-                let register = self.next_8_bits() as usize;
-                let target = self.registers[register];
-                // Eat last two bytes.
-                self.next_8_bits();
+                let target = self.next_16_bits() as u16;
+
+                // Eat last byte.
                 self.next_8_bits();
 
                 if self.equal_flag {
@@ -191,6 +221,51 @@ impl VM {
                 self.next_8_bits();
                 self.next_8_bits();
             }
+            Opcode::SYSC => {
+                // Execute a syscall.
+                let call_id = SysCall::from(self.registers[SYSCALL_REGISTER]);
+                match call_id {
+                    SysCall::NOP => {}
+                    SysCall::PRINT => {
+                        // Print something.
+                        // Expects the RO offset of the string in $0.
+                        let data_slice = self.ro_block.as_slice();
+
+                        let start_offset = self.registers[0] as usize;
+                        let mut end_offset = start_offset;
+                        while end_offset < data_slice.len() && data_slice[end_offset] != 0 {
+                            end_offset += 1;
+                        }
+
+                        // The VM expects the string to be UTF-8 encoded.
+                        let result = std::str::from_utf8(&data_slice[start_offset..end_offset]);
+                        match result {
+                            Ok(s) => {
+                                print!("{}", s);
+                            }
+                            Err(e) => {
+                                eprintln!("Error decoding string for prts instruction: {:#?}", e);
+                                return false;
+                            }
+                        };
+                    }
+                    SysCall::EXIT => {
+                        return false;
+                    }
+                    _ => {
+                        println!(
+                            "Illegal Syscall ({}). Terminating.",
+                            self.registers[SYSCALL_REGISTER]
+                        );
+                        return false;
+                    }
+                }
+
+                // Eat last three bytes.
+                self.next_8_bits();
+                self.next_8_bits();
+                self.next_8_bits();
+            }
             Opcode::HLT => {
                 println!("HLT received. Halting.");
                 for _i in 0..3 {
@@ -200,19 +275,11 @@ impl VM {
                 return false;
             }
             Opcode::IGL => {
-                println!("Unknown opcode. Terminating");
+                println!("Illegal opcode. Terminating");
                 return false;
             }
         }
         true
-    }
-
-    fn parse_header(&mut self) -> bool {
-        if self.program.len() <= ELIS_HEADER_LENGTH {
-            return false;
-        }
-        self.pc = 64;
-        self.program[0..4] == ELIS_HEADER_PREFIX
     }
 
     pub fn run_once(&mut self) {
@@ -220,8 +287,6 @@ impl VM {
     }
 
     pub fn run(&mut self) {
-        assert!(self.parse_header()); // TODO: Handle invalid header properly.
-
         let mut keepalive = true;
         while keepalive {
             keepalive = self.execute_instruction();
@@ -316,8 +381,7 @@ mod tests {
     #[test]
     fn test_opcode_jmp() {
         let mut test_vm = VM::new();
-        test_vm.registers[0] = 10;
-        test_vm.program = vec![6, 0, 0, 0];
+        test_vm.program = vec![6, 0, 10, 0];
         test_vm.run_once();
 
         assert_eq!(test_vm.pc, 10);
@@ -451,9 +515,8 @@ mod tests {
     #[test]
     fn test_opcode_jeq() {
         let mut test_vm = VM::new();
-        test_vm.registers[0] = 7;
         test_vm.equal_flag = true;
-        test_vm.program = vec![15, 0, 0, 0, 16, 0, 0, 0, 16, 0, 0, 0];
+        test_vm.program = vec![15, 0, 7, 0, 16, 0, 0, 0, 16, 0, 0, 0];
         test_vm.run_once();
         assert_eq!(test_vm.pc, 7);
     }
@@ -488,5 +551,20 @@ mod tests {
         test_vm.registers[0] = 10;
         test_vm.run_once();
         assert_eq!(test_vm.registers[0], 9);
+    }
+}
+
+impl Default for VM {
+    fn default() -> VM {
+        return VM {
+            registers: [0; REGISTER_COUNT],
+            ro_block: Vec::new(),
+            remainder: 0,
+            equal_flag: false,
+            heap: Vec::new(),
+
+            pc: 0,
+            program: Vec::new(),
+        };
     }
 }

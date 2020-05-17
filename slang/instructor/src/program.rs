@@ -1,4 +1,4 @@
-use crate::{Instruction, INSTRUCTION_LENGTH_BYTES};
+use crate::Instruction;
 
 #[derive(Debug, PartialEq)]
 pub struct Program {

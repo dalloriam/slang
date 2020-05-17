@@ -3,6 +3,7 @@ mod label_converter;
 mod opcode;
 mod operand;
 mod program;
+mod syscall;
 
 pub const INSTRUCTION_LENGTH_BYTES: usize = 4;
 
@@ -14,10 +15,11 @@ pub use label_converter::LabelConverter;
 pub use opcode::Opcode;
 pub use operand::Operand;
 pub use program::Program;
+pub use syscall::SysCall;
 
 #[cfg(test)]
 mod tests {
-    use super::{Instruction, Opcode};
+    use super::Opcode;
 
     #[test]
     fn test_create_hlt() {

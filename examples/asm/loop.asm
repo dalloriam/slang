@@ -1,12 +1,13 @@
-ld $0 #1
-ld $1 #2
-ld $3 #11
+.data
+.text
+ld $0 1
+ld $1 2
+ld $3 11
 
-ld $10 #16
-ld $11 #36
-
-add $0 $1 $0
+begin: add $0 $1 $0
 eq  $0 $3
-jeq $11
-jmpb $10
-hlt
+jeq @end
+jmp @begin
+
+end: ld $v0 2
+syscall

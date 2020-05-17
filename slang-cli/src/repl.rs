@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::fs;
 use std::io;
 use std::io::Write;
@@ -27,8 +28,8 @@ fn run_command(vm: &mut VM, cmd: &str) -> Result<bool> {
             let source_code = String::from_utf8(data)?;
 
             let mut asm = Assembler::new();
-            let program = asm.assemble(&source_code);
-            vm.load_bytecode(program);
+            let program = asm.assemble(&source_code)?;
+            vm.load_bytecode(program)?;
             println!("Program loaded.")
         }
         ".program" => {
@@ -39,7 +40,9 @@ fn run_command(vm: &mut VM, cmd: &str) -> Result<bool> {
         }
         ".reg" => {
             println!("Current VM state:");
-            println!("{:#?}", vm.registers());
+            let slice_ref: [i32; 32] = vm.registers()[0..32].try_into().unwrap();
+            println!("{:#?}", slice_ref);
+            // TODO: Print special registers also.
             println!("End of listing");
         }
         ".run" => {
@@ -58,8 +61,8 @@ fn run_command(vm: &mut VM, cmd: &str) -> Result<bool> {
         _ => {
             // Convert the hex to bytes, load it in the VM, and execute the instruction.
             let mut asm = Assembler::new();
-            let program = asm.assemble(cmd);
-            vm.load_bytecode(program);
+            let program = asm.assemble(cmd)?;
+            vm.load_bytecode(program)?;
             vm.run_once();
         }
     }
