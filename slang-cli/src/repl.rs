@@ -29,7 +29,7 @@ fn run_command(vm: &mut VM, cmd: &str) -> Result<bool> {
 
             let mut asm = Assembler::new();
             let program = asm.assemble(&source_code)?;
-            vm.load_bytecode(program);
+            vm.load_bytecode(program)?;
             println!("Program loaded.")
         }
         ".program" => {
@@ -62,7 +62,7 @@ fn run_command(vm: &mut VM, cmd: &str) -> Result<bool> {
             // Convert the hex to bytes, load it in the VM, and execute the instruction.
             let mut asm = Assembler::new();
             let program = asm.assemble(cmd)?;
-            vm.load_bytecode(program);
+            vm.load_bytecode(program)?;
             vm.run_once();
         }
     }

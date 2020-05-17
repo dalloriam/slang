@@ -2,6 +2,7 @@
 hello: .asciiz "Hello everyone!"
 
 .text
+ld $0 @hello
 ld $v0 1
 syscall
 

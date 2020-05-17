@@ -38,7 +38,9 @@ impl Instruction {
 
     /// Represent the instruction as a sequence of bytes.
     pub fn write_bytes<T: LabelConverter>(&self, w: &mut Vec<u8>, converter: &T) {
-        w.push(self.opcode.unwrap() as u8); // TODO HACK IMPORTANT: REMOVE UNWRAP HERE BEFORE USING DIRECTIVES.
+        assert!(self.opcode.is_some()); // Cannot fail from user input. If this assert trips, it means the assembler has a bug somewhere.
+
+        w.push(self.opcode.unwrap() as u8);
 
         // Write all instructions to the stream & gather byte count.
         let cur_size = &[&self.operand_1, &self.operand_2, &self.operand_3]

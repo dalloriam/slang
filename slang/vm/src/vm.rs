@@ -2,12 +2,22 @@ use byteorder::{LittleEndian, ReadBytesExt};
 
 use instructor::{Opcode, SysCall, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX};
 
+use snafu::{ensure, ResultExt, Snafu};
+
 const REGISTER_COUNT: usize = 33;
 const SYSCALL_REGISTER: usize = 32;
+
+#[derive(Debug, Snafu)]
+pub enum VMError {
+    LoadingFailed { source: crate::loader::LoadError },
+}
+
+type Result<T> = std::result::Result<T, VMError>;
 
 pub struct VM {
     // Registers 0-31 are regular registers. Reg 32 is the syscall register.
     registers: [i32; REGISTER_COUNT],
+    ro_block: Vec<u8>,
 
     remainder: u32,
     equal_flag: bool,
@@ -21,6 +31,7 @@ impl VM {
     pub fn new() -> VM {
         VM {
             registers: [0; REGISTER_COUNT],
+            ro_block: Vec::new(),
             remainder: 0,
             equal_flag: false,
             heap: Vec::new(),
@@ -40,25 +51,19 @@ impl VM {
     }
 
     pub fn registers(&self) -> &[i32; 33] {
+        // TODO: Make this transparent. Make it so it returns regular registers (0-31).
+        // Return the other special registers from other methods.
         &self.registers
     }
 
-    pub fn load_bytecode(&mut self, mut bytecode: Vec<u8>) {
-        // TODO: Errors.
+    pub fn load_bytecode(&mut self, mut bytecode: Vec<u8>) -> Result<()> {
+        let program = crate::loader::Program::new(bytecode).context(LoadingFailed)?;
 
-        // Validate the bytecode header.
-        // TODO: Refactor header parsing to other method.
-        assert!(bytecode.len() >= ELIS_HEADER_LENGTH);
-        assert_eq!(bytecode[0..4], ELIS_HEADER_PREFIX);
-        let ro_section_size = (&bytecode[4..8]).read_u32::<LittleEndian>().unwrap() as usize;
+        // TODO: Use program struct directly instead of unpacking.
+        self.program = program.program_text;
+        self.ro_block = program.ro_block;
 
-        // TODO: Bounds check.
-        let ro_section = &bytecode[ELIS_HEADER_LENGTH..ELIS_HEADER_LENGTH + ro_section_size];
-        println!("RO Section: {:x?}", ro_section);
-
-        let mut new_program = Vec::new();
-        new_program.extend_from_slice(&bytecode[ELIS_HEADER_LENGTH + ro_section_size..]);
-        self.program = new_program;
+        Ok(())
     }
 
     fn decode_opcode(&mut self) -> Opcode {
@@ -90,13 +95,11 @@ impl VM {
 
         match self.decode_opcode() {
             Opcode::LOAD => {
-                println!("LOAD");
                 let register = self.next_8_bits() as usize;
                 let value = self.next_16_bits() as u16;
                 self.registers[register] = value as i32;
             }
             Opcode::ADD => {
-                println!("ADD");
                 let register_1 = self.registers[self.next_8_bits() as usize];
                 let register_2 = self.registers[self.next_8_bits() as usize];
                 self.registers[self.next_8_bits() as usize] = register_1 + register_2;
@@ -120,7 +123,6 @@ impl VM {
             Opcode::JMP => {
                 // Short label jump.
                 let target_idx = self.next_16_bits() as u16;
-                println!("JMP to {}", target_idx);
 
                 // Eat last byte.
                 self.next_8_bits();
@@ -153,14 +155,12 @@ impl VM {
                 self.pc = value as usize;
             }
             Opcode::EQ => {
-                println!("EQ");
                 let register_1 = self.registers[self.next_8_bits() as usize];
                 let register_2 = self.registers[self.next_8_bits() as usize];
                 self.equal_flag = register_1 == register_2;
                 self.next_8_bits();
             }
             Opcode::NEQ => {
-                println!("NEQ");
                 let register_1 = self.registers[self.next_8_bits() as usize];
                 let register_2 = self.registers[self.next_8_bits() as usize];
                 self.equal_flag = register_1 != register_2;
@@ -191,7 +191,6 @@ impl VM {
                 self.next_8_bits();
             }
             Opcode::JEQ => {
-                println!("JEQ");
                 let target = self.next_16_bits() as u16;
 
                 // Eat last byte.
@@ -230,11 +229,29 @@ impl VM {
                 match call_id {
                     SysCall::NOP => {}
                     SysCall::PRINT => {
-                        // Print something
-                        println!("Print syscall");
+                        // Print something.
+                        // Expects the RO offset of the string in $0.
+                        let data_slice = self.ro_block.as_slice();
+
+                        let start_offset = self.registers[0] as usize;
+                        let mut end_offset = start_offset;
+                        while end_offset < data_slice.len() && data_slice[end_offset] != 0 {
+                            end_offset += 1;
+                        }
+
+                        // The VM expects the string to be UTF-8 encoded.
+                        let result = std::str::from_utf8(&data_slice[start_offset..end_offset]);
+                        match result {
+                            Ok(s) => {
+                                print!("{}", s);
+                            }
+                            Err(e) => {
+                                eprintln!("Error decoding string for prts instruction: {:#?}", e);
+                                return false;
+                            }
+                        };
                     }
                     SysCall::EXIT => {
-                        println!("Exit syscall");
                         return false;
                     }
                     _ => {
@@ -543,6 +560,7 @@ impl Default for VM {
     fn default() -> VM {
         return VM {
             registers: [0; REGISTER_COUNT],
+            ro_block: Vec::new(),
             remainder: 0,
             equal_flag: false,
             heap: Vec::new(),

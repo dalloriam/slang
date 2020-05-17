@@ -24,7 +24,7 @@ impl CLIRoot {
                 // Compile & load the program, and start the VM.
                 let program = load_program(&f)?;
                 let mut vm = VM::new();
-                vm.load_bytecode(program);
+                vm.load_bytecode(program)?;
                 vm.run();
                 Ok(())
             }

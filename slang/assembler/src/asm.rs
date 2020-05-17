@@ -1,8 +1,11 @@
 use std::fmt;
+use std::io;
 
 use byteorder::{LittleEndian, WriteBytesExt};
 
-use instructor::{Instruction, Operand, Program, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX};
+use instructor::{
+    Instruction, Operand, Program, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX, INSTRUCTION_LENGTH_BYTES,
+};
 
 use snafu::{ensure, ResultExt, Snafu};
 
@@ -29,6 +32,10 @@ pub enum AssemblerError {
     },
 
     InvalidAsciizDeclaration,
+
+    InvalidReadonlyBlockLength {
+        source: io::Error,
+    },
 
     #[snafu(display("Symbol '{}' defined multiple times", name))]
     SymbolAlreadyDefined {
@@ -143,11 +150,6 @@ impl Assembler {
         Ok(())
     }
 
-    fn extract_directives(&mut self, program: &Program) -> Result<()> {
-        for instruction in program.instructions.iter() {}
-        Ok(())
-    }
-
     /// Phase one is the assembler pre-processing routine.
     ///
     /// It is mainly tasked with extracting labels and directives.
@@ -195,28 +197,36 @@ impl Assembler {
 
             if (instruction.opcode.is_some()) {
                 // Only offset instructions that will be in the final program.
-                current_label_offset += 4; // TODO: Extract 4 as an INSTRUCTION_WIDTH constant.
+                current_label_offset += INSTRUCTION_LENGTH_BYTES as u32;
             }
         }
         Ok(())
     }
 
-    fn phase_two(&mut self, program: &Program) -> Vec<u8> {
-        self.current_phase = AssemblerPhase::Second;
-        // TODO: Pre-allocate for program size.
-        let mut compiled_prg = Vec::new();
-
-        // Header generation.
-        // TODO: Refactor in separate method.
+    fn write_header(&self, program_vector: &mut Vec<u8>) -> Result<()> {
         // 4 bytes for magic number
-        compiled_prg.extend_from_slice(&ELIS_HEADER_PREFIX);
-        compiled_prg
-            .write_u32::<LittleEndian>(self.readonly_block.len() as u32)
-            .unwrap(); // TODO: Handle
+        program_vector.extend_from_slice(&ELIS_HEADER_PREFIX);
 
+        // 4 other bytes for the length of the data block.
+        program_vector
+            .write_u32::<LittleEndian>(self.readonly_block.len() as u32)
+            .context(InvalidReadonlyBlockLength)?;
+
+        // Padding the remaining header length.
         for _i in 8..ELIS_HEADER_LENGTH {
-            compiled_prg.push(0 as u8);
+            program_vector.push(0 as u8);
         }
+
+        Ok(())
+    }
+
+    fn phase_two(&mut self, program: &Program) -> Result<Vec<u8>> {
+        self.current_phase = AssemblerPhase::Second;
+        let mut compiled_prg = Vec::with_capacity(
+            ELIS_HEADER_LENGTH + self.readonly_block.len() + program.instructions.len(),
+        );
+
+        self.write_header(&mut compiled_prg)?;
 
         // Write the ro block to the program.
         compiled_prg.extend_from_slice(&self.readonly_block);
@@ -229,7 +239,7 @@ impl Assembler {
             }
         }
 
-        compiled_prg
+        Ok(compiled_prg)
     }
 
     pub fn assemble(&mut self, raw: &str) -> Result<Vec<u8>> {
@@ -237,7 +247,7 @@ impl Assembler {
             Ok(prog) => {
                 // Actual assembly steps.
                 self.phase_one(&prog)?;
-                return Ok(self.phase_two(&prog));
+                self.phase_two(&prog)
             }
             Err(e) => Err(e),
         }

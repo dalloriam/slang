@@ -1,3 +1,5 @@
+use std::io;
+
 use instructor::Operand;
 
 use nom::{
@@ -9,7 +11,15 @@ use nom::{
     IResult,
 };
 
+use snafu::{ResultExt, Snafu};
+
 use crate::{common::whitespace, label_parser as label};
+
+#[derive(Debug, Snafu)]
+enum ParseError {
+    InvalidRegisterNumber { source: std::num::ParseIntError },
+    InvalidRegisterRange,
+}
 
 pub fn operand(i: &str) -> IResult<&str, Operand> {
     alt((
@@ -46,7 +56,13 @@ fn register(i: &str) -> IResult<&str, Operand> {
         alt((
             map_res(
                 delimited(whitespace, preceded(char('$'), digit1), whitespace),
-                |byte_val: &str| byte_val.parse::<u8>(), // TODO: Validate that the specified register is 0-31
+                |byte_val: &str| {
+                    let v = byte_val.parse::<u8>().context(InvalidRegisterNumber)?;
+                    if v > 31 {
+                        return Err(ParseError::InvalidRegisterRange);
+                    }
+                    return Ok(v);
+                },
             ),
             map(
                 delimited(whitespace, preceded(char('$'), tag("v0")), whitespace),
@@ -90,9 +106,17 @@ mod tests {
             let (_rest, reg) = register(" $18").unwrap();
             assert_eq!(reg, Operand::Register(18));
         }
-
         {
             assert!(register("$400").is_err());
+        }
+        {
+            assert!(register("$32").is_err());
+        }
+        {
+            // Test parsing of special register $v0 (used for syscalls).
+            let (rest, reg) = register("$v0").unwrap();
+            assert_eq!(reg, Operand::Register(32));
+            assert_eq!(rest, "");
         }
     }
 

@@ -11,7 +11,7 @@ _clippy target:
     @cd {{target}} && cargo check && cargo clippy
 
 lint:
-    @just _clippy repl
+    @just _clippy slang-cli
     @just _clippy slang/vm
     @just _clippy slang/instructor
     @just _clippy slang/assembler
