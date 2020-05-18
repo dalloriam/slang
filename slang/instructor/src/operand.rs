@@ -45,8 +45,10 @@ impl Operand {
                 2
             }
             Operand::Address((offset, reg)) => {
-                w.push(*offset);
+                // Swap the address tuple to allow the vm to do
+                // let ptr = self.registers[self.next_8_bits()] + self.next_8_bits();
                 w.push(*reg);
+                w.push(*offset);
                 2
             }
             Operand::Str(_s) => panic!(

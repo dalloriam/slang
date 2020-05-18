@@ -21,11 +21,11 @@ enum ParseError {
 
 pub fn operand(i: &str) -> IResult<&str, Operand> {
     alt((
+        address,
         integer,
         register,
         map(label::label_usage, |lbl| Operand::Label(lbl)),
         string,
-        address,
     ))(i)
 }
 

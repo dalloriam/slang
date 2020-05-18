@@ -29,6 +29,16 @@ impl Heap {
         }
     }
 
+    #[inline]
+    pub fn memory(&self) -> &[u8] {
+        &self.memory
+    }
+
+    #[inline]
+    pub fn memory_mut(&mut self) -> &mut [u8] {
+        &mut self.memory
+    }
+
     fn align(n: usize) -> usize {
         // Align the provided size value with the platform size.
         // TODO: Implement.

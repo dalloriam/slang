@@ -75,6 +75,12 @@ pub enum Opcode {
     /// Load constant word - Loads a word (i32) from the readonly section.
     LCW,
 
+    /// Set word - Writes a word (i32) from memory.
+    SW,
+
+    /// Load word - Loads a word from memory and writes it to the first register.
+    LW,
+
     /// Illegal Instruction.
     IGL,
 }
@@ -106,6 +112,8 @@ impl<'a> From<&'a str> for Opcode {
             "pop" => Opcode::POP,
             "move" => Opcode::MOV,
             "lcw" => Opcode::LCW,
+            "sw" => Opcode::SW,
+            "lw" => Opcode::LW,
             _ => Opcode::IGL,
         }
     }
@@ -138,6 +146,8 @@ impl From<u8> for Opcode {
             21 => Opcode::POP,
             22 => Opcode::MOV,
             23 => Opcode::LCW,
+            24 => Opcode::SW,
+            25 => Opcode::LW,
             _ => Opcode::IGL,
         }
     }

@@ -1,10 +1,15 @@
 .data
 .text
-ld $0 4
 ld $v0 3
+ld $0 4
 syscall
+move $v0 $1
 
-move $v0 $5
+ld $0 45
+sw $0 0($1)
+
+lw $10 0($1)
+
 ld $v0 4
-move $5 $0
+move $1 $0
 syscall
