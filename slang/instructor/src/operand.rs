@@ -16,6 +16,9 @@ pub enum Operand {
 
     /// String operand.
     Str(String),
+
+    /// Address operand. (offset + register)
+    Address((u8, u8)),
 }
 
 impl Operand {
@@ -39,6 +42,11 @@ impl Operand {
                 wtr.write_u16::<LittleEndian>(offset).unwrap(); // TODO: Handle.
                 w.push(wtr[1]);
                 w.push(wtr[0]);
+                2
+            }
+            Operand::Address((offset, reg)) => {
+                w.push(*offset);
+                w.push(*reg);
                 2
             }
             Operand::Str(_s) => panic!(
