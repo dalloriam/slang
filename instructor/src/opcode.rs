@@ -79,6 +79,12 @@ pub enum Opcode {
 
     /// Load word - Loads a word from memory and writes it to the first register.
     LW,
+
+    // Set byte - Writes a single byte to memory.
+    SB,
+
+    // Load byte - Loads a single byte from memory.
+    LB,
 }
 
 impl<'a> From<&'a str> for Opcode {
@@ -109,6 +115,8 @@ impl<'a> From<&'a str> for Opcode {
             "lcw" => Opcode::LCW,
             "sw" => Opcode::SW,
             "lw" => Opcode::LW,
+            "sb" => Opcode::SB,
+            "lb" => Opcode::LB,
             _ => Opcode::IGL,
         }
     }
@@ -142,6 +150,8 @@ impl From<u8> for Opcode {
             23 => Opcode::LCW,
             24 => Opcode::SW,
             25 => Opcode::LW,
+            26 => Opcode::SB,
+            27 => Opcode::LB,
             _ => Opcode::IGL,
         }
     }

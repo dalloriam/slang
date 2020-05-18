@@ -26,7 +26,7 @@ pub struct VM {
     stack: Vec<i32>,
     heap: Heap,
 
-    pc: usize,
+    pub pc: usize,
     program: Vec<u8>,
 }
 
@@ -125,27 +125,83 @@ impl VM {
                 let register = self.next_8_bits() as usize;
                 let value = self.next_16_bits() as u16;
                 self.registers[register] = value as i32;
+
+                log::trace!("ld {:#06x} => ${}", value, register);
             }
             Opcode::ADD => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.registers[self.next_8_bits() as usize] = register_1 + register_2;
+                let reg_1 = self.next_8_bits() as usize;
+                let reg_2 = self.next_8_bits() as usize;
+                let reg_3 = self.next_8_bits() as usize;
+
+                let res = self.registers[reg_1] + self.registers[reg_2];
+                log::trace!(
+                    "add ${}/{:#06x} ${}/{:#06x} => ${}/{:#06x}",
+                    reg_1,
+                    self.registers[reg_1],
+                    reg_2,
+                    self.registers[reg_2],
+                    reg_3,
+                    res
+                );
+
+                self.registers[reg_3] = res;
             }
             Opcode::SUB => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.registers[self.next_8_bits() as usize] = register_1 - register_2;
+                let reg_1 = self.next_8_bits() as usize;
+                let reg_2 = self.next_8_bits() as usize;
+                let reg_3 = self.next_8_bits() as usize;
+
+                let res = self.registers[reg_1] - self.registers[reg_2];
+
+                log::trace!(
+                    "sub ${}/{:#06x} ${}/{:#06x} => ${}/{:#06x}",
+                    reg_1,
+                    self.registers[reg_1],
+                    reg_2,
+                    self.registers[reg_2],
+                    reg_3,
+                    res
+                );
+
+                self.registers[reg_3] = res;
             }
             Opcode::MUL => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.registers[self.next_8_bits() as usize] = register_1 * register_2;
+                let reg_1 = self.next_8_bits() as usize;
+                let reg_2 = self.next_8_bits() as usize;
+                let reg_3 = self.next_8_bits() as usize;
+
+                let res = self.registers[reg_1] * self.registers[reg_2];
+
+                log::trace!(
+                    "mul ${}/{:#06x} ${}/{:#06x} => ${}/{:#06x}",
+                    reg_1,
+                    self.registers[reg_1],
+                    reg_2,
+                    self.registers[reg_2],
+                    reg_3,
+                    res
+                );
+
+                self.registers[reg_3] = res;
             }
             Opcode::DIV => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.registers[self.next_8_bits() as usize] = register_1 / register_2;
-                self.remainder = (register_1 % register_2) as u32;
+                let reg_1 = self.next_8_bits() as usize;
+                let reg_2 = self.next_8_bits() as usize;
+                let reg_3 = self.next_8_bits() as usize;
+
+                self.registers[reg_3] = self.registers[reg_1] / self.registers[reg_2];
+                self.remainder = (self.registers[reg_1] % self.registers[reg_2]) as u32;
+
+                log::trace!(
+                    "div ${}/{:#06x} ${}/{:#06x} => ${}/{:#06x}r{}",
+                    reg_1,
+                    self.registers[reg_1],
+                    reg_2,
+                    self.registers[reg_2],
+                    reg_3,
+                    self.registers[reg_3],
+                    self.remainder
+                );
             }
             Opcode::JMP => {
                 // Short label jump.
@@ -155,6 +211,8 @@ impl VM {
                 self.next_8_bits();
 
                 self.pc = target_idx as usize;
+
+                log::trace!("jmp {:#06x}", target_idx);
             }
             Opcode::JMPF => {
                 let value = self.next_16_bits() as u16;
@@ -164,6 +222,8 @@ impl VM {
 
                 // TODO: Overflow protection.
                 self.pc += value as usize;
+
+                log::trace!("jmpf {:#06x}", value);
             }
             Opcode::JMPB => {
                 let value = self.next_16_bits() as u16;
@@ -172,50 +232,116 @@ impl VM {
                 self.next_8_bits();
 
                 self.pc -= value as usize;
+
+                log::trace!("jmpb {:#06x}", value);
             }
             Opcode::RJMP => {
                 // Long absolute jump.
-                let value = self.registers[self.next_8_bits() as usize];
+                let reg = self.next_8_bits() as usize;
+                let value = self.registers[reg];
+
                 // Eat last two bytes.
                 self.next_8_bits();
                 self.next_8_bits();
                 self.pc = value as usize;
+
+                log::trace!("rjmp ${}/{:#06x}", reg, value);
             }
             Opcode::EQ => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 == register_2;
+                let reg_1 = self.next_8_bits() as usize;
+                let reg_2 = self.next_8_bits() as usize;
+
+                self.equal_flag = self.registers[reg_1] == self.registers[reg_2];
                 self.next_8_bits();
+
+                log::trace!(
+                    "eq ${}/{:#06x} ${}/{:#06x} => {}",
+                    reg_1,
+                    self.registers[reg_1],
+                    reg_2,
+                    self.registers[reg_2],
+                    self.equal_flag
+                );
             }
             Opcode::NEQ => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 != register_2;
+                let reg_1 = self.next_8_bits() as usize;
+                let reg_2 = self.next_8_bits() as usize;
+
+                self.equal_flag = self.registers[reg_1] != self.registers[reg_2];
                 self.next_8_bits();
+
+                log::trace!(
+                    "neq ${}/{:#06x} ${}/{:#06x} => {}",
+                    reg_1,
+                    self.registers[reg_1],
+                    reg_2,
+                    self.registers[reg_2],
+                    self.equal_flag
+                );
             }
             Opcode::GT => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 > register_2;
+                let reg_1 = self.next_8_bits() as usize;
+                let reg_2 = self.next_8_bits() as usize;
+
+                self.equal_flag = self.registers[reg_1] > self.registers[reg_2];
                 self.next_8_bits();
+
+                log::trace!(
+                    "gt ${}/{:#06x} ${}/{:#06x} => {}",
+                    reg_1,
+                    self.registers[reg_1],
+                    reg_2,
+                    self.registers[reg_2],
+                    self.equal_flag
+                );
             }
             Opcode::LT => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 < register_2;
+                let reg_1 = self.next_8_bits() as usize;
+                let reg_2 = self.next_8_bits() as usize;
+
+                self.equal_flag = self.registers[reg_1] < self.registers[reg_2];
                 self.next_8_bits();
+
+                log::trace!(
+                    "lt ${}/{:#06x} ${}/{:#06x} => {}",
+                    reg_1,
+                    self.registers[reg_1],
+                    reg_2,
+                    self.registers[reg_2],
+                    self.equal_flag
+                );
             }
             Opcode::GTQ => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 >= register_2;
+                let reg_1 = self.next_8_bits() as usize;
+                let reg_2 = self.next_8_bits() as usize;
+
+                self.equal_flag = self.registers[reg_1] >= self.registers[reg_2];
                 self.next_8_bits();
+
+                log::trace!(
+                    "gtq ${}/{:#06x} ${}/{:#06x} => {}",
+                    reg_1,
+                    self.registers[reg_1],
+                    reg_2,
+                    self.registers[reg_2],
+                    self.equal_flag
+                );
             }
             Opcode::LTQ => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 <= register_2;
+                let reg_1 = self.next_8_bits() as usize;
+                let reg_2 = self.next_8_bits() as usize;
+
+                self.equal_flag = self.registers[reg_1] <= self.registers[reg_2];
                 self.next_8_bits();
+
+                log::trace!(
+                    "ltq ${}/{:#06x} ${}/{:#06x} => {}",
+                    reg_1,
+                    self.registers[reg_1],
+                    reg_2,
+                    self.registers[reg_2],
+                    self.equal_flag
+                );
             }
             Opcode::JEQ => {
                 let target = self.next_16_bits() as u16;
@@ -226,16 +352,22 @@ impl VM {
                 if self.equal_flag {
                     self.pc = target as usize;
                 }
+
+                log::trace!("jeq {:#06x} => {}", target, self.equal_flag);
             }
             Opcode::INC => {
-                self.registers[self.next_8_bits() as usize] += 1;
+                let reg = self.next_8_bits() as usize;
+                self.registers[reg] += 1;
+                log::trace!("inc ${}/{}", reg, self.registers[reg]);
 
                 // Eat last two bytes.
                 self.next_8_bits();
                 self.next_8_bits();
             }
             Opcode::DEC => {
-                self.registers[self.next_8_bits() as usize] -= 1;
+                let reg = self.next_8_bits() as usize;
+                self.registers[reg] -= 1;
+                log::trace!("dec ${}/{}", reg, self.registers[reg]);
 
                 // Eat last two bytes.
                 self.next_8_bits();
@@ -243,6 +375,7 @@ impl VM {
             }
             Opcode::SYSC => {
                 // Execute a syscall.
+                log::trace!("syscall {:#06x}", self.registers[SYSCALL_REGISTER]);
                 let call_id = SysCall::from(self.registers[SYSCALL_REGISTER]);
                 let should_continue = execute_syscall(call_id, self);
 
@@ -256,7 +389,11 @@ impl VM {
                 self.next_8_bits();
             }
             Opcode::PUSH => {
-                let value = self.registers[self.next_8_bits() as usize];
+                let reg = self.next_8_bits() as usize;
+                let value = self.registers[reg];
+
+                log::trace!("push ${}/{:#06x}", reg, value);
+
                 self.stack.push(value);
 
                 // Eat last two bytes.
@@ -264,16 +401,27 @@ impl VM {
                 self.next_8_bits();
             }
             Opcode::POP => {
+                let reg = self.next_8_bits() as usize;
                 let value = self.stack.pop().unwrap_or(0);
-                self.registers[self.next_8_bits() as usize] = value;
+                log::trace!("pop ${}/{:#06x}", reg, value);
+                self.registers[reg] = value;
 
                 // Eat last two bytes.
                 self.next_8_bits();
                 self.next_8_bits();
             }
             Opcode::MOV => {
-                let value = self.registers[self.next_8_bits() as usize];
-                self.registers[self.next_8_bits() as usize] = value;
+                let reg_1 = self.next_8_bits() as usize;
+                let reg_2 = self.next_8_bits() as usize;
+
+                log::trace!(
+                    "mov ${}/{:#06x} => ${}",
+                    reg_1,
+                    self.registers[reg_1],
+                    reg_2
+                );
+
+                self.registers[reg_2] = self.registers[reg_1];
                 // Eat last byte.
                 self.next_8_bits();
             }
@@ -281,16 +429,23 @@ impl VM {
                 // Load constant word.
                 let register_index = self.next_8_bits() as usize;
                 let offset = self.next_16_bits() as usize;
-                self.registers[register_index] = (&self.ro_block[offset..offset + 4])
+                let val = (&self.ro_block[offset..offset + 4])
                     .read_i32::<LittleEndian>()
                     .unwrap();
+
+                log::trace!("lcw @{:#06x}/{:#06x} => ${}", offset, val, register_index);
+
+                self.registers[register_index] = val;
             }
             Opcode::SW => {
                 // Set word.
-                let value_to_write = self.registers[self.next_8_bits() as usize];
+                let reg = self.next_8_bits() as usize;
+                let value_to_write = self.registers[reg];
 
                 let ptr = self.registers[self.next_8_bits() as usize] as usize
                     + self.next_8_bits() as usize;
+
+                log::trace!("sw ${}/{:#06x} => @{:#06x}", reg, value_to_write, ptr);
 
                 let mut slice = &mut self.heap.memory_mut()[ptr..ptr + 4];
                 slice.write_i32::<LittleEndian>(value_to_write).unwrap(); // TODO: Catch error.
@@ -303,7 +458,36 @@ impl VM {
 
                 let mut slice = &self.heap.memory()[ptr..ptr + 4];
                 // TODO: Catch error
-                self.registers[target_register] = slice.read_i32::<LittleEndian>().unwrap()
+                self.registers[target_register] = slice.read_i32::<LittleEndian>().unwrap();
+
+                log::trace!(
+                    "lw @{:#06x} => ${}/{:#06x}",
+                    ptr,
+                    target_register,
+                    self.registers[target_register]
+                );
+            }
+            Opcode::SB => {
+                // Set byte.
+                let reg = self.next_8_bits() as usize;
+                let value_to_write = self.registers[reg] as u8; // TODO: Ensure < 256
+
+                let ptr = self.registers[self.next_8_bits() as usize] as usize
+                    + self.next_8_bits() as usize;
+
+                log::trace!("sb ${}/{:#04x} => @{:#06x}", reg, value_to_write, ptr);
+                self.heap.memory_mut()[ptr] = value_to_write;
+            }
+            Opcode::LB => {
+                // Load byte.
+                let target_register = self.next_8_bits() as usize;
+                let ptr = self.registers[self.next_8_bits() as usize] as usize
+                    + self.next_8_bits() as usize;
+
+                let val = self.heap.memory()[ptr];
+                self.registers[target_register] = val as i32;
+
+                log::trace!("lb @{:#06x} => #{}/{:#06x}", ptr, target_register, val);
             }
             Opcode::IGL => {
                 println!("Illegal opcode. Terminating");
@@ -318,16 +502,19 @@ impl VM {
     }
 
     pub fn run(&mut self) {
+        let start = std::time::Instant::now();
         let mut keepalive = true;
         while keepalive {
             keepalive = self.execute_instruction();
         }
+        let dur = std::time::Instant::now().duration_since(start);
+        println!("Done in {}us", dur.as_micros());
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+    use byteorder::{LittleEndian, WriteBytesExt};
 
     use super::VM;
 
@@ -644,6 +831,37 @@ mod tests {
         // Try to fetch it back with an lw instruction.
         test_vm.registers[1] = 4; // Pointer to the memory location containing our number.
         test_vm.program = vec![25, 0, 1, 0];
+
+        assert_eq!(test_vm.registers[0], 0);
+        test_vm.run_once();
+        assert_eq!(test_vm.registers[0], 42);
+    }
+
+    #[test]
+    fn test_opcode_sb() {
+        let mut test_vm = VM::new();
+
+        test_vm.heap_mut().alloc(4);
+
+        assert_eq!(test_vm.heap().memory()[3], 0);
+
+        test_vm.registers[0] = 42;
+        test_vm.registers[1] = 3;
+        test_vm.program = vec![26, 0, 1, 0];
+        test_vm.run_once();
+
+        assert_eq!(test_vm.heap().memory()[3], 42)
+    }
+
+    #[test]
+    fn test_opcode_lb() {
+        let mut test_vm = VM::new();
+
+        test_vm.heap_mut().alloc(4);
+        test_vm.heap_mut().memory_mut()[2] = 42;
+
+        test_vm.registers[1] = 2;
+        test_vm.program = vec![27, 0, 1, 0];
 
         assert_eq!(test_vm.registers[0], 0);
         test_vm.run_once();

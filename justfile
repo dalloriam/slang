@@ -23,4 +23,7 @@ test:
     @just _bzl test //...
 
 run +args="":
-    ./bazel-bin/slang-cli/slang_cli {{args}}
+    @cargo run -- {{args}}
+
+trace +args="":
+    @RUST_LOG=trace just run {{args}}

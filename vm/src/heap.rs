@@ -52,7 +52,11 @@ impl Heap {
     }
 
     pub fn alloc(&mut self, mut size: usize) -> usize {
+        log::trace!("received request to allocate {}b", size);
+
         size = Heap::align(size);
+
+        log::trace!("aligned to {}b", size);
 
         let idx = match self
             .index
@@ -62,6 +66,7 @@ impl Heap {
             Some(i) => {
                 // We were able to find a block of free memory to re-allocate.
                 // No memory resize necessary.
+                log::trace!("re-allocated block id. {}", i);
                 self.index[i].is_free = false;
                 i
             }
@@ -76,26 +81,39 @@ impl Heap {
                 // Afterwards, we extend the available memory.
                 self.memory.resize(self.memory.len() + size, 0);
 
+                log::trace!("allocated a new block");
+
                 block_id
             }
         };
 
-        self.index[idx].start_index
+        let ptr = self.index[idx].start_index;
+
+        log::trace!("returned pointer [{:#06x}]", ptr);
+
+        ptr
     }
 
     pub fn free(&mut self, ptr: usize) {
+        log::trace!("received request to free [{:#06x}]", ptr);
         let idx = match self.index.iter().position(|e| e.start_index == ptr) {
             Some(i) => i,
-            None => panic!("Invalid free"),
+            None => {
+                log::error!("invalid free of [{:#06x}]", ptr);
+                panic!("Invalid free")
+            }
         };
 
         {
             let node = self.index.get_mut(idx).unwrap();
             if node.is_free {
+                log::error!("double free of [{:#06x}]", ptr);
                 panic!("Double free");
             }
             node.is_free = true;
         }
+
+        log::trace!("block id. {} was marked free", idx);
 
         // Compaction.
         // We remove all data allocated to all free contiguous memory blocks, starting from the left.
@@ -107,6 +125,7 @@ impl Heap {
                 break;
             }
         }
+        log::trace!("shrinking by {}b", amt_to_shrink);
         self.memory.resize(self.memory.len() - amt_to_shrink, 0);
     }
 }

@@ -13,3 +13,6 @@ lw $10 0($1)
 ld $v0 4
 move $1 $0
 syscall
+
+ld $v0 2
+syscall
