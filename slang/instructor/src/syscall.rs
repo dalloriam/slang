@@ -14,6 +14,9 @@ pub enum SysCall {
     /// Writes the start address of the allocated memory in $v0.
     ALLOC,
 
+    /// Free. Frees memory associated to the pointer stored in $0.
+    FREE,
+
     /// Illegal syscall. Panics.
     IGL,
 }
@@ -25,6 +28,7 @@ impl From<i32> for SysCall {
             1 => SysCall::CPRINT,
             2 => SysCall::EXIT,
             3 => SysCall::ALLOC,
+            4 => SysCall::FREE,
             _ => SysCall::IGL,
         }
     }

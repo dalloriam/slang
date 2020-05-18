@@ -40,12 +40,22 @@ fn syscall_alloc(vm: &mut VM) -> bool {
     true
 }
 
+fn syscall_free(vm: &mut VM) -> bool {
+    let ptr_to_free = vm.registers()[0] as u16;
+
+    let heap = vm.heap_mut();
+    heap.free(ptr_to_free as usize);
+
+    true
+}
+
 pub fn execute_syscall(syscall: SysCall, vm: &mut VM) -> bool {
     match syscall {
         SysCall::NOP => true,
         SysCall::CPRINT => syscall_cprint(vm),
         SysCall::EXIT => false,
         SysCall::ALLOC => syscall_alloc(vm),
+        SysCall::FREE => syscall_free(vm),
         _ => {
             eprintln!("Illegal Syscall. Terminating.",);
             false
