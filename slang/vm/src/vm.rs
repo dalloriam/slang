@@ -1,13 +1,12 @@
-use byteorder::{LittleEndian, ReadBytesExt};
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 use instructor::{Opcode, SysCall};
 
 use snafu::{ResultExt, Snafu};
 
+use crate::constants::{REGISTER_COUNT, SYSCALL_REGISTER};
+use crate::heap::Heap;
 use crate::syscall::execute_syscall;
-
-const REGISTER_COUNT: usize = 33;
-const SYSCALL_REGISTER: usize = 32;
 
 #[derive(Debug, Snafu)]
 pub enum VMError {
@@ -25,7 +24,7 @@ pub struct VM {
     equal_flag: bool,
 
     stack: Vec<i32>,
-    heap: Vec<u8>,
+    heap: Heap,
 
     pc: usize,
     program: Vec<u8>,
@@ -39,7 +38,7 @@ impl VM {
             remainder: 0,
             equal_flag: false,
             stack: Vec::new(),
-            heap: Vec::new(),
+            heap: Heap::new(),
 
             pc: 0,
             program: Vec::new(),
@@ -55,10 +54,31 @@ impl VM {
         self.pc = 0;
     }
 
+    #[inline]
     pub fn registers(&self) -> &[i32; 33] {
         // TODO: Make this transparent. Make it so it returns regular registers (0-31).
         // Return the other special registers from other methods.
         &self.registers
+    }
+
+    #[inline]
+    pub fn registers_mut(&mut self) -> &mut [i32; 33] {
+        &mut self.registers
+    }
+
+    #[inline]
+    pub fn ro_block(&self) -> &[u8] {
+        &self.ro_block
+    }
+
+    #[inline]
+    pub fn heap(&self) -> &Heap {
+        &self.heap
+    }
+
+    #[inline]
+    pub fn heap_mut(&mut self) -> &mut Heap {
+        &mut self.heap
     }
 
     pub fn load_bytecode(&mut self, bytecode: Vec<u8>) -> Result<()> {
@@ -78,6 +98,7 @@ impl VM {
         opcode
     }
 
+    #[inline]
     fn next_8_bits(&mut self) -> u8 {
         let result = self.program[self.pc];
         self.pc += 1;
@@ -85,6 +106,7 @@ impl VM {
         result
     }
 
+    #[inline]
     fn next_16_bits(&mut self) -> u16 {
         let result = ((self.program[self.pc] as u16) << 8) | self.program[self.pc + 1] as u16;
         self.pc += 2;
@@ -205,15 +227,6 @@ impl VM {
                     self.pc = target as usize;
                 }
             }
-            Opcode::ALOC => {
-                let amt_to_alloc = self.registers[self.next_8_bits() as usize];
-                let new_heap_size = self.heap.len() as i32 + amt_to_alloc;
-                self.heap.resize(new_heap_size as usize, 0);
-
-                // Eat last two bytes.
-                self.next_8_bits();
-                self.next_8_bits();
-            }
             Opcode::INC => {
                 self.registers[self.next_8_bits() as usize] += 1;
 
@@ -231,8 +244,7 @@ impl VM {
             Opcode::SYSC => {
                 // Execute a syscall.
                 let call_id = SysCall::from(self.registers[SYSCALL_REGISTER]);
-                let should_continue =
-                    execute_syscall(call_id, &self.ro_block, &mut self.registers[0..32]);
+                let should_continue = execute_syscall(call_id, self);
 
                 if !should_continue {
                     return false;
@@ -273,6 +285,26 @@ impl VM {
                     .read_i32::<LittleEndian>()
                     .unwrap();
             }
+            Opcode::SW => {
+                // Set word.
+                let value_to_write = self.registers[self.next_8_bits() as usize];
+
+                let ptr = self.registers[self.next_8_bits() as usize] as usize
+                    + self.next_8_bits() as usize;
+
+                let mut slice = &mut self.heap.memory_mut()[ptr..ptr + 4];
+                slice.write_i32::<LittleEndian>(value_to_write).unwrap(); // TODO: Catch error.
+            }
+            Opcode::LW => {
+                // Load word.
+                let target_register = self.next_8_bits() as usize;
+                let ptr = self.registers[self.next_8_bits() as usize] as usize
+                    + self.next_8_bits() as usize;
+
+                let mut slice = &self.heap.memory()[ptr..ptr + 4];
+                // TODO: Catch error
+                self.registers[target_register] = slice.read_i32::<LittleEndian>().unwrap()
+            }
             Opcode::HLT => {
                 println!("HLT received. Halting.");
                 for _i in 0..3 {
@@ -303,6 +335,8 @@ impl VM {
 
 #[cfg(test)]
 mod tests {
+    use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+
     use super::VM;
 
     #[test]
@@ -528,21 +562,9 @@ mod tests {
     }
 
     #[test]
-    fn test_opcode_aloc() {
-        let mut test_vm = VM::new();
-
-        test_vm.registers[0] = 1024;
-        test_vm.program = vec![16, 0, 0, 0]; // Allocate 1kb.
-
-        assert_eq!(test_vm.heap.len(), 0);
-        test_vm.run_once();
-        assert_eq!(test_vm.heap.len(), 1024);
-    }
-
-    #[test]
     fn test_opcode_inc() {
         let mut test_vm = VM::new();
-        test_vm.program = vec![17, 0, 0, 0];
+        test_vm.program = vec![16, 0, 0, 0];
 
         assert_eq!(test_vm.registers[0], 0);
         test_vm.run_once();
@@ -552,7 +574,7 @@ mod tests {
     #[test]
     fn test_opcode_dec() {
         let mut test_vm = VM::new();
-        test_vm.program = vec![18, 0, 0, 0];
+        test_vm.program = vec![17, 0, 0, 0];
 
         test_vm.registers[0] = 10;
         test_vm.run_once();
@@ -564,7 +586,7 @@ mod tests {
         let mut test_vm = VM::new();
         assert!(test_vm.stack.is_empty());
         test_vm.registers[0] = 12;
-        test_vm.program = vec![21, 0, 0, 0];
+        test_vm.program = vec![20, 0, 0, 0];
         test_vm.run_once();
         assert_eq!(test_vm.stack, vec![12]);
     }
@@ -574,7 +596,7 @@ mod tests {
         let mut test_vm = VM::new();
         test_vm.stack = vec![18, 32];
 
-        test_vm.program = vec![22, 0, 0, 0];
+        test_vm.program = vec![21, 0, 0, 0];
         test_vm.run_once();
 
         assert_eq!(test_vm.registers[0], 32);
@@ -587,7 +609,7 @@ mod tests {
         test_vm.registers[1] = 18;
 
         assert_eq!(test_vm.registers[0], 0);
-        test_vm.program = vec![23, 1, 0, 0];
+        test_vm.program = vec![22, 1, 0, 0];
         test_vm.run_once();
 
         assert_eq!(test_vm.registers[0], 18);
@@ -599,10 +621,50 @@ mod tests {
         test_vm.ro_block = vec![0, 0, 0, 0, 10, 0, 0, 0];
 
         assert_eq!(test_vm.registers[0], 0);
-        test_vm.program = vec![24, 0, 0, 4];
+        test_vm.program = vec![23, 0, 0, 4];
         test_vm.run_once();
 
         assert_eq!(test_vm.registers[0], 10);
+    }
+
+    #[test]
+    fn test_opcode_sw() {
+        let mut test_vm = VM::new();
+
+        test_vm.heap_mut().alloc(8);
+
+        assert_eq!(&test_vm.heap().memory(), &vec![0; 8].as_slice());
+
+        test_vm.registers[0] = 512;
+        test_vm.registers[1] = 4;
+        test_vm.program = vec![24, 0, 1, 0];
+        test_vm.run_once();
+
+        assert_eq!(
+            &test_vm.heap().memory(),
+            &vec![0, 0, 0, 0, 0, 2, 0, 0].as_slice()
+        );
+    }
+
+    #[test]
+    fn test_opcode_lw() {
+        let mut test_vm = VM::new();
+
+        // Allocate 8 bytes in memory.
+        test_vm.heap_mut().alloc(8);
+
+        // Write an int to the second 4-byte memory block.
+        (&mut test_vm.heap_mut().memory_mut()[4..])
+            .write_i32::<LittleEndian>(42)
+            .unwrap();
+
+        // Try to fetch it back with an lw instruction.
+        test_vm.registers[1] = 4; // Pointer to the memory location containing our number.
+        test_vm.program = vec![25, 0, 1, 0];
+
+        assert_eq!(test_vm.registers[0], 0);
+        test_vm.run_once();
+        assert_eq!(test_vm.registers[0], 42);
     }
 }
 
@@ -614,7 +676,7 @@ impl Default for VM {
             remainder: 0,
             equal_flag: false,
             stack: Vec::new(),
-            heap: Vec::new(),
+            heap: Heap::new(),
 
             pc: 0,
             program: Vec::new(),

@@ -51,9 +51,6 @@ pub enum Opcode {
     /// Short jump if equal - If the result of the previous comparison was true, jump to the offset or label specified.
     JEQ,
 
-    /// Allocation - Resizes the heap to the value of the first register.
-    ALOC,
-
     /// Increment - Increments the value of the specified register by one.
     INC,
 
@@ -78,6 +75,12 @@ pub enum Opcode {
     /// Load constant word - Loads a word (i32) from the readonly section.
     LCW,
 
+    /// Set word - Writes a word (i32) from memory.
+    SW,
+
+    /// Load word - Loads a word from memory and writes it to the first register.
+    LW,
+
     /// Illegal Instruction.
     IGL,
 }
@@ -101,7 +104,6 @@ impl<'a> From<&'a str> for Opcode {
             "gtq" => Opcode::GTQ,
             "ltq" => Opcode::LTQ,
             "jeq" => Opcode::JEQ,
-            "aloc" => Opcode::ALOC,
             "inc" => Opcode::INC,
             "dec" => Opcode::DEC,
             "rjmp" => Opcode::RJMP,
@@ -110,6 +112,8 @@ impl<'a> From<&'a str> for Opcode {
             "pop" => Opcode::POP,
             "move" => Opcode::MOV,
             "lcw" => Opcode::LCW,
+            "sw" => Opcode::SW,
+            "lw" => Opcode::LW,
             _ => Opcode::IGL,
         }
     }
@@ -134,15 +138,16 @@ impl From<u8> for Opcode {
             13 => Opcode::GTQ,
             14 => Opcode::LTQ,
             15 => Opcode::JEQ,
-            16 => Opcode::ALOC,
-            17 => Opcode::INC,
-            18 => Opcode::DEC,
-            19 => Opcode::RJMP,
-            20 => Opcode::SYSC,
-            21 => Opcode::PUSH,
-            22 => Opcode::POP,
-            23 => Opcode::MOV,
-            24 => Opcode::LCW,
+            16 => Opcode::INC,
+            17 => Opcode::DEC,
+            18 => Opcode::RJMP,
+            19 => Opcode::SYSC,
+            20 => Opcode::PUSH,
+            21 => Opcode::POP,
+            22 => Opcode::MOV,
+            23 => Opcode::LCW,
+            24 => Opcode::SW,
+            25 => Opcode::LW,
             _ => Opcode::IGL,
         }
     }

@@ -16,6 +16,9 @@ pub enum Operand {
 
     /// String operand.
     Str(String),
+
+    /// Address operand. (offset + register)
+    Address((u8, u8)),
 }
 
 impl Operand {
@@ -34,14 +37,18 @@ impl Operand {
                 2
             }
             Operand::Label(s) => {
-                // TODO: This truncates the u32 offset to an u16. This effectively
-                // reduces the jump range to ~16k instructions, which obviously won't cut it.
-                // This will need to be seriously revised before going further.
                 let mut wtr = Vec::with_capacity(2);
                 let offset = converter.offset_of(&s).unwrap(); // TODO: Handle error;
-                wtr.write_u32::<LittleEndian>(offset).unwrap(); // TODO: Handle.
+                wtr.write_u16::<LittleEndian>(offset).unwrap(); // TODO: Handle.
                 w.push(wtr[1]);
                 w.push(wtr[0]);
+                2
+            }
+            Operand::Address((offset, reg)) => {
+                // Swap the address tuple to allow the vm to do
+                // let ptr = self.registers[self.next_8_bits()] + self.next_8_bits();
+                w.push(*reg);
+                w.push(*offset);
                 2
             }
             Operand::Str(_s) => panic!(

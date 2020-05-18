@@ -8,12 +8,12 @@ pub enum SymbolType {
 #[derive(Debug)]
 pub struct Symbol {
     name: String,
-    offset: u32,
+    offset: u16,
     symbol_type: SymbolType,
 }
 
 impl Symbol {
-    pub fn new(name: String, symbol_type: SymbolType, offset: u32) -> Symbol {
+    pub fn new(name: String, symbol_type: SymbolType, offset: u16) -> Symbol {
         Symbol {
             name,
             symbol_type,
@@ -39,7 +39,7 @@ impl SymbolTable {
         self.symbols.push(s)
     }
 
-    pub fn update_offset(&mut self, symbol_name: &str, offset: u32) {
+    pub fn update_offset(&mut self, symbol_name: &str, offset: u16) {
         for symbol in self.symbols.iter_mut() {
             if &symbol.name == symbol_name {
                 symbol.offset = offset;
@@ -58,7 +58,7 @@ impl SymbolTable {
 }
 
 impl LabelConverter for SymbolTable {
-    fn offset_of(&self, s: &str) -> Option<u32> {
+    fn offset_of(&self, s: &str) -> Option<u16> {
         for symbol in self.symbols.iter() {
             if &symbol.name == s {
                 return Some(symbol.offset);

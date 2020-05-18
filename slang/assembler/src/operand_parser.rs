@@ -5,7 +5,7 @@ use nom::{
     bytes::complete::{tag, take_till},
     character::complete::{char, digit1},
     combinator::{map, map_res},
-    sequence::{delimited, preceded},
+    sequence::{delimited, preceded, tuple},
     IResult,
 };
 
@@ -21,11 +21,27 @@ enum ParseError {
 
 pub fn operand(i: &str) -> IResult<&str, Operand> {
     alt((
+        address,
         integer,
         register,
         map(label::label_usage, |lbl| Operand::Label(lbl)),
         string,
     ))(i)
+}
+
+fn address(i: &str) -> IResult<&str, Operand> {
+    let addr = delimited(whitespace, register, whitespace);
+    let tup = delimited(
+        whitespace,
+        tuple((byte, delimited(char('('), addr, char(')')))),
+        whitespace,
+    );
+    map(tup, |(offset, reg)| {
+        if let Operand::Register(reg_byte) = reg {
+            return Operand::Address((offset, reg_byte));
+        }
+        panic!("The register parser returned a non-register operand");
+    })(i)
 }
 
 fn string(i: &str) -> IResult<&str, Operand> {
@@ -37,6 +53,12 @@ fn string(i: &str) -> IResult<&str, Operand> {
         ),
         |s| Operand::Str(String::from(s)),
     )(i)
+}
+
+fn byte(i: &str) -> IResult<&str, u8> {
+    map_res(delimited(whitespace, digit1, whitespace), |b_val: &str| {
+        b_val.parse::<u8>()
+    })(i)
 }
 
 fn integer(i: &str) -> IResult<&str, Operand> {
@@ -73,7 +95,14 @@ fn register(i: &str) -> IResult<&str, Operand> {
 
 #[cfg(test)]
 mod tests {
-    use super::{integer, operand, register, string, Operand};
+    use super::{address, integer, operand, register, string, Operand};
+
+    #[test]
+    fn parse_address() {
+        let (rest, addr) = address(" 18($3 ) ").unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(addr, Operand::Address((18, 3)));
+    }
 
     #[test]
     fn parse_integer() {
