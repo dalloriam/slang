@@ -1,6 +1,6 @@
 use instructor::SysCall;
 
-use crate::constants::{REGISTER_COUNT, SYSCALL_REGISTER};
+use crate::constants::SYSCALL_REGISTER;
 use crate::vm::VM;
 
 fn syscall_cprint(vm: &VM) -> bool {
@@ -30,7 +30,12 @@ fn syscall_cprint(vm: &VM) -> bool {
 }
 
 fn syscall_alloc(vm: &mut VM) -> bool {
-    let mut heap = vm.heap_mut();
+    let amt_to_allocate = vm.registers()[0] as u16;
+
+    let heap = vm.heap_mut();
+    let allocated_ptr = heap.alloc(amt_to_allocate as usize);
+
+    vm.registers_mut()[SYSCALL_REGISTER] = allocated_ptr as i32; // OK b-c the heap is currently 16-bit.
 
     true
 }
@@ -40,6 +45,7 @@ pub fn execute_syscall(syscall: SysCall, vm: &mut VM) -> bool {
         SysCall::NOP => true,
         SysCall::CPRINT => syscall_cprint(vm),
         SysCall::EXIT => false,
+        SysCall::ALLOC => syscall_alloc(vm),
         _ => {
             eprintln!("Illegal Syscall. Terminating.",);
             false
