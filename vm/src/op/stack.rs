@@ -1,6 +1,6 @@
 use std::mem;
 
-use instructor::{STACK_BASE_REGISTER, STACK_POINTER_REGISTER};
+use instructor::STACK_POINTER_REGISTER;
 
 use crate::VM;
 
@@ -17,7 +17,7 @@ pub fn push(register: u8, vm: &mut VM) {
 
 #[inline]
 pub fn pop(register: u8, vm: &mut VM) {
-    if vm.stack().len() != 0 {
+    if !vm.stack().is_empty() {
         vm.registers_mut()[STACK_POINTER_REGISTER] -= mem::size_of::<i32>() as i32;
         debug_assert!(vm.registers()[STACK_POINTER_REGISTER] >= 0);
     }

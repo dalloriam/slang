@@ -94,7 +94,7 @@ pub enum Opcode {
 }
 
 impl Opcode {
-    pub fn width(&self) -> u16 {
+    pub fn width(self) -> u16 {
         match self {
             Opcode::LOAD => 4,
             Opcode::ADD => 4,
