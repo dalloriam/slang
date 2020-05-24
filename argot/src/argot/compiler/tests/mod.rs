@@ -6,9 +6,10 @@ fn basic_add() {
     let asm = Compiler::new().compile_asm(src);
     let expected_asm = ".data
 .text
-ld $31 0x0002
-ld $30 0x0003
-add $31 $30 $29";
+ld $8 0x0002
+ld $9 0x0003
+add $8 $9 $0
+move $0 $8";
 
     assert_eq!(asm, expected_asm);
 }
@@ -19,9 +20,10 @@ fn basic_mult() {
     let asm = Compiler::new().compile_asm(src);
     let expected_asm = ".data
 .text
-ld $31 0x0002
-ld $30 0x0003
-mul $31 $30 $29";
+ld $8 0x0002
+ld $9 0x0003
+mul $8 $9 $0
+move $0 $8";
 
     assert_eq!(asm, expected_asm);
 }
@@ -32,9 +34,10 @@ fn basic_sub() {
     let asm = Compiler::new().compile_asm(src);
     let expected_asm = ".data
 .text
-ld $31 0x0003
-ld $30 0x0002
-sub $31 $30 $29";
+ld $8 0x0003
+ld $9 0x0002
+sub $8 $9 $0
+move $0 $8";
 
     assert_eq!(asm, expected_asm);
 }
@@ -45,9 +48,10 @@ fn basic_div() {
     let asm = Compiler::new().compile_asm(src);
     let expected_asm = ".data
 .text
-ld $31 0x0003
-ld $30 0x0002
-div $31 $30 $29";
+ld $8 0x0003
+ld $9 0x0002
+div $8 $9 $0
+move $0 $8";
 
     assert_eq!(asm, expected_asm);
 }
@@ -58,11 +62,13 @@ fn nested_add_mult() {
     let asm = Compiler::new().compile_asm(src);
     let expected_asm = ".data
 .text
-ld $31 0x0003
-ld $30 0x0002
-ld $29 0x0002
-add $30 $29 $28
-mul $31 $28 $30";
+ld $8 0x0003
+ld $9 0x0002
+ld $10 0x0002
+add $9 $10 $0
+move $0 $9
+mul $8 $9 $0
+move $0 $8";
 
     assert_eq!(asm, expected_asm);
 }
