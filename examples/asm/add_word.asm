@@ -1,6 +1,6 @@
 .data
-inta: .word 10
-intb: .word 5
+inta: .word 0x0010
+intb: .word 0x005
 
 .text
 lcw $0 @inta

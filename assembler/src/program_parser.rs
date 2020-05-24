@@ -7,7 +7,7 @@ use crate::instruction_parser as instruction;
 
 pub fn program(i: &str) -> IResult<&str, Program> {
     map(
-        many1(alt((instruction::instruction, directive))),
+        many1(alt((directive, instruction::instruction))),
         |instructions| Program { instructions },
     )(i)
 }

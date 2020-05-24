@@ -2,6 +2,28 @@ use byteorder::{LittleEndian, WriteBytesExt};
 
 use crate::LabelConverter;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum MemorySection {
+    Stack,
+    Heap,
+}
+
+impl From<MemorySection> for u8 {
+    fn from(s: MemorySection) -> u8 {
+        match s {
+            MemorySection::Stack => 0,
+            MemorySection::Heap => 1,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Address {
+    pub offset: u8,
+    pub register: u8,
+    pub section: MemorySection,
+}
+
 /// Operand Types.
 #[derive(Debug, PartialEq)]
 pub enum Operand {
@@ -18,7 +40,7 @@ pub enum Operand {
     Str(String),
 
     /// Address operand. (offset + register)
-    Address((u8, u8)),
+    Address(Address),
 }
 
 impl Operand {
@@ -44,12 +66,11 @@ impl Operand {
                 w.push(wtr[0]);
                 2
             }
-            Operand::Address((offset, reg)) => {
-                // Swap the address tuple to allow the vm to do
-                // let ptr = self.registers[self.next_8_bits()] + self.next_8_bits();
-                w.push(*reg);
-                w.push(*offset);
-                2
+            Operand::Address(addr) => {
+                w.push(addr.register);
+                w.push(addr.offset);
+                w.push(addr.section.into());
+                3
             }
             Operand::Str(_s) => panic!(
                 "String operands should never be written. They should be stripped beforehand."

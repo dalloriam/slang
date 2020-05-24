@@ -22,8 +22,11 @@ lint:
 test:
     @just _bzl test //...
 
+argotc +args="":
+    @cargo run --bin argotc -- {{args}}
+
 run +args="":
-    @cargo run -- {{args}}
+    @cargo run --bin slang -- {{args}}
 
 trace +args="":
     @RUST_LOG=trace just run {{args}}
