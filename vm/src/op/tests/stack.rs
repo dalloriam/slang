@@ -1,5 +1,6 @@
 use crate::op::stack;
 use crate::VM;
+use instructor::STACK_POINTER_REGISTER;
 
 #[test]
 fn op_push() {
@@ -16,6 +17,7 @@ fn op_pull() {
     let mut vm = VM::new();
     vm.stack_mut().push_i32(42);
     assert_eq!(vm.stack(), &vec![42, 0, 0, 0].into());
+    vm.registers_mut()[STACK_POINTER_REGISTER] = 4;
 
     stack::pop(3, &mut vm);
 

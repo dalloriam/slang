@@ -1,4 +1,4 @@
-use instructor::{Opcode, SysCall};
+use instructor::{Address, MemorySection, Opcode, SysCall};
 
 use snafu::{ResultExt, Snafu};
 
@@ -141,6 +141,19 @@ impl VM {
         result
     }
 
+    #[inline]
+    fn next_address(&mut self) -> Address {
+        let register = self.next_8_bits();
+        let offset = self.next_8_bits();
+        let section = MemorySection::from(self.next_8_bits());
+
+        Address {
+            register,
+            offset,
+            section,
+        }
+    }
+
     pub fn run_once(&mut self) -> bool {
         self.execute_instruction()
     }
@@ -214,30 +227,10 @@ impl VM {
             Opcode::POP => op::stack::pop(self.next_8_bits(), self),
             Opcode::MOV => op::reg::mov(self.next_8_bits(), self.next_8_bits(), self),
             Opcode::LCW => op::ro::lcw(self.next_8_bits(), self.next_16_bits(), self),
-            Opcode::SW => op::memory::sw(
-                self.next_8_bits(),
-                self.next_8_bits(),
-                self.next_8_bits(),
-                self,
-            ),
-            Opcode::LW => op::memory::lw(
-                self.next_8_bits(),
-                self.next_8_bits(),
-                self.next_8_bits(),
-                self,
-            ),
-            Opcode::SB => op::memory::sb(
-                self.next_8_bits(),
-                self.next_8_bits(),
-                self.next_8_bits(),
-                self,
-            ),
-            Opcode::LB => op::memory::lb(
-                self.next_8_bits(),
-                self.next_8_bits(),
-                self.next_8_bits(),
-                self,
-            ),
+            Opcode::SW => op::memory::sw(self.next_8_bits(), &self.next_address(), self),
+            Opcode::LW => op::memory::lw(self.next_8_bits(), &self.next_address(), self),
+            Opcode::SB => op::memory::sb(self.next_8_bits(), &self.next_address(), self),
+            Opcode::LB => op::memory::lb(self.next_8_bits(), &self.next_address(), self),
             Opcode::CALL => op::branch::call(self.next_16_bits(), self),
             Opcode::RET => op::branch::ret(self),
             Opcode::IGL => {
@@ -254,6 +247,7 @@ mod tests {
     use byteorder::{LittleEndian, WriteBytesExt};
 
     use super::VM;
+    use instructor::STACK_POINTER_REGISTER;
 
     #[test]
     fn test_create_vm() {
@@ -501,6 +495,7 @@ mod tests {
     fn test_opcode_pop() {
         let mut test_vm = VM::new();
         test_vm.stack = vec![18, 0, 0, 0, 32, 0, 0, 0].into();
+        test_vm.registers[STACK_POINTER_REGISTER] = 8;
 
         test_vm.program = vec![21, 0, 0, 0];
         test_vm.run_once();
@@ -527,7 +522,7 @@ mod tests {
         test_vm.ro_block = vec![0, 0, 0, 0, 10, 0, 0, 0];
 
         assert_eq!(test_vm.registers[0], 0);
-        test_vm.program = vec![23, 0, 0, 4];
+        test_vm.program = vec![23, 0, 0, 4, 1];
         test_vm.run_once();
 
         assert_eq!(test_vm.registers[0], 10);
@@ -543,7 +538,7 @@ mod tests {
 
         test_vm.registers[0] = 512;
         test_vm.registers[1] = 4;
-        test_vm.program = vec![24, 0, 1, 0];
+        test_vm.program = vec![24, 0, 1, 0, 1];
         test_vm.run_once();
 
         assert_eq!(
@@ -566,7 +561,7 @@ mod tests {
 
         // Try to fetch it back with an lw instruction.
         test_vm.registers[1] = 4; // Pointer to the memory location containing our number.
-        test_vm.program = vec![25, 0, 1, 0];
+        test_vm.program = vec![25, 0, 1, 0, 1];
 
         assert_eq!(test_vm.registers[0], 0);
         test_vm.run_once();
@@ -583,7 +578,7 @@ mod tests {
 
         test_vm.registers[0] = 42;
         test_vm.registers[1] = 3;
-        test_vm.program = vec![26, 0, 1, 0];
+        test_vm.program = vec![26, 0, 1, 0, 1];
         test_vm.run_once();
 
         assert_eq!(test_vm.heap().memory()[3], 42)
@@ -597,7 +592,7 @@ mod tests {
         test_vm.heap_mut().memory_mut()[2] = 42;
 
         test_vm.registers[1] = 2;
-        test_vm.program = vec![27, 0, 1, 0];
+        test_vm.program = vec![27, 0, 1, 0, 1];
 
         assert_eq!(test_vm.registers[0], 0);
         test_vm.run_once();

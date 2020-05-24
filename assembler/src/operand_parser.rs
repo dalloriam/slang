@@ -151,12 +151,13 @@ pub fn register(i: &str) -> IResult<&str, Operand> {
 #[cfg(test)]
 mod tests {
     use super::{address, integer, operand, register, string, Operand};
+    use instructor::{Address, MemorySection};
 
     #[test]
     fn parse_address() {
         let (rest, addr) = address(" 18($3 ) ").unwrap();
         assert_eq!(rest, "");
-        assert_eq!(addr, Operand::Address((18, 3)));
+        assert_eq!(addr, Operand::Address(Address{offset: 18, register: 3, section: MemorySection::Heap}))
     }
 
     #[test]

@@ -1,5 +1,7 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
+use instructor::{Address, MemorySection};
+
 use crate::{memutil, op::memory, VM};
 
 #[test]
@@ -9,7 +11,7 @@ fn op_sw() {
     vm.heap_mut().alloc(4);
     vm.registers_mut()[0] = 42;
     vm.registers_mut()[1] = 0;
-    memory::sw(0, 1, 0, &mut vm);
+    memory::sw(0, &Address::new_heap(1, 0), &mut vm);
 
     assert_eq!(&vm.registers()[0..2], vec![42, 0].as_slice());
     assert_eq!(vm.heap().memory().read_i32::<LittleEndian>().unwrap(), 42);
@@ -22,7 +24,7 @@ fn op_sw_invalid_ptr() {
     vm.heap_mut().alloc(4);
     vm.registers_mut()[0] = 42;
     vm.registers_mut()[1] = 15;
-    memory::sw(0, 1, 0, &mut vm);
+    memory::sw(0, &Address::new_heap(1, 0), &mut vm);
 }
 
 #[test]
@@ -32,7 +34,7 @@ fn op_sw_offset() {
     vm.heap_mut().alloc(8);
     vm.registers_mut()[0] = 42;
     vm.registers_mut()[1] = 2;
-    memory::sw(0, 1, 2, &mut vm);
+    memory::sw(0, &Address::new_heap(1, 2), &mut vm);
 
     assert_eq!(&vm.registers()[0..2], vec![42, 2].as_slice());
     assert_eq!(&vm.heap().memory()[0..4], vec![0; 4].as_slice());
@@ -52,7 +54,7 @@ fn op_sw_memory_too_small() {
     vm.heap_mut().alloc(2);
     vm.registers_mut()[0] = 42;
     vm.registers_mut()[1] = (memutil::WORD_WIDTH - 2) as i32;
-    memory::sw(0, 1, 0, &mut vm);
+    memory::sw(0, &Address::new_heap(1, 0), &mut vm);
 }
 
 #[test]
@@ -62,7 +64,7 @@ fn op_sb() {
     vm.heap_mut().alloc(4);
     vm.registers_mut()[0] = 42;
     vm.registers_mut()[1] = 0;
-    memory::sb(0, 1, 0, &mut vm);
+    memory::sb(0, &Address::new_heap(1, 0), &mut vm);
 
     assert_eq!(&vm.registers()[0..2], vec![42, 0].as_slice());
     assert_eq!(&vm.heap().memory()[0..4], vec![42, 0, 0, 0].as_slice());
@@ -75,7 +77,7 @@ fn op_sb_invalid_ptr() {
     vm.heap_mut().alloc(4);
     vm.registers_mut()[0] = 42;
     vm.registers_mut()[1] = 15;
-    memory::sb(0, 1, 0, &mut vm);
+    memory::sb(0, &Address::new_heap(1, 0), &mut vm);
 }
 
 #[test]
@@ -85,7 +87,7 @@ fn op_sb_offset() {
     vm.heap_mut().alloc(8);
     vm.registers_mut()[0] = 42;
     vm.registers_mut()[1] = 2;
-    memory::sb(0, 1, 2, &mut vm);
+    memory::sb(0, &Address::new_heap(1, 2), &mut vm);
 
     assert_eq!(&vm.registers()[0..2], vec![42, 2].as_slice());
     assert_eq!(&vm.heap().memory()[0..4], vec![0; 4].as_slice());
@@ -106,7 +108,7 @@ fn op_lw() {
     (&mut vm.heap_mut().memory_mut()[4..8])
         .write_i32::<LittleEndian>(45)
         .unwrap();
-    memory::lw(0, 1, 0, &mut vm);
+    memory::lw(0, &Address::new_heap(1, 0), &mut vm);
     assert_eq!(vm.registers()[0], 45);
 }
 
@@ -119,7 +121,7 @@ fn op_lw_offset() {
     (&mut vm.heap_mut().memory_mut()[4..8])
         .write_i32::<LittleEndian>(45)
         .unwrap();
-    memory::lw(0, 1, 2, &mut vm);
+    memory::lw(0, &Address::new_heap(1, 2), &mut vm);
     assert_eq!(vm.registers()[0], 45);
 }
 
@@ -130,7 +132,7 @@ fn op_lw_invalid_ptr() {
     vm.heap_mut().alloc(4);
     vm.registers_mut()[0] = 0;
     vm.registers_mut()[1] = 18;
-    memory::lw(0, 1, 0, &mut vm);
+    memory::lw(0, &Address::new_heap(1, 0), &mut vm);
 }
 
 #[test]
@@ -140,7 +142,7 @@ fn op_lw_memory_too_small() {
     vm.heap_mut().alloc(2);
     vm.registers_mut()[0] = 0;
     vm.registers_mut()[1] = (memutil::WORD_WIDTH - 2) as i32;
-    memory::lw(0, 1, 0, &mut vm);
+    memory::lw(0, &Address::new_heap(1, 0), &mut vm);
 }
 
 #[test]
@@ -150,7 +152,7 @@ fn op_lb() {
     vm.registers_mut()[0] = 0;
     vm.registers_mut()[1] = 3;
     vm.heap_mut().memory_mut()[3] = 18;
-    memory::lb(0, 1, 0, &mut vm);
+    memory::lb(0, &Address::new_heap(1, 0), &mut vm);
     assert_eq!(vm.registers()[0], 18);
 }
 
@@ -161,7 +163,7 @@ fn op_lb_offset() {
     vm.registers_mut()[0] = 0;
     vm.registers_mut()[1] = 2;
     vm.heap_mut().memory_mut()[5] = 14;
-    memory::lb(0, 1, 3, &mut vm);
+    memory::lb(0, &Address::new_heap(1, 3), &mut vm);
     assert_eq!(vm.registers()[0], 14);
 }
 
@@ -172,5 +174,5 @@ fn op_lb_invalid_ptr() {
     vm.heap_mut().alloc(4);
     vm.registers_mut()[0] = 0;
     vm.registers_mut()[1] = 18;
-    memory::lb(0, 1, 0, &mut vm);
+    memory::lb(0, &Address::new_heap(1, 0), &mut vm);
 }

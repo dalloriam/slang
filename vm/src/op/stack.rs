@@ -19,7 +19,7 @@ pub fn push(register: u8, vm: &mut VM) {
 pub fn pop(register: u8, vm: &mut VM) {
     if vm.stack().len() != 0 {
         vm.registers_mut()[STACK_POINTER_REGISTER] -= mem::size_of::<i32>() as i32;
-        debug_assert!(vm.registers()[STACK_POINTER_REGISTER] > 0);
+        debug_assert!(vm.registers()[STACK_POINTER_REGISTER] >= 0);
     }
 
     let value = vm.stack_mut().pop_i32();

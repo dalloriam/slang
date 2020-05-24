@@ -90,7 +90,7 @@ impl Instruction {
             .iter()
             .map(|op| Instruction::write_operand(*op, w, converter))
             .sum::<usize>();
-        assert!(cur_size <= &3);
+        debug_assert_eq!(self.opcode.as_ref().unwrap().width() - 1, *cur_size as u16);
     }
 }
 

@@ -17,11 +17,39 @@ impl From<MemorySection> for u8 {
     }
 }
 
+impl From<u8> for MemorySection {
+    fn from(u: u8) -> MemorySection {
+        match u {
+            0 => MemorySection::Stack,
+            1 => MemorySection::Heap,
+            _ => panic!("Invalid section"), // TODO: Handle error properly with TryFrom.
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Address {
     pub offset: u8,
     pub register: u8,
     pub section: MemorySection,
+}
+
+impl Address {
+    pub fn new_heap(register: u8, offset: u8) -> Address {
+        Address {
+            register,
+            offset,
+            section: MemorySection::Heap,
+        }
+    }
+
+    pub fn new_stack(register: u8, offset: u8) -> Address {
+        Address {
+            register,
+            offset,
+            section: MemorySection::Stack,
+        }
+    }
 }
 
 /// Operand Types.

@@ -32,6 +32,16 @@ impl Stack {
     }
 
     #[inline]
+    pub fn memory(&self) -> &[u8] {
+        &self.data
+    }
+
+    #[inline]
+    pub fn memory_mut(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
