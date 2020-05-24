@@ -17,6 +17,9 @@ pub enum SysCall {
     /// Free. Frees memory associated to the pointer stored in $0.
     FREE,
 
+    /// Print string. Prints a string from dynamic memory.
+    PRINTS,
+
     /// Illegal syscall. Panics.
     IGL,
 }
@@ -29,6 +32,7 @@ impl From<i32> for SysCall {
             2 => SysCall::EXIT,
             3 => SysCall::ALLOC,
             4 => SysCall::FREE,
+            5 => SysCall::PRINTS,
             _ => SysCall::IGL,
         }
     }

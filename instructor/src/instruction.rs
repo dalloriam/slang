@@ -90,13 +90,7 @@ impl Instruction {
             .iter()
             .map(|op| Instruction::write_operand(*op, w, converter))
             .sum::<usize>();
-        assert!(cur_size <= &3);
-
-        // Padding to ensure instructions always 4 bytes wide.
-        // We loop to 3 instead of 4 because the opcode is a guaranteed write, so we can write 1-4 bytes, inclusively.
-        for _i in *cur_size..3 {
-            w.push(0);
-        }
+        debug_assert_eq!(self.opcode.as_ref().unwrap().width() - 1, *cur_size as u16);
     }
 }
 

@@ -1,3 +1,5 @@
+use crate::memutil;
+
 #[derive(Debug, PartialEq)]
 struct MemoryBlock {
     start_index: usize,
@@ -45,14 +47,12 @@ impl Heap {
         &mut self.memory
     }
 
-    fn align(n: usize) -> usize {
-        // Align the provided size value with the platform size.
-        // TODO: Implement.
-        n
-    }
-
     pub fn alloc(&mut self, mut size: usize) -> usize {
-        size = Heap::align(size);
+        log::trace!("received request to allocate {}b", size);
+
+        size = memutil::align(size);
+
+        log::trace!("aligned to {}b", size);
 
         let idx = match self
             .index
@@ -62,6 +62,7 @@ impl Heap {
             Some(i) => {
                 // We were able to find a block of free memory to re-allocate.
                 // No memory resize necessary.
+                log::trace!("re-allocated block id. {}", i);
                 self.index[i].is_free = false;
                 i
             }
@@ -76,26 +77,39 @@ impl Heap {
                 // Afterwards, we extend the available memory.
                 self.memory.resize(self.memory.len() + size, 0);
 
+                log::trace!("allocated a new block");
+
                 block_id
             }
         };
 
-        self.index[idx].start_index
+        let ptr = self.index[idx].start_index;
+
+        log::trace!("returned pointer [{:#06x}]", ptr);
+
+        ptr
     }
 
     pub fn free(&mut self, ptr: usize) {
+        log::trace!("received request to free [{:#06x}]", ptr);
         let idx = match self.index.iter().position(|e| e.start_index == ptr) {
             Some(i) => i,
-            None => panic!("Invalid free"),
+            None => {
+                log::error!("invalid free of [{:#06x}]", ptr);
+                panic!("Invalid free")
+            }
         };
 
         {
             let node = self.index.get_mut(idx).unwrap();
             if node.is_free {
+                log::error!("double free of [{:#06x}]", ptr);
                 panic!("Double free");
             }
             node.is_free = true;
         }
+
+        log::trace!("block id. {} was marked free", idx);
 
         // Compaction.
         // We remove all data allocated to all free contiguous memory blocks, starting from the left.
@@ -107,17 +121,17 @@ impl Heap {
                 break;
             }
         }
+        log::trace!("shrinking by {}b", amt_to_shrink);
         self.memory.resize(self.memory.len() - amt_to_shrink, 0);
     }
 }
 
 #[cfg(test)]
 mod tests {
-
-    use super::{Heap, MemoryBlock};
+    use super::{memutil, Heap, MemoryBlock};
 
     #[test]
-    fn test_heap_alloc() {
+    fn alloc() {
         let mut heap = Heap::new();
         {
             // Allocate 4 bytes to the heap.
@@ -136,12 +150,18 @@ mod tests {
             }
         }
 
-        assert_eq!(heap.memory.len(), 6);
-        assert_eq!(heap.memory, vec![0, 1, 2, 3, 8, 7]);
+        assert_eq!(heap.memory.len(), memutil::align(4) + memutil::align(6));
+
+        // Validate memory regardless of alignment.
+        assert_eq!(&heap.memory[0..4], vec![0, 1, 2, 3].as_slice());
+        assert_eq!(
+            &heap.memory[memutil::align(4)..memutil::align(4) + 2],
+            vec![8, 7].as_slice()
+        );
     }
 
     #[test]
-    fn test_heap_simple_free() {
+    fn simple_free() {
         let mut heap = Heap::new();
         heap.memory = vec![0, 1, 2, 3];
         heap.index = vec![MemoryBlock::new(0, 4)];
@@ -154,7 +174,7 @@ mod tests {
     }
 
     #[test]
-    fn test_heap_contiguous_free() {
+    fn contiguous_free() {
         let mut heap = Heap::new();
         heap.memory = vec![0, 1, 2, 3, 8, 7];
         heap.index = vec![MemoryBlock::new(0, 4), MemoryBlock::new(4, 2)];
@@ -171,7 +191,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Double free")]
-    fn test_heap_double_free() {
+    fn double_free() {
         let mut heap = Heap::new();
         heap.memory = vec![0, 1];
         heap.index = vec![MemoryBlock::new(0, 2)];
@@ -182,7 +202,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Invalid free")]
-    fn test_heap_invalid_free() {
+    fn invalid_free() {
         let mut heap = Heap::new();
         heap.memory = vec![0, 1];
         heap.index = vec![MemoryBlock::new(0, 2)];

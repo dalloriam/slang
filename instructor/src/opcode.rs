@@ -79,6 +79,55 @@ pub enum Opcode {
 
     /// Load word - Loads a word from memory and writes it to the first register.
     LW,
+
+    // Set byte - Writes a single byte to memory.
+    SB,
+
+    // Load byte - Loads a single byte from memory.
+    LB,
+
+    // Call - Calls a procedure.
+    CALL,
+
+    // Ret - Returns from a procedure.
+    RET,
+}
+
+impl Opcode {
+    pub fn width(self) -> u16 {
+        match self {
+            Opcode::LOAD => 4,
+            Opcode::ADD => 4,
+            Opcode::SUB => 4,
+            Opcode::MUL => 4,
+            Opcode::DIV => 4,
+            Opcode::JMP => 3,
+            Opcode::JMPF => 3,
+            Opcode::JMPB => 3,
+            Opcode::RJMP => 2,
+            Opcode::EQ => 3,
+            Opcode::NEQ => 3,
+            Opcode::GT => 3,
+            Opcode::LT => 3,
+            Opcode::GTQ => 3,
+            Opcode::LTQ => 3,
+            Opcode::JEQ => 3,
+            Opcode::INC => 2,
+            Opcode::DEC => 2,
+            Opcode::SYSC => 1,
+            Opcode::PUSH => 2,
+            Opcode::POP => 2,
+            Opcode::MOV => 3,
+            Opcode::LCW => 4,
+            Opcode::SW => 5,
+            Opcode::LW => 5,
+            Opcode::SB => 5,
+            Opcode::LB => 5,
+            Opcode::CALL => 3,
+            Opcode::RET => 1,
+            Opcode::IGL => 1,
+        }
+    }
 }
 
 impl<'a> From<&'a str> for Opcode {
@@ -109,6 +158,10 @@ impl<'a> From<&'a str> for Opcode {
             "lcw" => Opcode::LCW,
             "sw" => Opcode::SW,
             "lw" => Opcode::LW,
+            "sb" => Opcode::SB,
+            "lb" => Opcode::LB,
+            "call" => Opcode::CALL,
+            "ret" => Opcode::RET,
             _ => Opcode::IGL,
         }
     }
@@ -142,6 +195,10 @@ impl From<u8> for Opcode {
             23 => Opcode::LCW,
             24 => Opcode::SW,
             25 => Opcode::LW,
+            26 => Opcode::SB,
+            27 => Opcode::LB,
+            28 => Opcode::CALL,
+            29 => Opcode::RET,
             _ => Opcode::IGL,
         }
     }

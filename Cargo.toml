@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "argot",
     "assembler",
     "instructor",
     "slang-cli",

@@ -2,9 +2,7 @@ use std::io;
 
 use byteorder::{LittleEndian, WriteBytesExt};
 
-use instructor::{
-    Instruction, Operand, Program, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX, INSTRUCTION_LENGTH_BYTES,
-};
+use instructor::{Instruction, Operand, Program, ELIS_HEADER_LENGTH, ELIS_HEADER_PREFIX};
 
 use snafu::{ensure, ResultExt, Snafu};
 
@@ -242,9 +240,8 @@ impl Assembler {
                 }
             }
 
-            if instruction.opcode.is_some() {
-                // Only offset instructions that will be in the final program.
-                current_label_offset += INSTRUCTION_LENGTH_BYTES as u16;
+            if let Some(op) = instruction.opcode.as_ref() {
+                current_label_offset += op.width();
             }
         }
         Ok(())

@@ -1,11 +1,11 @@
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-
-use instructor::{Opcode, SysCall};
+use instructor::{Address, MemorySection, Opcode, SysCall};
 
 use snafu::{ResultExt, Snafu};
 
 use crate::constants::{REGISTER_COUNT, SYSCALL_REGISTER};
 use crate::heap::Heap;
+use crate::op;
+use crate::stack::Stack;
 use crate::syscall::execute_syscall;
 
 #[derive(Debug, Snafu)]
@@ -21,12 +21,12 @@ pub struct VM {
     ro_block: Vec<u8>,
 
     remainder: u32,
-    equal_flag: bool,
+    pub equal_flag: bool,
 
-    stack: Vec<i32>,
+    stack: Stack,
     heap: Heap,
 
-    pc: usize,
+    pub pc: usize,
     program: Vec<u8>,
 }
 
@@ -37,12 +37,18 @@ impl VM {
             ro_block: Vec::new(),
             remainder: 0,
             equal_flag: false,
-            stack: Vec::new(),
+            stack: Stack::new(),
             heap: Heap::new(),
 
             pc: 0,
             program: Vec::new(),
         }
+    }
+
+    pub fn with_ro_block(ro: Vec<u8>) -> VM {
+        let mut vm = VM::default();
+        vm.ro_block = ro;
+        vm
     }
 
     pub fn program(&self) -> &[u8] {
@@ -55,20 +61,30 @@ impl VM {
     }
 
     #[inline]
-    pub fn registers(&self) -> &[i32; 33] {
+    pub fn registers(&self) -> &[i32; REGISTER_COUNT] {
         // TODO: Make this transparent. Make it so it returns regular registers (0-31).
         // Return the other special registers from other methods.
         &self.registers
     }
 
     #[inline]
-    pub fn registers_mut(&mut self) -> &mut [i32; 33] {
+    pub fn registers_mut(&mut self) -> &mut [i32; REGISTER_COUNT] {
         &mut self.registers
     }
 
     #[inline]
     pub fn ro_block(&self) -> &[u8] {
         &self.ro_block
+    }
+
+    #[inline]
+    pub fn stack(&self) -> &Stack {
+        &self.stack
+    }
+
+    #[inline]
+    pub fn stack_mut(&mut self) -> &mut Stack {
+        &mut self.stack
     }
 
     #[inline]
@@ -81,6 +97,16 @@ impl VM {
         &mut self.heap
     }
 
+    #[inline]
+    pub fn remainder(&self) -> u32 {
+        self.remainder
+    }
+
+    #[inline]
+    pub fn set_remainder(&mut self, v: u32) {
+        self.remainder = v;
+    }
+
     pub fn load_bytecode(&mut self, bytecode: Vec<u8>) -> Result<()> {
         let program = crate::loader::Program::new(bytecode).context(LoadingFailed)?;
 
@@ -91,6 +117,7 @@ impl VM {
         Ok(())
     }
 
+    #[inline]
     fn decode_opcode(&mut self) -> Opcode {
         let opcode = Opcode::from(self.program[self.pc]);
         self.pc += 1;
@@ -114,6 +141,33 @@ impl VM {
         result
     }
 
+    #[inline]
+    fn next_address(&mut self) -> Address {
+        let register = self.next_8_bits();
+        let offset = self.next_8_bits();
+        let section = MemorySection::from(self.next_8_bits());
+
+        Address {
+            register,
+            offset,
+            section,
+        }
+    }
+
+    pub fn run_once(&mut self) -> bool {
+        self.execute_instruction()
+    }
+
+    pub fn run(&mut self) {
+        let start = std::time::Instant::now();
+        let mut keepalive = true;
+        while keepalive {
+            keepalive = self.execute_instruction();
+        }
+        let dur = std::time::Instant::now().duration_since(start);
+        println!("Done in {}us", dur.as_micros());
+    }
+
     fn execute_instruction(&mut self) -> bool {
         if self.pc >= self.program.len() {
             println!("End of program reached.");
@@ -121,190 +175,64 @@ impl VM {
         }
 
         match self.decode_opcode() {
-            Opcode::LOAD => {
-                let register = self.next_8_bits() as usize;
-                let value = self.next_16_bits() as u16;
-                self.registers[register] = value as i32;
-            }
-            Opcode::ADD => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.registers[self.next_8_bits() as usize] = register_1 + register_2;
-            }
-            Opcode::SUB => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.registers[self.next_8_bits() as usize] = register_1 - register_2;
-            }
-            Opcode::MUL => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.registers[self.next_8_bits() as usize] = register_1 * register_2;
-            }
-            Opcode::DIV => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.registers[self.next_8_bits() as usize] = register_1 / register_2;
-                self.remainder = (register_1 % register_2) as u32;
-            }
-            Opcode::JMP => {
-                // Short label jump.
-                let target_idx = self.next_16_bits() as u16;
-
-                // Eat last byte.
-                self.next_8_bits();
-
-                self.pc = target_idx as usize;
-            }
-            Opcode::JMPF => {
-                let value = self.next_16_bits() as u16;
-
-                // Eat last byte.
-                self.next_8_bits();
-
-                // TODO: Overflow protection.
-                self.pc += value as usize;
-            }
-            Opcode::JMPB => {
-                let value = self.next_16_bits() as u16;
-
-                // Eat last byte.
-                self.next_8_bits();
-
-                self.pc -= value as usize;
-            }
-            Opcode::RJMP => {
-                // Long absolute jump.
-                let value = self.registers[self.next_8_bits() as usize];
-                // Eat last two bytes.
-                self.next_8_bits();
-                self.next_8_bits();
-                self.pc = value as usize;
-            }
-            Opcode::EQ => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 == register_2;
-                self.next_8_bits();
-            }
-            Opcode::NEQ => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 != register_2;
-                self.next_8_bits();
-            }
-            Opcode::GT => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 > register_2;
-                self.next_8_bits();
-            }
-            Opcode::LT => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 < register_2;
-                self.next_8_bits();
-            }
-            Opcode::GTQ => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 >= register_2;
-                self.next_8_bits();
-            }
-            Opcode::LTQ => {
-                let register_1 = self.registers[self.next_8_bits() as usize];
-                let register_2 = self.registers[self.next_8_bits() as usize];
-                self.equal_flag = register_1 <= register_2;
-                self.next_8_bits();
-            }
-            Opcode::JEQ => {
-                let target = self.next_16_bits() as u16;
-
-                // Eat last byte.
-                self.next_8_bits();
-
-                if self.equal_flag {
-                    self.pc = target as usize;
-                }
-            }
-            Opcode::INC => {
-                self.registers[self.next_8_bits() as usize] += 1;
-
-                // Eat last two bytes.
-                self.next_8_bits();
-                self.next_8_bits();
-            }
-            Opcode::DEC => {
-                self.registers[self.next_8_bits() as usize] -= 1;
-
-                // Eat last two bytes.
-                self.next_8_bits();
-                self.next_8_bits();
-            }
+            Opcode::LOAD => op::reg::load(self.next_8_bits(), self.next_16_bits(), self),
+            Opcode::ADD => op::math::add(
+                self.next_8_bits(),
+                self.next_8_bits(),
+                self.next_8_bits(),
+                self,
+            ),
+            Opcode::SUB => op::math::sub(
+                self.next_8_bits(),
+                self.next_8_bits(),
+                self.next_8_bits(),
+                self,
+            ),
+            Opcode::MUL => op::math::mul(
+                self.next_8_bits(),
+                self.next_8_bits(),
+                self.next_8_bits(),
+                self,
+            ),
+            Opcode::DIV => op::math::div(
+                self.next_8_bits(),
+                self.next_8_bits(),
+                self.next_8_bits(),
+                self,
+            ),
+            Opcode::JMP => op::branch::jmp(self.next_16_bits(), self),
+            Opcode::JMPF => op::branch::jmpf(self.next_16_bits(), self),
+            Opcode::JMPB => op::branch::jmpb(self.next_16_bits(), self),
+            Opcode::RJMP => op::branch::rjmp(self.next_8_bits(), self),
+            Opcode::EQ => op::math::eq(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::NEQ => op::math::neq(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::GT => op::math::gt(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::LT => op::math::lt(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::GTQ => op::math::gtq(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::LTQ => op::math::ltq(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::JEQ => op::branch::jeq(self.next_16_bits(), self),
+            Opcode::INC => op::reg::inc(self.next_8_bits(), self),
+            Opcode::DEC => op::reg::dec(self.next_8_bits(), self),
             Opcode::SYSC => {
                 // Execute a syscall.
+                log::trace!("syscall {:#06x}", self.registers[SYSCALL_REGISTER]);
                 let call_id = SysCall::from(self.registers[SYSCALL_REGISTER]);
                 let should_continue = execute_syscall(call_id, self);
 
                 if !should_continue {
                     return false;
                 }
-
-                // Eat last three bytes.
-                self.next_8_bits();
-                self.next_8_bits();
-                self.next_8_bits();
             }
-            Opcode::PUSH => {
-                let value = self.registers[self.next_8_bits() as usize];
-                self.stack.push(value);
-
-                // Eat last two bytes.
-                self.next_8_bits();
-                self.next_8_bits();
-            }
-            Opcode::POP => {
-                let value = self.stack.pop().unwrap_or(0);
-                self.registers[self.next_8_bits() as usize] = value;
-
-                // Eat last two bytes.
-                self.next_8_bits();
-                self.next_8_bits();
-            }
-            Opcode::MOV => {
-                let value = self.registers[self.next_8_bits() as usize];
-                self.registers[self.next_8_bits() as usize] = value;
-                // Eat last byte.
-                self.next_8_bits();
-            }
-            Opcode::LCW => {
-                // Load constant word.
-                let register_index = self.next_8_bits() as usize;
-                let offset = self.next_16_bits() as usize;
-                self.registers[register_index] = (&self.ro_block[offset..offset + 4])
-                    .read_i32::<LittleEndian>()
-                    .unwrap();
-            }
-            Opcode::SW => {
-                // Set word.
-                let value_to_write = self.registers[self.next_8_bits() as usize];
-
-                let ptr = self.registers[self.next_8_bits() as usize] as usize
-                    + self.next_8_bits() as usize;
-
-                let mut slice = &mut self.heap.memory_mut()[ptr..ptr + 4];
-                slice.write_i32::<LittleEndian>(value_to_write).unwrap(); // TODO: Catch error.
-            }
-            Opcode::LW => {
-                // Load word.
-                let target_register = self.next_8_bits() as usize;
-                let ptr = self.registers[self.next_8_bits() as usize] as usize
-                    + self.next_8_bits() as usize;
-
-                let mut slice = &self.heap.memory()[ptr..ptr + 4];
-                // TODO: Catch error
-                self.registers[target_register] = slice.read_i32::<LittleEndian>().unwrap()
-            }
+            Opcode::PUSH => op::stack::push(self.next_8_bits(), self),
+            Opcode::POP => op::stack::pop(self.next_8_bits(), self),
+            Opcode::MOV => op::reg::mov(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::LCW => op::ro::lcw(self.next_8_bits(), self.next_16_bits(), self),
+            Opcode::SW => op::memory::sw(self.next_8_bits(), &self.next_address(), self),
+            Opcode::LW => op::memory::lw(self.next_8_bits(), &self.next_address(), self),
+            Opcode::SB => op::memory::sb(self.next_8_bits(), &self.next_address(), self),
+            Opcode::LB => op::memory::lb(self.next_8_bits(), &self.next_address(), self),
+            Opcode::CALL => op::branch::call(self.next_16_bits(), self),
+            Opcode::RET => op::branch::ret(self),
             Opcode::IGL => {
                 println!("Illegal opcode. Terminating");
                 return false;
@@ -312,24 +240,14 @@ impl VM {
         }
         true
     }
-
-    pub fn run_once(&mut self) {
-        self.execute_instruction();
-    }
-
-    pub fn run(&mut self) {
-        let mut keepalive = true;
-        while keepalive {
-            keepalive = self.execute_instruction();
-        }
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+    use byteorder::{LittleEndian, WriteBytesExt};
 
     use super::VM;
+    use instructor::STACK_POINTER_REGISTER;
 
     #[test]
     fn test_create_vm() {
@@ -414,17 +332,16 @@ mod tests {
     #[test]
     fn test_opcode_jmpf() {
         let mut test_vm = VM::new();
-        test_vm.program = vec![7, 0, 2, 0, 6, 0, 0, 0];
+        test_vm.program = vec![7, 0, 2, 6, 0, 0, 0];
         test_vm.run_once();
-        assert_eq!(test_vm.pc, 6);
+        assert_eq!(test_vm.pc, 5);
     }
 
     #[test]
     fn test_opcode_jmpb() {
         let mut test_vm = VM::new();
         test_vm.pc = 2;
-        test_vm.registers[0] = 6;
-        test_vm.program = vec![7, 0, 8, 0, 6, 0, 0, 0];
+        test_vm.program = vec![7, 0, 8, 0, 5];
         test_vm.run_once();
         assert_eq!(test_vm.pc, 0);
     }
@@ -434,7 +351,7 @@ mod tests {
         let mut test_vm = VM::new();
         test_vm.registers[0] = 10;
         test_vm.registers[1] = 10;
-        test_vm.program = vec![9, 0, 1, 0, 9, 0, 1, 0];
+        test_vm.program = vec![9, 0, 1, 9, 0, 1];
 
         // Exec the first instruction -- should be equal.
         test_vm.run_once();
@@ -451,7 +368,7 @@ mod tests {
         let mut test_vm = VM::new();
         test_vm.registers[0] = 10;
         test_vm.registers[1] = 10;
-        test_vm.program = vec![10, 0, 1, 0, 10, 0, 1, 0];
+        test_vm.program = vec![10, 0, 1, 10, 0, 1];
 
         // Exec the first instruction -- should not be equal.
         test_vm.run_once();
@@ -468,7 +385,7 @@ mod tests {
         let mut test_vm = VM::new();
         test_vm.registers[0] = 11;
         test_vm.registers[1] = 10;
-        test_vm.program = vec![11, 0, 1, 0, 11, 0, 1, 0];
+        test_vm.program = vec![11, 0, 1, 11, 0, 1];
 
         // Exec the first instruction -- should be equal.
         test_vm.run_once();
@@ -485,7 +402,7 @@ mod tests {
         let mut test_vm = VM::new();
         test_vm.registers[0] = 9;
         test_vm.registers[1] = 10;
-        test_vm.program = vec![12, 0, 1, 0, 12, 0, 1, 0];
+        test_vm.program = vec![12, 0, 1, 12, 0, 1];
 
         // Exec the first instruction -- should be equal.
         test_vm.run_once();
@@ -571,19 +488,20 @@ mod tests {
         test_vm.registers[0] = 12;
         test_vm.program = vec![20, 0, 0, 0];
         test_vm.run_once();
-        assert_eq!(test_vm.stack, vec![12]);
+        assert_eq!(test_vm.stack, vec![12, 0, 0, 0].into());
     }
 
     #[test]
     fn test_opcode_pop() {
         let mut test_vm = VM::new();
-        test_vm.stack = vec![18, 32];
+        test_vm.stack = vec![18, 0, 0, 0, 32, 0, 0, 0].into();
+        test_vm.registers[STACK_POINTER_REGISTER] = 8;
 
         test_vm.program = vec![21, 0, 0, 0];
         test_vm.run_once();
 
         assert_eq!(test_vm.registers[0], 32);
-        assert_eq!(test_vm.stack, vec![18]);
+        assert_eq!(test_vm.stack, vec![18, 0, 0, 0].into());
     }
 
     #[test]
@@ -604,7 +522,7 @@ mod tests {
         test_vm.ro_block = vec![0, 0, 0, 0, 10, 0, 0, 0];
 
         assert_eq!(test_vm.registers[0], 0);
-        test_vm.program = vec![23, 0, 0, 4];
+        test_vm.program = vec![23, 0, 0, 4, 1];
         test_vm.run_once();
 
         assert_eq!(test_vm.registers[0], 10);
@@ -620,7 +538,7 @@ mod tests {
 
         test_vm.registers[0] = 512;
         test_vm.registers[1] = 4;
-        test_vm.program = vec![24, 0, 1, 0];
+        test_vm.program = vec![24, 0, 1, 0, 1];
         test_vm.run_once();
 
         assert_eq!(
@@ -643,7 +561,38 @@ mod tests {
 
         // Try to fetch it back with an lw instruction.
         test_vm.registers[1] = 4; // Pointer to the memory location containing our number.
-        test_vm.program = vec![25, 0, 1, 0];
+        test_vm.program = vec![25, 0, 1, 0, 1];
+
+        assert_eq!(test_vm.registers[0], 0);
+        test_vm.run_once();
+        assert_eq!(test_vm.registers[0], 42);
+    }
+
+    #[test]
+    fn test_opcode_sb() {
+        let mut test_vm = VM::new();
+
+        test_vm.heap_mut().alloc(4);
+
+        assert_eq!(test_vm.heap().memory()[3], 0);
+
+        test_vm.registers[0] = 42;
+        test_vm.registers[1] = 3;
+        test_vm.program = vec![26, 0, 1, 0, 1];
+        test_vm.run_once();
+
+        assert_eq!(test_vm.heap().memory()[3], 42)
+    }
+
+    #[test]
+    fn test_opcode_lb() {
+        let mut test_vm = VM::new();
+
+        test_vm.heap_mut().alloc(4);
+        test_vm.heap_mut().memory_mut()[2] = 42;
+
+        test_vm.registers[1] = 2;
+        test_vm.program = vec![27, 0, 1, 0, 1];
 
         assert_eq!(test_vm.registers[0], 0);
         test_vm.run_once();
@@ -658,7 +607,7 @@ impl Default for VM {
             ro_block: Vec::new(),
             remainder: 0,
             equal_flag: false,
-            stack: Vec::new(),
+            stack: Stack::new(),
             heap: Heap::new(),
 
             pc: 0,

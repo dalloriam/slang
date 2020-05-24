@@ -29,6 +29,32 @@ fn syscall_cprint(vm: &VM) -> bool {
     true
 }
 
+fn syscall_prints(vm: &VM) -> bool {
+    // Prints a string from memory.
+    // Expects a ptr. to the beginning of the string in $0.
+
+    let start_ptr = vm.registers()[0] as usize;
+    let mut end_ptr = start_ptr;
+    while end_ptr < vm.heap().memory().len() && vm.heap().memory()[end_ptr] != 0 {
+        end_ptr += 1;
+    }
+
+    // The VM expects the string to be UTF-8 encoded.
+    let result = std::str::from_utf8(&vm.heap().memory()[start_ptr..end_ptr]);
+    match result {
+        Ok(s) => {
+            print!("{}", s);
+        }
+        Err(e) => {
+            // TODO: Swap with logger.
+            eprintln!("Error decoding string for print syscall: {:#?}", e);
+            return false;
+        }
+    };
+
+    true
+}
+
 fn syscall_alloc(vm: &mut VM) -> bool {
     let amt_to_allocate = vm.registers()[0] as u16;
 
@@ -50,13 +76,14 @@ fn syscall_free(vm: &mut VM) -> bool {
 }
 
 pub fn execute_syscall(syscall: SysCall, vm: &mut VM) -> bool {
-    log::trace!("Executing: {:?}", syscall);
+    log::trace!("{:?}", syscall);
     match syscall {
         SysCall::NOP => true,
         SysCall::CPRINT => syscall_cprint(vm),
         SysCall::EXIT => false,
         SysCall::ALLOC => syscall_alloc(vm),
         SysCall::FREE => syscall_free(vm),
+        SysCall::PRINTS => syscall_prints(vm),
         _ => {
             eprintln!("Illegal Syscall. Terminating.",);
             false

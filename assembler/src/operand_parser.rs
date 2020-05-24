@@ -1,9 +1,9 @@
-use instructor::Operand;
+use instructor::{Address, MemorySection, Operand};
 
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_till},
-    character::complete::{char, digit1},
+    character::complete::{char, digit1, hex_digit1},
     combinator::{map, map_res},
     sequence::{delimited, preceded, tuple},
     IResult,
@@ -29,7 +29,11 @@ pub fn operand(i: &str) -> IResult<&str, Operand> {
     ))(i)
 }
 
-fn address(i: &str) -> IResult<&str, Operand> {
+pub fn address(i: &str) -> IResult<&str, Operand> {
+    alt((heap_address, stack_address))(i)
+}
+
+fn heap_address(i: &str) -> IResult<&str, Operand> {
     let addr = delimited(whitespace, register, whitespace);
     let tup = delimited(
         whitespace,
@@ -38,13 +42,36 @@ fn address(i: &str) -> IResult<&str, Operand> {
     );
     map(tup, |(offset, reg)| {
         if let Operand::Register(reg_byte) = reg {
-            return Operand::Address((offset, reg_byte));
+            return Operand::Address(Address {
+                offset,
+                register: reg_byte,
+                section: MemorySection::Heap,
+            });
         }
         panic!("The register parser returned a non-register operand");
     })(i)
 }
 
-fn string(i: &str) -> IResult<&str, Operand> {
+fn stack_address(i: &str) -> IResult<&str, Operand> {
+    let addr = delimited(whitespace, register, whitespace);
+    let tup = delimited(
+        whitespace,
+        tuple((byte, delimited(char('['), addr, char(']')))),
+        whitespace,
+    );
+    map(tup, |(offset, reg)| {
+        if let Operand::Register(reg_byte) = reg {
+            return Operand::Address(Address {
+                offset,
+                register: reg_byte,
+                section: MemorySection::Stack,
+            });
+        }
+        panic!("The register parser returned a non-register operand");
+    })(i)
+}
+
+pub fn string(i: &str) -> IResult<&str, Operand> {
     map(
         delimited(
             whitespace,
@@ -55,13 +82,32 @@ fn string(i: &str) -> IResult<&str, Operand> {
     )(i)
 }
 
-fn byte(i: &str) -> IResult<&str, u8> {
+pub fn byte(i: &str) -> IResult<&str, u8> {
     map_res(delimited(whitespace, digit1, whitespace), |b_val: &str| {
         b_val.parse::<u8>()
     })(i)
 }
 
-fn integer(i: &str) -> IResult<&str, Operand> {
+/// Offset can be either an int or a label usage.
+pub fn offset(i: &str) -> IResult<&str, Operand> {
+    alt((integer, map(label::label_usage, Operand::Label)))(i)
+}
+
+pub fn integer(i: &str) -> IResult<&str, Operand> {
+    alt((hex_digits, digits))(i)
+}
+
+fn hex_digits(i: &str) -> IResult<&str, Operand> {
+    map(
+        map_res(
+            delimited(whitespace, preceded(tag("0x"), hex_digit1), whitespace),
+            |rs| i32::from_str_radix(rs, 16),
+        ),
+        Operand::Integer,
+    )(i)
+}
+
+fn digits(i: &str) -> IResult<&str, Operand> {
     map(
         map_res(
             delimited(whitespace, digit1, whitespace),
@@ -71,7 +117,7 @@ fn integer(i: &str) -> IResult<&str, Operand> {
     )(i)
 }
 
-fn register(i: &str) -> IResult<&str, Operand> {
+pub fn register(i: &str) -> IResult<&str, Operand> {
     map(
         alt((
             map_res(
@@ -89,6 +135,14 @@ fn register(i: &str) -> IResult<&str, Operand> {
                 delimited(whitespace, preceded(char('$'), tag("v0")), whitespace),
                 |_val| 32 as u8,
             ),
+            map(
+                delimited(whitespace, preceded(char('$'), tag("esp")), whitespace),
+                |_val| 33 as u8,
+            ),
+            map(
+                delimited(whitespace, preceded(char('$'), tag("ebp")), whitespace),
+                |_val| 34 as u8,
+            ),
         )),
         Operand::Register,
     )(i)
@@ -97,12 +151,13 @@ fn register(i: &str) -> IResult<&str, Operand> {
 #[cfg(test)]
 mod tests {
     use super::{address, integer, operand, register, string, Operand};
+    use instructor::{Address, MemorySection};
 
     #[test]
     fn parse_address() {
         let (rest, addr) = address(" 18($3 ) ").unwrap();
         assert_eq!(rest, "");
-        assert_eq!(addr, Operand::Address((18, 3)));
+        assert_eq!(addr, Operand::Address(Address{offset: 18, register: 3, section: MemorySection::Heap}))
     }
 
     #[test]
@@ -146,6 +201,20 @@ mod tests {
             assert_eq!(reg, Operand::Register(32));
             assert_eq!(rest, "");
         }
+
+        {
+            // Test parsing of special register $esp (stack pointer).
+            let (rest, reg) = register("$esp").unwrap();
+            assert_eq!(reg, Operand::Register(33));
+            assert_eq!(rest, "");
+        }
+
+        {
+            // Test parsing of special register $esp (stack base).
+            let (rest, reg) = register("$ebp").unwrap();
+            assert_eq!(reg, Operand::Register(34));
+            assert_eq!(rest, "");
+        }
     }
 
     #[test]
@@ -153,6 +222,13 @@ mod tests {
         let (rest, s) = string("\"hello\"").unwrap();
         assert_eq!(s, Operand::Str(String::from("hello")));
         assert_eq!(rest, "");
+    }
+
+    #[test]
+    fn parse_hex_digit() {
+        let (rest, op) = integer(" 0x002A  ").unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(op, Operand::Integer(42));
     }
 
     #[test]
