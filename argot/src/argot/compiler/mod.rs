@@ -11,6 +11,7 @@ pub struct Compiler {
     free_registers: Vec<u8>,
     used_registers: Vec<u8>,
     stack_storecount: usize,
+    total_stack_offset: usize,
 
     assembly_buffer: Vec<String>,
 }
@@ -27,6 +28,7 @@ impl Compiler {
             free_registers: free_reg,
             used_registers: Vec::new(),
             stack_storecount: 0,
+            total_stack_offset: 0,
 
             assembly_buffer: Vec::new(),
         }
@@ -59,6 +61,7 @@ impl Compiler {
                 self.assembly_buffer
                     .push(format!("ld $7 {:#06x}\npush $7", val));
                 self.stack_storecount += 1;
+                self.stack_storecount += std::mem::size_of::<i32>();
             }
         }
     }
@@ -74,6 +77,7 @@ impl Compiler {
                 // No storage register -- Store on stack instead.
                 self.assembly_buffer.push(format!("push ${}", src_reg));
                 self.stack_storecount += 1;
+                self.stack_storecount += std::mem::size_of::<i32>();
             }
         }
     }
@@ -82,6 +86,7 @@ impl Compiler {
         if self.stack_storecount > 0 {
             self.assembly_buffer.push(format!("pop ${}", default));
             self.stack_storecount -= 1;
+            self.stack_storecount -= std::mem::size_of::<i32>();
             default
         } else {
             debug_assert!(!self.used_registers.is_empty());

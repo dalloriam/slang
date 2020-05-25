@@ -17,12 +17,16 @@ UnaryOperator:  -
 pub mod arithmetic_expression;
 pub mod common;
 pub mod factor;
+pub mod function;
 pub mod number;
 pub mod operator;
+pub mod statement;
 pub mod term;
 pub mod var_decl;
 
 pub use arithmetic_expression::ArithmeticExpression;
 pub use factor::Factor;
 pub use operator::{FactorOperator, TermOperator, UnaryOperator};
+pub use statement::Statement;
 pub use term::Term;
+pub use var_decl::{VariableAssignment, VariableDeclaration};
