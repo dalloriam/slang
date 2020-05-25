@@ -20,6 +20,7 @@ pub mod factor;
 pub mod number;
 pub mod operator;
 pub mod term;
+pub mod var_decl;
 
 pub use arithmetic_expression::ArithmeticExpression;
 pub use factor::Factor;

@@ -10,6 +10,7 @@ use crate::visitor::{Visitable, Visitor};
 pub struct Compiler {
     free_registers: Vec<u8>,
     used_registers: Vec<u8>,
+    stack_storecount: usize,
 
     assembly_buffer: Vec<String>,
 }
@@ -17,13 +18,15 @@ pub struct Compiler {
 impl Compiler {
     pub fn new() -> Compiler {
         let mut free_reg = Vec::with_capacity(REGULAR_REGISTER_COUNT);
-        for i in 0..REGULAR_REGISTER_COUNT {
+        // Registers 0-8 are reserved for operations 8-31 are OK for storage.
+        for i in (8..REGULAR_REGISTER_COUNT).rev() {
             free_reg.push(i as u8)
         }
 
         Compiler {
             free_registers: free_reg,
             used_registers: Vec::new(),
+            stack_storecount: 0,
 
             assembly_buffer: Vec::new(),
         }
@@ -42,6 +45,51 @@ impl Compiler {
         let program = self.compile_asm(source);
         Assembler::new().assemble(&program).unwrap()
     }
+
+    fn save_val(&mut self, val: i32) {
+        match self.free_registers.pop() {
+            Some(reg) => {
+                // A storage register is available -- save it there.
+                self.assembly_buffer
+                    .push(format!("ld ${} {:#06x}", reg, val));
+                self.used_registers.push(reg);
+            }
+            None => {
+                // No storage register is available. Store the value in the vm stack.
+                self.assembly_buffer
+                    .push(format!("ld $7 {:#06x}\npush $7", val));
+                self.stack_storecount += 1;
+            }
+        }
+    }
+    fn save_reg(&mut self, src_reg: u8) {
+        match self.free_registers.pop() {
+            Some(reg) => {
+                // Found a storage register, copy there.
+                self.assembly_buffer
+                    .push(format!("move ${} ${}", src_reg, reg));
+                self.used_registers.push(reg);
+            }
+            None => {
+                // No storage register -- Store on stack instead.
+                self.assembly_buffer.push(format!("push ${}", src_reg));
+                self.stack_storecount += 1;
+            }
+        }
+    }
+
+    fn pop_reg(&mut self, default: u8) -> u8 {
+        if self.stack_storecount > 0 {
+            self.assembly_buffer.push(format!("pop ${}", default));
+            self.stack_storecount -= 1;
+            default
+        } else {
+            debug_assert!(!self.used_registers.is_empty());
+            let r = self.used_registers.pop().unwrap();
+            self.free_registers.push(r);
+            r
+        }
+    }
 }
 
 impl Default for Compiler {
@@ -55,6 +103,7 @@ impl Visitor for Compiler {
 
     fn visit_arithmetic_expression(&mut self, v: &mut ArithmeticExpression) -> Self::Result {
         log::debug!("arithmetic expression");
+
         v.root_term.accept(self)?;
 
         for (term_op, term) in v.trail.iter_mut() {
@@ -67,10 +116,7 @@ impl Visitor for Compiler {
         log::debug!("factor");
         match v {
             Factor::Integer(i) => {
-                let register = self.free_registers.pop().unwrap();
-                self.used_registers.push(register);
-                self.assembly_buffer
-                    .push(format!("ld ${} {:#06x}", register, i));
+                self.save_val(*i);
                 Ok(())
             }
             Factor::Unary(op, f) => {
@@ -82,55 +128,44 @@ impl Visitor for Compiler {
     }
     fn visit_factor_operator(&mut self, v: &mut FactorOperator) -> Self::Result {
         log::debug!("factor operator");
-        let result_register = self.free_registers.pop().unwrap();
-        let data_register_2 = self.used_registers.pop().unwrap();
-        let data_register_1 = self.used_registers.pop().unwrap();
+
+        let d1 = self.pop_reg(0);
+        let d2 = self.pop_reg(1);
+
         match v {
-            FactorOperator::Mult => self.assembly_buffer.push(format!(
-                "mul ${} ${} ${}",
-                data_register_1, data_register_2, result_register
-            )),
-            FactorOperator::Div => self.assembly_buffer.push(format!(
-                "div ${} ${} ${}",
-                data_register_1, data_register_2, result_register
-            )),
+            FactorOperator::Mult => self.assembly_buffer.push(format!("mul ${} ${} $0", d2, d1)),
+            FactorOperator::Div => self.assembly_buffer.push(format!("div ${} ${} $0", d2, d1)),
             FactorOperator::Unknown => panic!("unknown factor operator"),
         }
-        self.free_registers.push(data_register_2);
-        self.free_registers.push(data_register_1);
-        self.used_registers.push(result_register);
+
+        self.save_reg(0);
 
         Ok(())
     }
     fn visit_term(&mut self, v: &mut Term) -> Self::Result {
         log::debug!("term");
+
         v.root_factor.accept(self)?;
 
         for (op, t) in v.trail.iter_mut() {
             t.accept(self)?;
+
             op.accept(self)?;
         }
         Ok(())
     }
     fn visit_term_operator(&mut self, v: &mut TermOperator) -> Self::Result {
         log::debug!("term operator");
-        let result_register = self.free_registers.pop().unwrap();
-        let data_register_2 = self.used_registers.pop().unwrap();
-        let data_register_1 = self.used_registers.pop().unwrap();
+        let d1 = self.pop_reg(0);
+        let d2 = self.pop_reg(1);
+
         match v {
-            TermOperator::Plus => self.assembly_buffer.push(format!(
-                "add ${} ${} ${}",
-                data_register_1, data_register_2, result_register
-            )),
-            TermOperator::Minus => self.assembly_buffer.push(format!(
-                "sub ${} ${} ${}",
-                data_register_1, data_register_2, result_register
-            )),
+            TermOperator::Plus => self.assembly_buffer.push(format!("add ${} ${} $0", d2, d1)),
+            TermOperator::Minus => self.assembly_buffer.push(format!("sub ${} ${} $0", d2, d1)),
             TermOperator::Unknown => panic!("unknown term operator"),
         }
-        self.free_registers.push(data_register_2);
-        self.free_registers.push(data_register_1);
-        self.used_registers.push(result_register);
+
+        self.save_reg(0);
         Ok(())
     }
     fn visit_unary_operator(&mut self, v: &mut UnaryOperator) -> Self::Result {
