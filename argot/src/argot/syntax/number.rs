@@ -53,7 +53,7 @@ mod tests {
 
     #[test]
     fn hexadecimal_integer_overflow() {
-        let (rest, i) = integer("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").unwrap();
+        let (_rest, i) = integer("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").unwrap();
         assert_eq!(i, 0);
     }
 }

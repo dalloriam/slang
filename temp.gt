@@ -1,0 +1,5 @@
+fn main() {
+  int a = 6 * 6 + 6;
+  int b = 2 + 3;
+  int c = 1 + (a);
+}

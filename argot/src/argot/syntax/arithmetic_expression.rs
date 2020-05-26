@@ -41,7 +41,7 @@ mod tests {
 
     use super::{arithmetic_expression, ArithmeticExpression, Term, TermOperator};
     use crate::syntax::operator::{FactorOperator, UnaryOperator};
-    use crate::syntax::Factor;
+    use crate::syntax::{Expression, Factor};
 
     #[test]
     fn arithm_expression() {
@@ -71,13 +71,15 @@ mod tests {
     fn nested_expression() {
         let expected_expression = ArithmeticExpression {
             root_term: Term {
-                root_factor: Factor::Expression(Box::new(ArithmeticExpression {
-                    root_term: Term {
-                        root_factor: Factor::Integer(2),
-                        trail: vec![(FactorOperator::Mult, Factor::Integer(3))],
+                root_factor: Factor::Expression(Box::new(Expression::Arithmetic(
+                    ArithmeticExpression {
+                        root_term: Term {
+                            root_factor: Factor::Integer(2),
+                            trail: vec![(FactorOperator::Mult, Factor::Integer(3))],
+                        },
+                        trail: Vec::new(),
                     },
-                    trail: Vec::new(),
-                })),
+                ))),
                 trail: Vec::new(),
             },
             trail: vec![(
