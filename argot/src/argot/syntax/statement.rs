@@ -1,5 +1,4 @@
 use nom::{
-    branch::alt,
     character::complete::char,
     combinator::map,
     sequence::{delimited, terminated},
@@ -40,7 +39,7 @@ pub fn statement(i: &str) -> IResult<&str, Statement> {
 mod tests {
 
     use super::statement;
-    use crate::syntax::{Statement, VariableAssignment, VariableDeclaration};
+    use crate::syntax::{Statement, VariableDeclaration};
 
     #[test]
     fn statement_decl_noassign() {

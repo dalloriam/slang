@@ -1,7 +1,7 @@
 use nom::{
     bytes::complete::tag,
     character::complete::{alpha1, char},
-    combinator::{map, opt},
+    combinator::map,
     multi::many0,
     sequence::{delimited, tuple},
     IResult,
@@ -33,7 +33,7 @@ pub fn function_declaration(i: &str) -> IResult<&str, FunctionDeclaration> {
             tag("()"),
             function_body,
         )),
-        |(f, name, _x, body)| FunctionDeclaration {
+        |(_f, name, _x, body)| FunctionDeclaration {
             return_type: String::from("int"),
             name: String::from(name),
             body,

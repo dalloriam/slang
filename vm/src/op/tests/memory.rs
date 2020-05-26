@@ -1,6 +1,6 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
-use instructor::{Address, MemorySection};
+use instructor::Address;
 
 use crate::{memutil, op::memory, VM};
 

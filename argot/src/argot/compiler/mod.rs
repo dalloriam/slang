@@ -4,9 +4,8 @@ use assembler::Assembler;
 use instructor::REGULAR_REGISTER_COUNT;
 
 use crate::syntax::{
-    arithmetic_expression::arithmetic_expression, function::function_declaration,
-    ArithmeticExpression, Expression, Factor, FactorOperator, FunctionDeclaration, Statement, Term,
-    TermOperator, UnaryOperator, VariableDeclaration,
+    function::function_declaration, ArithmeticExpression, Expression, Factor, FactorOperator,
+    FunctionDeclaration, Statement, Term, TermOperator, UnaryOperator, VariableDeclaration,
 };
 use crate::visitor::{Visitable, Visitor};
 use scope::Scope;
@@ -15,7 +14,6 @@ pub struct Compiler {
     free_registers: Vec<u8>,
     used_registers: Vec<u8>,
     stack_storecount: usize,
-    total_stack_offset: usize,
 
     scopes: Vec<Scope>,
 
@@ -34,7 +32,6 @@ impl Compiler {
             free_registers: free_reg,
             used_registers: Vec::new(),
             stack_storecount: 0,
-            total_stack_offset: 0,
 
             scopes: Vec::new(),
 
@@ -213,7 +210,7 @@ impl Visitor for Compiler {
         self.assembly_buffer.push(format!("{}:", v.name));
 
         // Generate function prelude.
-        for (variable_name, stack_offset) in last_scope.local_variables().iter() {
+        for (_variable_name, stack_offset) in last_scope.local_variables().iter() {
             self.assembly_buffer
                 .push(format!("sw $0 {}[$ebp]", stack_offset))
         }
@@ -275,7 +272,14 @@ impl Visitor for Compiler {
     fn visit_expression(&mut self, expr: &mut Expression) -> Self::Result {
         match expr {
             Expression::Arithmetic(arith) => arith.accept(self)?,
-            _ => unimplemented!(),
+            Expression::Identifier(var_name) => {
+                let scope = self.scopes.last_mut().unwrap();
+                // Load the val. of the variable from the runtime stack & push the register address
+                // to the compiler stack.
+                let var_offset = *scope.local_variables().get(var_name).unwrap(); // TODO: Handle errors.
+                scope.push_instruction(format!("lw $0 {}[$ebp]", var_offset));
+                self.save_reg(0);
+            }
         }
         Ok(())
     }

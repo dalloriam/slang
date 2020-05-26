@@ -1,8 +1,7 @@
 use nom::{
     character::complete::{alpha1, char},
     combinator::{map, opt},
-    multi::many0,
-    sequence::{delimited, delimitedc, preceded, tuple},
+    sequence::{delimited, preceded, tuple},
     IResult,
 };
 
