@@ -242,7 +242,9 @@ impl Visitor for Compiler {
     fn visit_variable_declaration(&mut self, decl: &mut VariableDeclaration) -> Self::Result {
         {
             let latest_scope = self.scopes.last_mut().unwrap(); // TODO: Handle.
-            latest_scope.variable_with_size(&decl.name, std::mem::size_of::<i32>());
+            latest_scope
+                .variable_with_size(&decl.name, std::mem::size_of::<i32>())
+                .unwrap();
         }
 
         if let Some(mut expr) = decl.expression.clone() {
@@ -271,6 +273,10 @@ impl Visitor for Compiler {
     }
 
     fn visit_expression(&mut self, expr: &mut Expression) -> Self::Result {
+        match expr {
+            Expression::Arithmetic(arith) => arith.accept(self)?,
+            _ => unimplemented!(),
+        }
         Ok(())
     }
 }

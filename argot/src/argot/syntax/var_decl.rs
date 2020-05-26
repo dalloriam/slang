@@ -23,6 +23,7 @@ impl Visitable for VariableDeclaration {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct VariableAssignment {
     pub name: String,
     pub expression: Expression,

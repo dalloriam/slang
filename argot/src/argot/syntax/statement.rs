@@ -13,6 +13,7 @@ use crate::{
     visitor::{Visitable, Visitor},
 };
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum Statement {
     VarDecl(VariableDeclaration),
     VarAssign(VariableAssignment),
@@ -33,4 +34,34 @@ pub fn statement(i: &str) -> IResult<&str, Statement> {
         ),
         |decl| Statement::VarDecl(decl),
     )(i)
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::statement;
+    use crate::syntax::{Statement, VariableAssignment, VariableDeclaration};
+
+    #[test]
+    fn statement_decl_noassign() {
+        let (rest, stmt) = statement("int i;").unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(
+            stmt,
+            Statement::VarDecl(VariableDeclaration {
+                name: String::from("i"),
+                expression: None,
+                var_type: String::from("int")
+            })
+        )
+    }
+
+    #[test]
+    fn statement_decl_assign() {}
+
+    #[test]
+    fn bad_statement() {}
+
+    #[test]
+    fn statement_missing_semicolon() {}
 }
