@@ -49,8 +49,8 @@ pub fn variable_declaration(i: &str) -> IResult<&str, VariableDeclaration> {
 
 #[cfg(test)]
 mod tests {
-    use super::{variable_declaration, ArithmeticExpression, VariableDeclaration};
-    use crate::syntax::{Factor, Term};
+    use super::variable_declaration;
+    use crate::syntax::{ArithmeticExpression, Expression, Factor, Term, VariableDeclaration};
 
     #[test]
     fn int_decl() {
@@ -75,13 +75,13 @@ mod tests {
             VariableDeclaration {
                 var_type: String::from("int"),
                 name: String::from("bing"),
-                expression: Some(ArithmeticExpression {
+                expression: Some(Expression::Arithmetic(ArithmeticExpression {
                     root_term: Term {
                         root_factor: Factor::Integer(14),
                         trail: Vec::new()
                     },
                     trail: Vec::new(),
-                })
+                }))
             }
         )
     }
