@@ -2,7 +2,7 @@ use crate::Compiler;
 
 #[test]
 fn basic_add() {
-    let src = "2 + 3";
+    let src = "fn main() { int a = 2 + 3; }";
     let asm = Compiler::new().compile_asm(src);
     let expected_asm = ".data
 .text

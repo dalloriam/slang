@@ -1,6 +1,6 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
-use instructor::{Address, MemorySection};
+use instructor::{Address, MemorySection, STACK_POINTER_REGISTER};
 
 use crate::VM;
 
@@ -14,7 +14,14 @@ pub fn sw(src_reg: u8, addr: &Address, vm: &mut VM) {
 
     let mut memory_slice = match addr.section {
         MemorySection::Heap => &mut vm.heap_mut().memory_mut()[ptr..ptr + 4],
-        MemorySection::Stack => &mut vm.stack_mut().memory_mut()[ptr..ptr + 4],
+        MemorySection::Stack => {
+            // This can cause stack growth, need to update the esp
+            vm.stack_mut().safe_grow(ptr + 4);
+
+            vm.registers_mut()[STACK_POINTER_REGISTER] = vm.stack().len() as i32;
+
+            &mut vm.stack_mut().memory_mut()[ptr..ptr + 4]
+        }
     };
 
     memory_slice

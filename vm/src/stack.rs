@@ -42,6 +42,14 @@ impl Stack {
     }
 
     #[inline]
+    pub fn safe_grow(&mut self, upper_bound: usize) {
+        let abs_diff = (upper_bound as i32) - (self.data.len() as i32);
+        if abs_diff > 0 {
+            self.data.resize(upper_bound, 0);
+        }
+    }
+
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }

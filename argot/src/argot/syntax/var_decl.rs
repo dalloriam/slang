@@ -2,32 +2,34 @@ use nom::{
     character::complete::{alpha1, char},
     combinator::{map, opt},
     multi::many0,
-    sequence::{delimited, preceded, tuple},
+    sequence::{delimited, delimitedc, preceded, tuple},
     IResult,
 };
 
-use crate::syntax::{arithmetic_expression::arithmetic_expression, common::whitespace};
+use crate::syntax::{common::whitespace, expression::expression, Expression};
 
-use super::ArithmeticExpression;
-use nom::sequence::delimitedc;
+use crate::visitor::{Visitable, Visitor};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct VariableDeclaration {
     pub var_type: String,
     pub name: String,
-    pub expression: Option<ArithmeticExpression>,
+    pub expression: Option<Expression>,
+}
+
+impl Visitable for VariableDeclaration {
+    fn accept<V: Visitor>(&mut self, v: &mut V) -> V::Result {
+        v.visit_variable_declaration(self)
+    }
 }
 
 pub struct VariableAssignment {
     pub name: String,
-    pub expression: ArithmeticExpression,
+    pub expression: Expression,
 }
 
-fn assign(i: &str) -> IResult<&str, ArithmeticExpression> {
-    preceded(
-        delimited(whitespace, char('='), whitespace),
-        arithmetic_expression,
-    )(i)
+fn assign(i: &str) -> IResult<&str, Expression> {
+    preceded(delimited(whitespace, char('='), whitespace), expression)(i)
 }
 
 pub fn identifier(i: &str) -> IResult<&str, &str> {

@@ -7,8 +7,8 @@ use nom::{
 };
 
 use crate::syntax::{
-    arithmetic_expression::{arithmetic_expression, ArithmeticExpression},
     common::whitespace,
+    expression::{expression, Expression},
     number::integer,
     operator::{unary_operator, UnaryOperator},
 };
@@ -18,7 +18,7 @@ use crate::visitor::{Visitable, Visitor};
 pub enum Factor {
     Integer(i32),
     Unary(UnaryOperator, Box<Factor>),
-    Expression(Box<ArithmeticExpression>),
+    Expression(Box<Expression>),
 }
 
 impl Visitable for Factor {
@@ -49,7 +49,7 @@ fn expr_factor(i: &str) -> IResult<&str, Factor> {
     map(
         delimited(
             whitespace,
-            delimited(char('('), arithmetic_expression, char(')')),
+            delimited(char('('), expression, char(')')),
             whitespace,
         ),
         |e| Factor::Expression(Box::new(e)),
