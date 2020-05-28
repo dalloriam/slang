@@ -1,6 +1,6 @@
 use crate::syntax::{
-    ArithmeticExpression, Expression, Factor, FactorOperator, FunctionDeclaration, Statement, Term,
-    TermOperator, UnaryOperator, VariableDeclaration,
+    ArithmeticExpression, Expression, Factor, FactorOperator, FunctionDeclaration, Program,
+    Statement, Term, TermOperator, UnaryOperator, VariableDeclaration,
 };
 
 pub trait Visitable {
@@ -20,4 +20,5 @@ pub trait Visitor {
     fn visit_statement(&mut self, v: &mut Statement) -> Self::Result;
     fn visit_variable_declaration(&mut self, v: &mut VariableDeclaration) -> Self::Result;
     fn visit_expression(&mut self, v: &mut Expression) -> Self::Result;
+    fn visit_program(&mut self, v: &mut Program) -> Self::Result;
 }

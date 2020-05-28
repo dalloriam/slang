@@ -21,9 +21,10 @@ argotc +args="":
     @cargo run --bin argotc -- {{args}}
 
 gtr f:
+    @cargo run --bin argotc -- --asm {{f}}
     @cargo run --bin argotc -- {{f}}
     @just trace -f ./a.out
-    rm ./a.out
+    @rm ./a.out
 
 run +args="":
     @cargo run --bin slang -- {{args}}
