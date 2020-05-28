@@ -6,6 +6,7 @@ fn basic_add() {
     let asm = Compiler::new().compile_asm(src);
     let expected_asm = ".data
 .text
+jmp @main
 main:
 sw $0 0[$ebp]
 ld $8 0x0002
@@ -13,7 +14,9 @@ ld $9 0x0003
 add $8 $9 $0
 move $0 $8
 sw $8 0[$ebp]
-pop $0";
+pop $0
+ld $v0 0x0002
+syscall";
 
     assert_eq!(asm, expected_asm);
 }
@@ -24,6 +27,7 @@ fn basic_mult() {
     let asm = Compiler::new().compile_asm(src);
     let expected_asm = ".data
 .text
+jmp @main
 main:
 sw $0 0[$ebp]
 ld $8 0x0002
@@ -31,7 +35,9 @@ ld $9 0x0003
 mul $8 $9 $0
 move $0 $8
 sw $8 0[$ebp]
-pop $0";
+pop $0
+ld $v0 0x0002
+syscall";
 
     assert_eq!(asm, expected_asm);
 }
@@ -42,6 +48,7 @@ fn basic_sub() {
     let asm = Compiler::new().compile_asm(src);
     let expected_asm = ".data
 .text
+jmp @main
 main:
 sw $0 0[$ebp]
 ld $8 0x0003
@@ -49,7 +56,9 @@ ld $9 0x0002
 sub $8 $9 $0
 move $0 $8
 sw $8 0[$ebp]
-pop $0";
+pop $0
+ld $v0 0x0002
+syscall";
 
     assert_eq!(asm, expected_asm);
 }
@@ -60,6 +69,7 @@ fn basic_div() {
     let asm = Compiler::new().compile_asm(src);
     let expected_asm = ".data
 .text
+jmp @main
 main:
 sw $0 0[$ebp]
 ld $8 0x0003
@@ -67,7 +77,9 @@ ld $9 0x0002
 div $8 $9 $0
 move $0 $8
 sw $8 0[$ebp]
-pop $0";
+pop $0
+ld $v0 0x0002
+syscall";
 
     assert_eq!(asm, expected_asm);
 }
@@ -78,6 +90,7 @@ fn nested_add_mult() {
     let asm = Compiler::new().compile_asm(src);
     let expected_asm = ".data
 .text
+jmp @main
 main:
 sw $0 0[$ebp]
 ld $8 0x0003
@@ -88,7 +101,9 @@ move $0 $9
 mul $8 $9 $0
 move $0 $8
 sw $8 0[$ebp]
-pop $0";
+pop $0
+ld $v0 0x0002
+syscall";
 
     assert_eq!(asm, expected_asm);
 }

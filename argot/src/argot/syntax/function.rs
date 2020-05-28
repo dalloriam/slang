@@ -13,6 +13,7 @@ use crate::{
     visitor::{Visitable, Visitor},
 };
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct FunctionDeclaration {
     pub return_type: String,
     pub name: String,
@@ -47,4 +48,44 @@ fn function_body(i: &str) -> IResult<&str, Vec<Statement>> {
         delimited(char('{'), many0(statement), char('}')),
         whitespace,
     )(i)
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::function_declaration;
+
+    use crate::syntax::{FunctionDeclaration, Statement, VariableDeclaration};
+
+    #[test]
+    fn fn_decl_no_return_type_no_arg_no_body() {
+        let (rest, decl) = function_declaration("fn hello() {}").unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(
+            decl,
+            FunctionDeclaration {
+                return_type: String::from("int"),
+                name: String::from("hello"),
+                body: Vec::new()
+            }
+        )
+    }
+
+    #[test]
+    fn fn_decl_no_return_type_no_arg() {
+        let (rest, decl) = function_declaration("fn hello() { int a; }").unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(
+            decl,
+            FunctionDeclaration {
+                return_type: String::from("int"),
+                name: String::from("hello"),
+                body: vec![Statement::VarDecl(VariableDeclaration {
+                    name: String::from("a"),
+                    var_type: String::from("int"),
+                    expression: None
+                })]
+            }
+        )
+    }
 }

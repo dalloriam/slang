@@ -164,8 +164,18 @@ impl VM {
         while keepalive {
             keepalive = self.execute_instruction();
         }
+
+        self.post_run_validations();
+
         let dur = std::time::Instant::now().duration_since(start);
         println!("Done in {}us", dur.as_micros());
+    }
+
+    fn post_run_validations(&self) {
+        log::debug!("running debug validations");
+
+        log::debug!("validating that stack is empty");
+        debug_assert_eq!(self.stack.len(), 0);
     }
 
     fn execute_instruction(&mut self) -> bool {

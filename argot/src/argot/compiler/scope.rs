@@ -16,6 +16,12 @@ pub struct Scope {
     instruction_buffer: Vec<String>,
 }
 
+impl Default for Scope {
+    fn default() -> Scope {
+        Scope::new()
+    }
+}
+
 impl Scope {
     pub fn new() -> Scope {
         Scope {
