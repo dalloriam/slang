@@ -176,3 +176,19 @@ fn op_lb_invalid_ptr() {
     vm.registers_mut()[1] = 18;
     memory::lb(0, &Address::new_heap(1, 0), &mut vm);
 }
+
+#[test]
+fn op_sw_stack_growth() {
+    let mut vm = VM::new();
+    assert_eq!(vm.stack().len(), 0);
+    memory::sw(0, &Address::new_stack(0, 4), &mut vm);
+    assert_eq!(vm.stack().len(), 8);
+}
+
+#[test]
+fn op_sb_stack_growth() {
+    let mut vm = VM::new();
+    assert_eq!(vm.stack().len(), 0);
+    memory::sb(0, &Address::new_stack(0, 4), &mut vm);
+    assert_eq!(vm.stack().len(), 5);
+}

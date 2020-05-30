@@ -12,10 +12,17 @@ impl Stack {
         Stack { data: Vec::new() }
     }
 
+    #[inline]
     pub fn push_i32(&mut self, v: i32) {
         self.data.write_i32::<LittleEndian>(v).unwrap();
     }
 
+    #[inline]
+    pub fn push_u8(&mut self, v: u8) {
+        self.data.push(v);
+    }
+
+    #[inline]
     pub fn pop_i32(&mut self) -> i32 {
         if self.data.len() < (mem::size_of::<i32>() as usize) {
             return 0;
@@ -29,6 +36,14 @@ impl Stack {
         self.data.resize(stack_idx, 0);
 
         value
+    }
+
+    #[inline]
+    pub fn pop_u8(&mut self) -> u8 {
+        if self.data.is_empty() {
+            return 0;
+        }
+        self.data.pop().unwrap()
     }
 
     #[inline]

@@ -40,23 +40,25 @@ pub fn arithmetic_expression(i: &str) -> IResult<&str, ArithmeticExpression> {
 mod tests {
 
     use super::{arithmetic_expression, ArithmeticExpression, Term, TermOperator};
-    use crate::syntax::operator::{FactorOperator, UnaryOperator};
-    use crate::syntax::{Expression, Factor};
+    use crate::syntax::{Atom, Expression, Factor, FactorOperator, UnaryOperator};
 
     #[test]
     fn arithm_expression() {
         let expected_expression = ArithmeticExpression {
             root_term: Term {
-                root_factor: Factor::Integer(18),
+                root_factor: Factor::Atom(Atom::Integer(18)),
                 trail: Vec::new(),
             },
             trail: vec![(
                 TermOperator::Plus,
                 Term {
-                    root_factor: Factor::Integer(15),
+                    root_factor: Factor::Atom(Atom::Integer(15)),
                     trail: vec![(
                         FactorOperator::Mult,
-                        Factor::Unary(UnaryOperator::Minus, Box::new(Factor::Integer(4))),
+                        Factor::Unary(
+                            UnaryOperator::Minus,
+                            Box::new(Factor::Atom(Atom::Integer(4))),
+                        ),
                     )],
                 },
             )],
@@ -74,8 +76,8 @@ mod tests {
                 root_factor: Factor::Expression(Box::new(Expression::Arithmetic(
                     ArithmeticExpression {
                         root_term: Term {
-                            root_factor: Factor::Integer(2),
-                            trail: vec![(FactorOperator::Mult, Factor::Integer(3))],
+                            root_factor: Factor::Atom(Atom::Integer(2)),
+                            trail: vec![(FactorOperator::Mult, Factor::Atom(Atom::Integer(3)))],
                         },
                         trail: Vec::new(),
                     },
@@ -85,7 +87,7 @@ mod tests {
             trail: vec![(
                 TermOperator::Plus,
                 Term {
-                    root_factor: Factor::Integer(4),
+                    root_factor: Factor::Atom(Atom::Integer(4)),
                     trail: Vec::new(),
                 },
             )],

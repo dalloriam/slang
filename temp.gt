@@ -1,4 +1,4 @@
 fn main() {
   int a;
-  bool b;
+  bool b = true;
 }

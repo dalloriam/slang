@@ -62,11 +62,11 @@ pub enum Opcode {
     /// Syscall - Executes the syscall currently stored in the $v0 virtual register.
     SYSC,
 
-    /// Stack push - Pushes the value of the first register on the stack.
-    PUSH,
+    /// Stack push word - Pushes the value of the first register on the stack.
+    PUSHW,
 
-    /// Stack pop - Pops the first value off the stack and writes it to the first register.
-    POP,
+    /// Stack pop word - Pops the first value off the stack and writes it to the first register.
+    POPW,
 
     /// Move - Copies the value from the first register to the second.
     MOV,
@@ -91,6 +91,12 @@ pub enum Opcode {
 
     // Ret - Returns from a procedure.
     RET,
+
+    // Push Byte - Pushes a byte on the stack.
+    PUSHB,
+
+    // Pop byte - Pops a byte from the stack.
+    POPB,
 
     // Negate - inverts the value of a register.
     NEG,
@@ -118,8 +124,8 @@ impl Opcode {
             Opcode::INC => 2,
             Opcode::DEC => 2,
             Opcode::SYSC => 1,
-            Opcode::PUSH => 2,
-            Opcode::POP => 2,
+            Opcode::PUSHW => 2,
+            Opcode::POPW => 2,
             Opcode::MOV => 3,
             Opcode::LCW => 4,
             Opcode::SW => 5,
@@ -129,6 +135,8 @@ impl Opcode {
             Opcode::CALL => 3,
             Opcode::RET => 1,
             Opcode::NEG => 2,
+            Opcode::PUSHB => 2,
+            Opcode::POPB => 2,
             Opcode::IGL => 1,
         }
     }
@@ -156,8 +164,8 @@ impl<'a> From<&'a str> for Opcode {
             "dec" => Opcode::DEC,
             "rjmp" => Opcode::RJMP,
             "syscall" => Opcode::SYSC,
-            "push" => Opcode::PUSH,
-            "pop" => Opcode::POP,
+            "push" => Opcode::PUSHW,
+            "pop" => Opcode::POPW,
             "move" => Opcode::MOV,
             "lcw" => Opcode::LCW,
             "sw" => Opcode::SW,
@@ -167,6 +175,8 @@ impl<'a> From<&'a str> for Opcode {
             "call" => Opcode::CALL,
             "ret" => Opcode::RET,
             "neg" => Opcode::NEG,
+            "pushb" => Opcode::PUSHB,
+            "popb" => Opcode::POPB,
             _ => Opcode::IGL,
         }
     }
@@ -194,8 +204,8 @@ impl From<u8> for Opcode {
             17 => Opcode::DEC,
             18 => Opcode::RJMP,
             19 => Opcode::SYSC,
-            20 => Opcode::PUSH,
-            21 => Opcode::POP,
+            20 => Opcode::PUSHW,
+            21 => Opcode::POPW,
             22 => Opcode::MOV,
             23 => Opcode::LCW,
             24 => Opcode::SW,
@@ -205,6 +215,8 @@ impl From<u8> for Opcode {
             28 => Opcode::CALL,
             29 => Opcode::RET,
             30 => Opcode::NEG,
+            31 => Opcode::PUSHB,
+            32 => Opcode::POPB,
             _ => Opcode::IGL,
         }
     }

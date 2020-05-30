@@ -5,8 +5,8 @@ use snafu::ResultExt;
 use crate::{
     compiler::{root::*, scope::Variable, types},
     syntax::{
-        ArithmeticExpression, Expression, Factor, FactorOperator, FunctionDeclaration, Program,
-        Statement, Term, TermOperator, UnaryOperator, VariableDeclaration,
+        ArithmeticExpression, Atom, Expression, Factor, FactorOperator, FunctionDeclaration,
+        Program, Statement, Term, TermOperator, UnaryOperator, VariableDeclaration,
     },
     visitor::{Visitable, Visitor},
 };
@@ -25,21 +25,14 @@ impl Visitor for Compiler {
         }
         Ok(())
     }
-    fn visit_factor(&mut self, v: &mut Factor) -> Self::Result {
-        log::debug!("factor");
+    fn visit_atom(&mut self, v: &mut Atom) -> Self::Result {
         match v {
-            Factor::Integer(i) => {
+            Atom::Integer(i) => {
                 log::debug!("int");
                 self.save_val(*i)?;
                 Ok(())
             }
-            Factor::Unary(op, f) => {
-                log::debug!("unary");
-                f.accept(self)?;
-                op.accept(self)
-            }
-            Factor::Expression(e) => e.accept(self),
-            Factor::Identifier(var_name) => {
+            Atom::Identifier(var_name) => {
                 let scope = self.scopes.last_mut().ok_or(CompileError::MissingScope)?;
 
                 // Load the val. of the variable from the runtime stack & push the register address
@@ -57,6 +50,26 @@ impl Visitor for Compiler {
                 self.save_reg(0)?;
                 Ok(())
             }
+            Atom::Boolean(bool_val) => {
+                if *bool_val {
+                    self.save_val(1)
+                } else {
+                    self.save_val(0)
+                }
+            }
+        }
+    }
+
+    fn visit_factor(&mut self, v: &mut Factor) -> Self::Result {
+        log::debug!("factor");
+        match v {
+            Factor::Unary(op, f) => {
+                log::debug!("unary");
+                f.accept(self)?;
+                op.accept(self)
+            }
+            Factor::Expression(e) => e.accept(self),
+            Factor::Atom(at) => at.accept(self),
         }
     }
     fn visit_factor_operator(&mut self, v: &mut FactorOperator) -> Self::Result {

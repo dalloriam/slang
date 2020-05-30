@@ -7,19 +7,17 @@ use nom::{
 };
 
 use crate::syntax::{
+    atom::{atom, Atom},
     common::whitespace,
     expression::{expression, Expression},
-    number::integer,
     operator::{unary_operator, UnaryOperator},
-    var_decl::identifier,
 };
 use crate::visitor::{Visitable, Visitor};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Factor {
-    Integer(i32),
+    Atom(Atom),
     Unary(UnaryOperator, Box<Factor>),
-    Identifier(String),
     Expression(Box<Expression>),
 }
 
@@ -32,23 +30,19 @@ impl Visitable for Factor {
 pub fn factor(i: &str) -> IResult<&str, Factor> {
     delimited(
         whitespace,
-        alt((unary_factor, int_factor, expr_factor, identifier_factor)),
+        alt((unary_factor, expr_factor, atom_factor)),
         whitespace,
     )(i)
 }
 
-fn int_factor(i: &str) -> IResult<&str, Factor> {
-    map(integer, Factor::Integer)(i)
+fn atom_factor(i: &str) -> IResult<&str, Factor> {
+    map(atom, Factor::Atom)(i)
 }
 
 fn unary_factor(i: &str) -> IResult<&str, Factor> {
     map(tuple((unary_operator, factor)), |(op, sub)| {
         Factor::Unary(op, Box::new(sub))
     })(i)
-}
-
-fn identifier_factor(i: &str) -> IResult<&str, Factor> {
-    map(identifier, |id| Factor::Identifier(String::from(id)))(i)
 }
 
 fn expr_factor(i: &str) -> IResult<&str, Factor> {
@@ -64,13 +58,13 @@ fn expr_factor(i: &str) -> IResult<&str, Factor> {
 
 #[cfg(test)]
 mod tests {
-    use super::{factor, Factor, UnaryOperator};
+    use super::{factor, Atom, Factor, UnaryOperator};
 
     #[test]
-    fn test_int_factor() {
+    fn test_atom_factor() {
         let (rest, f) = factor(" 48").unwrap();
         assert_eq!(rest, "");
-        assert_eq!(f, Factor::Integer(48));
+        assert_eq!(f, Factor::Atom(Atom::Integer(48)));
     }
 
     #[test]
@@ -79,7 +73,10 @@ mod tests {
         assert_eq!(rest, "");
         assert_eq!(
             f,
-            Factor::Unary(UnaryOperator::Minus, Box::new(Factor::Integer(42)))
+            Factor::Unary(
+                UnaryOperator::Minus,
+                Box::new(Factor::Atom(Atom::Integer(42)))
+            )
         );
     }
 }

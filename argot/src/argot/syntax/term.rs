@@ -40,7 +40,7 @@ pub fn term(i: &str) -> IResult<&str, Term> {
 mod tests {
 
     use super::{term, Factor, FactorOperator, Term};
-    use crate::syntax::operator::UnaryOperator;
+    use crate::syntax::{Atom, UnaryOperator};
 
     #[test]
     fn term_single_factor() {
@@ -49,7 +49,10 @@ mod tests {
         assert_eq!(
             t,
             Term {
-                root_factor: Factor::Unary(UnaryOperator::Minus, Box::new(Factor::Integer(26))),
+                root_factor: Factor::Unary(
+                    UnaryOperator::Minus,
+                    Box::new(Factor::Atom(Atom::Integer(26)))
+                ),
                 trail: Vec::new()
             }
         )
@@ -62,12 +65,18 @@ mod tests {
         assert_eq!(
             t,
             Term {
-                root_factor: Factor::Unary(UnaryOperator::Minus, Box::new(Factor::Integer(26))),
+                root_factor: Factor::Unary(
+                    UnaryOperator::Minus,
+                    Box::new(Factor::Atom(Atom::Integer(26)))
+                ),
                 trail: vec![
-                    (FactorOperator::Mult, Factor::Integer(42)),
+                    (FactorOperator::Mult, Factor::Atom(Atom::Integer(42))),
                     (
                         FactorOperator::Div,
-                        Factor::Unary(UnaryOperator::Minus, Box::new(Factor::Integer(3)))
+                        Factor::Unary(
+                            UnaryOperator::Minus,
+                            Box::new(Factor::Atom(Atom::Integer(3)))
+                        )
                     ),
                 ]
             }

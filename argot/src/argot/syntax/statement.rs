@@ -49,7 +49,7 @@ mod tests {
 
     use super::statement;
     use crate::syntax::{
-        ArithmeticExpression, Expression, Factor, Statement, Term, VariableDeclaration,
+        ArithmeticExpression, Atom, Expression, Factor, Statement, Term, VariableDeclaration,
     };
 
     #[test]
@@ -77,7 +77,7 @@ mod tests {
                 var_type: String::from("int"),
                 expression: Some(Expression::Arithmetic(ArithmeticExpression {
                     root_term: Term {
-                        root_factor: Factor::Integer(3),
+                        root_factor: Factor::Atom(Atom::Integer(3)),
                         trail: Vec::new()
                     },
                     trail: Vec::new()

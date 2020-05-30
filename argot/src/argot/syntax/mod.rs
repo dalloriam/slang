@@ -15,6 +15,7 @@ UnaryOperator:  -
 */
 
 pub mod arithmetic_expression;
+pub mod atom;
 pub mod common;
 pub mod expression;
 pub mod factor;
@@ -27,6 +28,7 @@ pub mod term;
 pub mod var_decl;
 
 pub use arithmetic_expression::ArithmeticExpression;
+pub use atom::Atom;
 pub use expression::Expression;
 pub use factor::Factor;
 pub use function::FunctionDeclaration;
