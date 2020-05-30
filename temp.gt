@@ -1,9 +1,4 @@
-fn test() {
-  int a = 18;
-}
-
 fn main() {
-  test();
-  int a = 3;
-  int b = a + 4;
+  int a;
+  bool b;
 }

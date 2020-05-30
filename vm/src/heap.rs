@@ -38,6 +38,11 @@ impl Heap {
     }
 
     #[inline]
+    pub fn len(&self) -> usize {
+        self.memory.len()
+    }
+
+    #[inline]
     pub fn memory(&self) -> &[u8] {
         &self.memory
     }

@@ -6,17 +6,17 @@ mod tests {
     use assembler::Assembler;
     use vm::{memutil, VM};
 
-    fn execute_test(source: &str, max_epochs: usize) -> VM {
+    fn execute_test(source: &str, max_instructions: usize) -> VM {
         let mut vm = VM::new();
         let asm = Assembler::new().assemble(source).unwrap();
         vm.load_bytecode(asm).unwrap();
 
-        let mut current_epochs = 0;
+        let mut current_instr = 0;
         let mut keepalive = true;
         while keepalive {
             keepalive = vm.run_once();
-            current_epochs += 1;
-            if current_epochs >= max_epochs {
+            current_instr += 1;
+            if current_instr >= max_instructions {
                 panic!("Test took too long");
             }
         }
@@ -59,5 +59,18 @@ mod tests {
         // Tests that constr loading parses & runs.
         const SOURCE: &str = include_str!("./data/constr.asm");
         let _vm = execute_test(SOURCE, 20);
+    }
+
+    #[test]
+    fn ft_alloc_free() {
+        const SOURCE: &str = include_str!("./data/alloc_free.asm");
+        let vm = execute_test(SOURCE, 16);
+        assert_eq!(vm.heap().len(), 0);
+    }
+
+    #[test]
+    fn ft_prints() {
+        const SOURCE: &str = include_str!("./data/prints.asm");
+        let _vm = execute_test(SOURCE, 16);
     }
 }

@@ -10,4 +10,5 @@ mod section;
 mod symbol;
 
 pub use asm::Assembler;
+pub use asm::AssemblerError;
 pub use instructor::Program;

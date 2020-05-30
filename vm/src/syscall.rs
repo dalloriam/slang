@@ -20,8 +20,7 @@ fn syscall_cprint(vm: &VM) -> bool {
             print!("{}", s);
         }
         Err(e) => {
-            // TODO: Swap with logger.
-            eprintln!("Error decoding string for print syscall: {:#?}", e);
+            log::error!("Error decoding for print syscall: {:#?}", e);
             return false;
         }
     };
@@ -46,8 +45,7 @@ fn syscall_prints(vm: &VM) -> bool {
             print!("{}", s);
         }
         Err(e) => {
-            // TODO: Swap with logger.
-            eprintln!("Error decoding string for print syscall: {:#?}", e);
+            log::error!("Error decoding string for print syscall: {:#?}", e);
             return false;
         }
     };

@@ -1,9 +1,7 @@
 mod compiler_visitor;
 mod root;
 mod scope;
+mod types;
 
-pub use root::Compiler;
+pub use root::{CompileError, Compiler};
 use scope::Scope;
-
-#[cfg(test)]
-mod tests;
