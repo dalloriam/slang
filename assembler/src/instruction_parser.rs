@@ -53,7 +53,7 @@ fn opcode_instr(opcode: Opcode, lbl: Option<String>, rest: &str) -> IResult<&str
                 ..Default::default()
             }
         })(rest)?,
-        Opcode::INC | Opcode::DEC | Opcode::RJMP | Opcode::PUSH | Opcode::POP => {
+        Opcode::INC | Opcode::DEC | Opcode::RJMP | Opcode::PUSH | Opcode::POP | Opcode::NEG => {
             map(operand::register, |r| Instruction {
                 label: lbl.clone(),
                 opcode: Some(opcode),

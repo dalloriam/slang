@@ -251,3 +251,27 @@ fn op_ltq_lower() {
     assert_eq!(&vm.registers()[0..2], vec![9, 11].as_slice());
     assert!(vm.equal_flag);
 }
+
+#[test]
+fn op_neg_positive() {
+    let mut vm = VM::new();
+    vm.registers_mut()[0] = 10;
+    math::neg(0, &mut vm);
+    assert_eq!(vm.registers()[0], -10);
+}
+
+#[test]
+fn op_neg_negative() {
+    let mut vm = VM::new();
+    vm.registers_mut()[0] = -10;
+    math::neg(0, &mut vm);
+    assert_eq!(vm.registers()[0], 10);
+}
+
+#[test]
+fn op_neg_zero() {
+    let mut vm = VM::new();
+    assert_eq!(vm.registers()[0], 0);
+    math::neg(0, &mut vm);
+    assert_eq!(vm.registers()[0], 0);
+}

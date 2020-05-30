@@ -14,3 +14,23 @@ impl From<&str> for Section {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Section;
+
+    #[test]
+    fn parse_section_text() {
+        assert_eq!(Section::from("text"), Section::Text);
+    }
+
+    #[test]
+    fn parse_section_data() {
+        assert_eq!(Section::from("data"), Section::Data);
+    }
+
+    #[test]
+    fn parse_section_unknown() {
+        assert_eq!(Section::from("hello"), Section::Unknown);
+    }
+}

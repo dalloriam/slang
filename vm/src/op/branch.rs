@@ -68,7 +68,7 @@ pub fn ret(vm: &mut VM) {
     // We assume here that the return value of the function is stored in $0.
 
     // Pop the saved ebp from the stack - This tears down the stack frame.
-    let old_stack_base = vm.stack_mut().pop_i32(); // TODO: Safety
+    let old_stack_base = vm.stack_mut().pop_i32();
     vm.registers_mut()[STACK_BASE_REGISTER] = old_stack_base;
     vm.registers_mut()[STACK_POINTER_REGISTER] -= mem::size_of::<i32>() as i32;
 

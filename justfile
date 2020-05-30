@@ -14,6 +14,9 @@ lint:
     @just _clippy instructor
     @just _clippy assembler
 
+release:
+    @just build --release
+
 test:
     cargo test
 

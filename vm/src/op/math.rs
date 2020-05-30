@@ -147,3 +147,10 @@ pub fn ltq(reg_1: u8, reg_2: u8, vm: &mut VM) {
         vm.equal_flag
     );
 }
+
+#[inline]
+pub fn neg(reg: u8, vm: &mut VM) {
+    let value = -vm.registers()[reg as usize];
+    vm.registers_mut()[reg as usize] = value;
+    log::trace!("neg ${}/{:#06x}", reg, vm.registers()[reg as usize]);
+}

@@ -91,6 +91,9 @@ pub enum Opcode {
 
     // Ret - Returns from a procedure.
     RET,
+
+    // Negate - inverts the value of a register.
+    NEG,
 }
 
 impl Opcode {
@@ -125,6 +128,7 @@ impl Opcode {
             Opcode::LB => 5,
             Opcode::CALL => 3,
             Opcode::RET => 1,
+            Opcode::NEG => 2,
             Opcode::IGL => 1,
         }
     }
@@ -162,6 +166,7 @@ impl<'a> From<&'a str> for Opcode {
             "lb" => Opcode::LB,
             "call" => Opcode::CALL,
             "ret" => Opcode::RET,
+            "neg" => Opcode::NEG,
             _ => Opcode::IGL,
         }
     }
@@ -199,6 +204,7 @@ impl From<u8> for Opcode {
             27 => Opcode::LB,
             28 => Opcode::CALL,
             29 => Opcode::RET,
+            30 => Opcode::NEG,
             _ => Opcode::IGL,
         }
     }

@@ -1,8 +1,54 @@
-use assembler::Assembler;
+use std::fmt;
+
+use assembler::{Assembler, AssemblerError};
 
 use instructor::REGULAR_REGISTER_COUNT;
 
-use crate::{compiler::Scope, syntax::program::program, visitor::Visitor};
+use snafu::{ResultExt, Snafu};
+
+use crate::{
+    compiler::{scope::ScopeError, Scope},
+    syntax::program::program,
+    visitor::Visitor,
+};
+
+#[derive(Debug)]
+pub struct ParseError {
+    message: String,
+}
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for ParseError {}
+
+#[derive(Debug, Snafu)]
+#[snafu(visibility = "pub")]
+pub enum CompileError {
+    AssemblyFailed {
+        source: AssemblerError,
+    },
+    IncompleteParse {
+        source: ParseError,
+    },
+    MissingScope,
+    NoUsedRegisters,
+    UnknownIdentifier {
+        name: String,
+    },
+    UnknownType {
+        name: String,
+        source: super::types::UnknownType,
+    },
+    VariableDeclarationError {
+        source: ScopeError,
+    },
+}
+
+type Result<T> = std::result::Result<T, CompileError>;
 
 pub struct Compiler {
     free_registers: Vec<u8>,
@@ -33,26 +79,31 @@ impl Compiler {
         }
     }
 
-    pub fn compile_asm(&mut self, source: &str) -> String {
-        let (rest, mut p) = program(source).unwrap();
+    pub fn compile_asm(&mut self, source: &str) -> Result<String> {
+        let (rest, mut p) = program(source)
+            .map_err(|e| ParseError {
+                message: e.to_string(),
+            })
+            .context(IncompleteParse)?;
+
         assert_eq!(rest, "");
         println!("{:?}", p);
-        self.visit_program(&mut p).unwrap();
+        self.visit_program(&mut p)?;
         let program = format!(
             ".data\n.text\njmp @main\n{}",
             self.assembly_buffer.join("\n")
         );
 
-        program
+        Ok(program)
     }
 
-    pub fn compile(&mut self, source: &str) -> Vec<u8> {
-        let program = self.compile_asm(source);
-        Assembler::new().assemble(&program).unwrap()
+    pub fn compile(&mut self, source: &str) -> Result<Vec<u8>> {
+        let program = self.compile_asm(source)?;
+        Assembler::new().assemble(&program).context(AssemblyFailed)
     }
 
-    pub fn save_val(&mut self, val: i32) {
-        let latest_scope = self.scopes.last_mut().unwrap();
+    pub fn save_val(&mut self, val: i32) -> Result<()> {
+        let latest_scope = self.scopes.last_mut().ok_or(CompileError::MissingScope)?;
 
         match self.free_registers.pop() {
             Some(reg) => {
@@ -67,10 +118,11 @@ impl Compiler {
                 self.stack_storecount += std::mem::size_of::<i32>();
             }
         }
+        Ok(())
     }
 
-    pub fn save_reg(&mut self, src_reg: u8) {
-        let latest_scope = self.scopes.last_mut().unwrap();
+    pub fn save_reg(&mut self, src_reg: u8) -> Result<()> {
+        let latest_scope = self.scopes.last_mut().ok_or(CompileError::MissingScope)?;
         match self.free_registers.pop() {
             Some(reg) => {
                 // Found a storage register, copy there.
@@ -84,37 +136,42 @@ impl Compiler {
                 self.stack_storecount += std::mem::size_of::<i32>();
             }
         }
+        Ok(())
     }
 
-    pub fn pop_reg(&mut self, default: u8) -> u8 {
-        let latest_scope = self.scopes.last_mut().unwrap();
-        if self.stack_storecount > 0 {
+    pub fn pop_reg(&mut self, default: u8) -> Result<u8> {
+        let latest_scope = self.scopes.last_mut().ok_or(CompileError::MissingScope)?;
+        let reg = if self.stack_storecount > 0 {
             latest_scope.push_instruction(format!("pop ${}", default));
             self.stack_storecount -= 1;
             self.stack_storecount -= std::mem::size_of::<i32>();
             default
         } else {
             debug_assert!(!self.used_registers.is_empty());
-            let r = self.used_registers.pop().unwrap();
+            let r = self
+                .used_registers
+                .pop()
+                .ok_or(CompileError::NoUsedRegisters)?;
             self.free_registers.push(r);
             r
-        }
+        };
+        Ok(reg)
     }
 
-    pub fn current_scope(&self) -> &Scope {
-        self.scopes.last().unwrap()
+    pub fn current_scope(&self) -> Result<&Scope> {
+        self.scopes.last().ok_or(CompileError::MissingScope)
     }
 
-    pub fn current_scope_mut(&mut self) -> &mut Scope {
-        self.scopes.last_mut().unwrap()
+    pub fn current_scope_mut(&mut self) -> Result<&mut Scope> {
+        self.scopes.last_mut().ok_or(CompileError::MissingScope)
     }
 
     pub fn push_scope(&mut self) {
         self.scopes.push(Scope::new())
     }
 
-    pub fn pop_scope(&mut self) -> Scope {
-        self.scopes.pop().unwrap()
+    pub fn pop_scope(&mut self) -> Result<Scope> {
+        self.scopes.pop().ok_or(CompileError::MissingScope)
     }
 }
 

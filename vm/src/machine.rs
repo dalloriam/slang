@@ -243,6 +243,7 @@ impl VM {
             Opcode::LB => op::memory::lb(self.next_8_bits(), &self.next_address(), self),
             Opcode::CALL => op::branch::call(self.next_16_bits(), self),
             Opcode::RET => op::branch::ret(self),
+            Opcode::NEG => op::math::neg(self.next_8_bits(), self),
             Opcode::IGL => {
                 println!("Illegal opcode. Terminating");
                 return false;
@@ -607,6 +608,16 @@ mod tests {
         assert_eq!(test_vm.registers[0], 0);
         test_vm.run_once();
         assert_eq!(test_vm.registers[0], 42);
+    }
+
+    #[test]
+    fn test_opcode_neg() {
+        let mut test_vm = VM::new();
+
+        test_vm.registers_mut()[15] = 18;
+        test_vm.program = vec![30, 15];
+        test_vm.run_once();
+        assert_eq!(test_vm.registers()[15], -18);
     }
 }
 
