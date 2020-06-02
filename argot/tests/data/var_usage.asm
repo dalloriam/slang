@@ -15,7 +15,7 @@ move $0 $9
 mul $8 $9 $0
 move $0 $8
 sw $8 4[$ebp]
-pop $0
-pop $0
+popw $0
+popw $0
 ld $v0 0x0002
 syscall

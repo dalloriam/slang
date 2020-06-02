@@ -28,12 +28,27 @@ pub struct VariableAssignment {
     pub expression: Expression,
 }
 
+impl Visitable for VariableAssignment {
+    fn accept<V: Visitor>(&mut self, v: &mut V) -> V::Result {
+        v.visit_variable_assignment(self)
+    }
+}
+
 fn assign(i: &str) -> IResult<&str, Expression> {
     preceded(delimited(whitespace, char('='), whitespace), expression)(i)
 }
 
 pub fn identifier(i: &str) -> IResult<&str, &str> {
     delimited(whitespace, alpha1, whitespace)(i)
+}
+
+pub fn variable_assignment(i: &str) -> IResult<&str, VariableAssignment> {
+    map(tuple((identifier, assign)), |(name, ass)| {
+        VariableAssignment {
+            name: String::from(name),
+            expression: ass,
+        }
+    })(i)
 }
 
 pub fn variable_declaration(i: &str) -> IResult<&str, VariableDeclaration> {

@@ -92,14 +92,14 @@ pub enum Opcode {
     // Ret - Returns from a procedure.
     RET,
 
+    // Negate - inverts the value of a register.
+    NEG,
+
     // Push Byte - Pushes a byte on the stack.
     PUSHB,
 
     // Pop byte - Pops a byte from the stack.
     POPB,
-
-    // Negate - inverts the value of a register.
-    NEG,
 }
 
 impl Opcode {
@@ -164,8 +164,8 @@ impl<'a> From<&'a str> for Opcode {
             "dec" => Opcode::DEC,
             "rjmp" => Opcode::RJMP,
             "syscall" => Opcode::SYSC,
-            "push" => Opcode::PUSHW,
-            "pop" => Opcode::POPW,
+            "pushw" => Opcode::PUSHW,
+            "popw" => Opcode::POPW,
             "move" => Opcode::MOV,
             "lcw" => Opcode::LCW,
             "sw" => Opcode::SW,

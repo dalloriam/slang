@@ -33,6 +33,7 @@ impl cmp::Ord for Variable {
 pub struct Scope {
     local_stack_offset: usize,
     local_variables: HashMap<String, Variable>,
+    variables_insert_order: Vec<String>,
     instruction_buffer: Vec<String>,
 }
 
@@ -47,6 +48,7 @@ impl Scope {
         Scope {
             local_stack_offset: 0,
             local_variables: HashMap::new(),
+            variables_insert_order: Vec::new(),
             instruction_buffer: Vec::new(),
         }
     }
@@ -65,6 +67,16 @@ impl Scope {
         &self.local_variables
     }
 
+    pub fn sorted_variables(&self) -> Vec<&Variable> {
+        let mut refs = Vec::new();
+
+        for var_name in self.variables_insert_order.iter() {
+            refs.push(self.local_variables.get(var_name).unwrap())
+        }
+
+        refs
+    }
+
     pub fn variable_with_size(
         &mut self,
         variable_name: &str,
@@ -76,6 +88,8 @@ impl Scope {
             VariableAlreadyDefined
         );
 
+        self.variables_insert_order
+            .push(String::from(variable_name));
         self.local_variables.insert(
             String::from(variable_name),
             Variable {

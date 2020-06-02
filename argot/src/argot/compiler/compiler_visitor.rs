@@ -3,10 +3,11 @@ use std::convert::TryFrom;
 use snafu::ResultExt;
 
 use crate::{
-    compiler::{root::*, scope::Variable, types},
+    compiler::{root::*, types},
     syntax::{
-        ArithmeticExpression, Atom, Expression, Factor, FactorOperator, FunctionDeclaration,
-        Program, Statement, Term, TermOperator, UnaryOperator, VariableDeclaration,
+        ArithmeticExpression, Atom, Block, Expression, Factor, FactorOperator, FunctionDeclaration,
+        Program, Statement, Term, TermOperator, UnaryOperator, VariableAssignment,
+        VariableDeclaration,
     },
     visitor::{Visitable, Visitor},
 };
@@ -25,6 +26,7 @@ impl Visitor for Compiler {
         }
         Ok(())
     }
+
     fn visit_atom(&mut self, v: &mut Atom) -> Self::Result {
         match v {
             Atom::Integer(i) => {
@@ -138,8 +140,7 @@ impl Visitor for Compiler {
         Ok(())
     }
 
-    fn visit_function_declaration(&mut self, v: &mut FunctionDeclaration) -> Self::Result {
-        log::debug!("Function decl");
+    fn visit_block(&mut self, v: &mut Block) -> Self::Result {
         self.push_scope();
 
         for stmt in v.body.iter_mut() {
@@ -148,18 +149,10 @@ impl Visitor for Compiler {
 
         let mut last_scope = self.pop_scope()?;
 
-        self.assembly_buffer.push(format!("{}:", v.name));
-
         // Generate function prelude.
-        // This trick guarantees stack variable declaration order.
-        let mut offsets: Vec<Variable> = last_scope
-            .local_variables()
-            .iter()
-            .map(|(_n, v)| v.clone())
-            .collect();
-        offsets.sort();
+        let vars = last_scope.sorted_variables();
 
-        for var in offsets.iter() {
+        for var in vars.into_iter() {
             // Allocate the stack space for this variable.
             // TODO: Properly allocate stack space according to type size w/ integer division.
             let variable_type =
@@ -183,10 +176,34 @@ impl Visitor for Compiler {
         self.assembly_buffer.extend(last_scope.take_instructions());
 
         // Generate the function epilogue
-        for (_var_name, _stack_offset) in last_scope.local_variables().iter() {
+        for var in last_scope.sorted_variables().into_iter().rev() {
             // Pop a word from the stack to return it to what it was before the fn.
-            self.assembly_buffer.push(format!("pop $0"));
+            let variable_type =
+                types::BuiltInType::try_from(var.var_type.clone()).context(UnknownType {
+                    name: var.var_type.clone(),
+                })?;
+            let sz = variable_type.alloc_size();
+
+            let instr = if sz == 4 {
+                // TODO: Word length constant
+                String::from("popw")
+            } else if sz == 1 {
+                String::from("popb")
+            } else {
+                panic!("Bad alloc size")
+            };
+            self.assembly_buffer.push(format!("{} $0", instr));
         }
+
+        Ok(())
+    }
+
+    fn visit_function_declaration(&mut self, v: &mut FunctionDeclaration) -> Self::Result {
+        log::debug!("Function decl");
+
+        self.assembly_buffer.push(format!("{}:", v.name));
+
+        v.block.accept(self)?;
 
         if v.name == "main" {
             // Generate exit syscall after main.
@@ -213,7 +230,7 @@ impl Visitor for Compiler {
                 // Evaluate the expr & do nothing else.
                 expr.accept(self)?;
             }
-            _ => unimplemented!(),
+            Statement::VarAssign(assign) => assign.accept(self)?,
         }
 
         Ok(())
@@ -276,6 +293,46 @@ impl Visitor for Compiler {
             }
         }
 
+        Ok(())
+    }
+
+    fn visit_variable_assignment(&mut self, v: &mut VariableAssignment) -> Self::Result {
+        // Eval an expression. Its value is stored in the reg. at the top of the compiler
+        // stack.
+        {
+            v.expression.accept(self)?;
+        }
+
+        let var_decl = self
+            .current_scope()?
+            .local_variables()
+            .get(&v.name)
+            .unwrap();
+        let offset = var_decl.offset;
+        let variable_type =
+            types::BuiltInType::try_from(var_decl.var_type.clone()).context(UnknownType {
+                name: var_decl.var_type.clone(),
+            })?;
+
+        let reg = self.pop_reg(0)?;
+
+        // Allocate the stack space for this variable.
+        // TODO: Properly allocate stack space according to type size w/ integer division.
+        let sz = variable_type.alloc_size();
+        if sz == 4 {
+            // TODO: Add WORD_LENGTH constant.
+            self.scopes
+                .last_mut()
+                .ok_or(CompileError::MissingScope)?
+                .push_instruction(format!("sw ${} {}[$ebp]", reg, offset))
+        } else if sz == 1 {
+            self.scopes
+                .last_mut()
+                .ok_or(CompileError::MissingScope)?
+                .push_instruction(format!("sb ${} {}[$ebp]", reg, offset))
+        } else {
+            panic!("Bad alloc size")
+        }
         Ok(())
     }
 

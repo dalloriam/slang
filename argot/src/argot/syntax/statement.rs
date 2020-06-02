@@ -9,8 +9,10 @@ use nom::{
 
 use crate::{
     syntax::{
-        common::whitespace, expression::expression, var_decl::variable_declaration, Expression,
-        VariableAssignment, VariableDeclaration,
+        common::whitespace,
+        expression::expression,
+        var_decl::{variable_assignment, variable_declaration},
+        Expression, VariableAssignment, VariableDeclaration,
     },
     visitor::{Visitable, Visitor},
 };
@@ -36,6 +38,7 @@ pub fn statement(i: &str) -> IResult<&str, Statement> {
             alt((
                 map(preceded(tag("return"), opt(expression)), Statement::Return),
                 map(variable_declaration, Statement::VarDecl),
+                map(variable_assignment, Statement::VarAssign),
                 map(expression, Statement::Expr),
             )),
             char(';'),
