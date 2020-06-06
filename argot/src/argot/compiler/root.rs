@@ -1,54 +1,13 @@
-use std::fmt;
-
-use assembler::{Assembler, AssemblerError};
+use assembler::Assembler;
 
 use instructor::REGULAR_REGISTER_COUNT;
 
-use snafu::{ResultExt, Snafu};
+use snafu::ResultExt;
 
 use crate::{
-    compiler::{scope::ScopeError, Scope},
+    compiler::{error::*, first_pass::FirstPassVisitor, second_pass::SecondPassVisitor, Scope},
     syntax::program::program,
-    visitor::Visitor,
 };
-
-#[derive(Debug)]
-pub struct ParseError {
-    message: String,
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for ParseError {}
-
-#[derive(Debug, Snafu)]
-#[snafu(visibility = "pub")]
-pub enum CompileError {
-    AssemblyFailed {
-        source: AssemblerError,
-    },
-    IncompleteParse {
-        source: ParseError,
-    },
-    MissingScope,
-    NoUsedRegisters,
-    UnknownIdentifier {
-        name: String,
-    },
-    UnknownType {
-        name: String,
-        source: super::types::UnknownType,
-    },
-    VariableDeclarationError {
-        source: ScopeError,
-    },
-}
-
-type Result<T> = std::result::Result<T, CompileError>;
 
 pub struct Compiler {
     free_registers: Vec<u8>,
@@ -87,14 +46,11 @@ impl Compiler {
             .context(IncompleteParse)?;
 
         assert_eq!(rest, "");
-        println!("{:?}", p);
-        self.visit_program(&mut p)?;
-        let program = format!(
-            ".data\n.text\njmp @main\n{}",
-            self.assembly_buffer.join("\n")
-        );
 
-        Ok(program)
+        let first_pass_output = FirstPassVisitor::new().apply(&mut p)?;
+        let asm_source = SecondPassVisitor::new(first_pass_output.functions).apply(&mut p)?;
+
+        Ok(asm_source)
     }
 
     pub fn compile(&mut self, source: &str) -> Result<Vec<u8>> {
@@ -117,6 +73,23 @@ impl Compiler {
                 self.stack_storecount += 1;
                 self.stack_storecount += std::mem::size_of::<i32>();
             }
+        }
+        Ok(())
+    }
+
+    pub fn get_writeable_register(&mut self) -> Result<u8> {
+        match self.free_registers.pop() {
+            Some(i) => {
+                self.used_registers.push(i);
+                Ok(i)
+            }
+            None => Ok(0), // TODO: Use 1-8
+        }
+    }
+
+    pub fn save_reg_maybe(&mut self, register: u8) -> Result<()> {
+        if register < 8 {
+            self.save_reg(register)?;
         }
         Ok(())
     }

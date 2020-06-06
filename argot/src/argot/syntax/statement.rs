@@ -51,8 +51,9 @@ pub fn statement(i: &str) -> IResult<&str, Statement> {
 mod tests {
 
     use super::statement;
-    use crate::syntax::{
-        ArithmeticExpression, Atom, Expression, Factor, Statement, Term, VariableDeclaration,
+    use crate::syntax::types::{
+        ArithmeticExpression, Atom, AtomicExpression, Expression, Factor, Statement, Term,
+        VariableDeclaration,
     };
 
     #[test]
@@ -80,8 +81,11 @@ mod tests {
                 var_type: String::from("int"),
                 expression: Some(Expression::Arithmetic(ArithmeticExpression {
                     root_term: Term {
-                        root_factor: Factor::Atom(Atom::Integer(3)),
-                        trail: Vec::new()
+                        root_factor: Factor::Atomic(AtomicExpression {
+                            atom: Atom::Integer(3),
+                            trailers: Vec::new()
+                        }),
+                        trail: Vec::new(),
                     },
                     trail: Vec::new()
                 }))

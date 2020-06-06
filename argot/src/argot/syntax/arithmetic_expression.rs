@@ -40,24 +40,35 @@ pub fn arithmetic_expression(i: &str) -> IResult<&str, ArithmeticExpression> {
 mod tests {
 
     use super::{arithmetic_expression, ArithmeticExpression, Term, TermOperator};
-    use crate::syntax::{Atom, Expression, Factor, FactorOperator, UnaryOperator};
+    use crate::syntax::types::{
+        Atom, AtomicExpression, Expression, Factor, FactorOperator, UnaryOperator,
+    };
 
     #[test]
     fn arithm_expression() {
         let expected_expression = ArithmeticExpression {
             root_term: Term {
-                root_factor: Factor::Atom(Atom::Integer(18)),
+                root_factor: Factor::Atomic(AtomicExpression {
+                    atom: Atom::Integer(18),
+                    trailers: Vec::new(),
+                }),
                 trail: Vec::new(),
             },
             trail: vec![(
                 TermOperator::Plus,
                 Term {
-                    root_factor: Factor::Atom(Atom::Integer(15)),
+                    root_factor: Factor::Atomic(AtomicExpression {
+                        atom: Atom::Integer(15),
+                        trailers: Vec::new(),
+                    }),
                     trail: vec![(
                         FactorOperator::Mult,
                         Factor::Unary(
                             UnaryOperator::Minus,
-                            Box::new(Factor::Atom(Atom::Integer(4))),
+                            Box::new(Factor::Atomic(AtomicExpression {
+                                atom: Atom::Integer(4),
+                                trailers: Vec::new(),
+                            })),
                         ),
                     )],
                 },
@@ -76,8 +87,17 @@ mod tests {
                 root_factor: Factor::Expression(Box::new(Expression::Arithmetic(
                     ArithmeticExpression {
                         root_term: Term {
-                            root_factor: Factor::Atom(Atom::Integer(2)),
-                            trail: vec![(FactorOperator::Mult, Factor::Atom(Atom::Integer(3)))],
+                            root_factor: Factor::Atomic(AtomicExpression {
+                                atom: Atom::Integer(2),
+                                trailers: Vec::new(),
+                            }),
+                            trail: vec![(
+                                FactorOperator::Mult,
+                                Factor::Atomic(AtomicExpression {
+                                    atom: Atom::Integer(3),
+                                    trailers: Vec::new(),
+                                }),
+                            )],
                         },
                         trail: Vec::new(),
                     },
@@ -87,7 +107,10 @@ mod tests {
             trail: vec![(
                 TermOperator::Plus,
                 Term {
-                    root_factor: Factor::Atom(Atom::Integer(4)),
+                    root_factor: Factor::Atomic(AtomicExpression {
+                        atom: Atom::Integer(4),
+                        trailers: Vec::new(),
+                    }),
                     trail: Vec::new(),
                 },
             )],

@@ -59,6 +59,16 @@ pub enum FactorOperator {
     Unknown, // TODO: Get more detail.
 }
 
+impl ToString for FactorOperator {
+    fn to_string(&self) -> String {
+        match self {
+            FactorOperator::Div => String::from("/"),
+            FactorOperator::Mult => String::from("*"),
+            FactorOperator::Unknown => String::from("IGL"),
+        }
+    }
+}
+
 impl Visitable for FactorOperator {
     fn accept<V: Visitor>(&mut self, visitor: &mut V) -> V::Result {
         visitor.visit_factor_operator(self)

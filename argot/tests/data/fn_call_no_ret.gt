@@ -1,0 +1,9 @@
+fn main() {
+    int a = 3;
+    hello();
+    int b = 4;
+}
+
+fn hello() {
+    bool b = true;
+}

@@ -65,8 +65,8 @@ pub fn variable_declaration(i: &str) -> IResult<&str, VariableDeclaration> {
 #[cfg(test)]
 mod tests {
     use super::variable_declaration;
-    use crate::syntax::{
-        ArithmeticExpression, Atom, Expression, Factor, Term, VariableDeclaration,
+    use crate::syntax::types::{
+        ArithmeticExpression, Atom, AtomicExpression, Expression, Factor, Term, VariableDeclaration,
     };
 
     #[test]
@@ -94,10 +94,13 @@ mod tests {
                 name: String::from("bing"),
                 expression: Some(Expression::Arithmetic(ArithmeticExpression {
                     root_term: Term {
-                        root_factor: Factor::Atom(Atom::Integer(14)),
+                        root_factor: Factor::Atomic(AtomicExpression {
+                            atom: Atom::Integer(14),
+                            trailers: Vec::new()
+                        }),
                         trail: Vec::new()
                     },
-                    trail: Vec::new(),
+                    trail: Vec::new()
                 }))
             }
         )

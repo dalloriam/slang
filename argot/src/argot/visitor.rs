@@ -1,7 +1,4 @@
-use crate::syntax::{
-    ArithmeticExpression, Atom, Block, Expression, Factor, FactorOperator, FunctionDeclaration,
-    Program, Statement, Term, TermOperator, UnaryOperator, VariableAssignment, VariableDeclaration,
-};
+use crate::syntax::types::*;
 
 pub trait Visitable {
     fn accept<V: Visitor>(&mut self, visitor: &mut V) -> V::Result;
@@ -21,6 +18,7 @@ pub trait Visitor {
     fn visit_variable_declaration(&mut self, v: &mut VariableDeclaration) -> Self::Result;
     fn visit_expression(&mut self, v: &mut Expression) -> Self::Result;
     fn visit_program(&mut self, v: &mut Program) -> Self::Result;
+    fn visit_atomic_expression(&mut self, v: &mut AtomicExpression) -> Self::Result;
     fn visit_atom(&mut self, v: &mut Atom) -> Self::Result;
     fn visit_block(&mut self, v: &mut Block) -> Self::Result;
     fn visit_variable_assignment(&mut self, v: &mut VariableAssignment) -> Self::Result;

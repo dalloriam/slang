@@ -7,7 +7,7 @@ use nom::{
 };
 
 use crate::syntax::{
-    atom::{atom, Atom},
+    atom_expr::{atomic_expression, AtomicExpression},
     common::whitespace,
     expression::{expression, Expression},
     operator::{unary_operator, UnaryOperator},
@@ -16,7 +16,7 @@ use crate::visitor::{Visitable, Visitor};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Factor {
-    Atom(Atom),
+    Atomic(AtomicExpression),
     Unary(UnaryOperator, Box<Factor>),
     Expression(Box<Expression>),
 }
@@ -36,7 +36,7 @@ pub fn factor(i: &str) -> IResult<&str, Factor> {
 }
 
 fn atom_factor(i: &str) -> IResult<&str, Factor> {
-    map(atom, Factor::Atom)(i)
+    map(atomic_expression, Factor::Atomic)(i)
 }
 
 fn unary_factor(i: &str) -> IResult<&str, Factor> {
@@ -58,13 +58,20 @@ fn expr_factor(i: &str) -> IResult<&str, Factor> {
 
 #[cfg(test)]
 mod tests {
-    use super::{factor, Atom, Factor, UnaryOperator};
+    use super::{factor, AtomicExpression, Factor, UnaryOperator};
+    use crate::syntax::types::Atom;
 
     #[test]
     fn test_atom_factor() {
         let (rest, f) = factor(" 48").unwrap();
         assert_eq!(rest, "");
-        assert_eq!(f, Factor::Atom(Atom::Integer(48)));
+        assert_eq!(
+            f,
+            Factor::Atomic(AtomicExpression {
+                atom: Atom::Integer(48),
+                trailers: Vec::new()
+            })
+        );
     }
 
     #[test]
@@ -75,7 +82,10 @@ mod tests {
             f,
             Factor::Unary(
                 UnaryOperator::Minus,
-                Box::new(Factor::Atom(Atom::Integer(42)))
+                Box::new(Factor::Atomic(AtomicExpression {
+                    atom: Atom::Integer(42),
+                    trailers: Vec::new()
+                }))
             )
         );
     }

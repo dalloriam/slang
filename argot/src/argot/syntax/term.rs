@@ -40,7 +40,7 @@ pub fn term(i: &str) -> IResult<&str, Term> {
 mod tests {
 
     use super::{term, Factor, FactorOperator, Term};
-    use crate::syntax::{Atom, UnaryOperator};
+    use crate::syntax::types::{Atom, AtomicExpression, UnaryOperator};
 
     #[test]
     fn term_single_factor() {
@@ -51,7 +51,10 @@ mod tests {
             Term {
                 root_factor: Factor::Unary(
                     UnaryOperator::Minus,
-                    Box::new(Factor::Atom(Atom::Integer(26)))
+                    Box::new(Factor::Atomic(AtomicExpression {
+                        atom: Atom::Integer(26),
+                        trailers: Vec::new()
+                    }))
                 ),
                 trail: Vec::new()
             }
@@ -67,15 +70,27 @@ mod tests {
             Term {
                 root_factor: Factor::Unary(
                     UnaryOperator::Minus,
-                    Box::new(Factor::Atom(Atom::Integer(26)))
+                    Box::new(Factor::Atomic(AtomicExpression {
+                        atom: Atom::Integer(26),
+                        trailers: Vec::new()
+                    }))
                 ),
                 trail: vec![
-                    (FactorOperator::Mult, Factor::Atom(Atom::Integer(42))),
+                    (
+                        FactorOperator::Mult,
+                        Factor::Atomic(AtomicExpression {
+                            atom: Atom::Integer(42),
+                            trailers: Vec::new()
+                        })
+                    ),
                     (
                         FactorOperator::Div,
                         Factor::Unary(
                             UnaryOperator::Minus,
-                            Box::new(Factor::Atom(Atom::Integer(3)))
+                            Box::new(Factor::Atomic(AtomicExpression {
+                                atom: Atom::Integer(3),
+                                trailers: Vec::new()
+                            }))
                         )
                     ),
                 ]
