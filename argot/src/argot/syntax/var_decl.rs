@@ -5,7 +5,7 @@ use nom::{
     IResult,
 };
 
-use crate::syntax::{common::whitespace, expression::expression, Expression};
+use crate::syntax::{common::whitespace, expression::expression, types::Expression};
 
 use crate::visitor::{Visitable, Visitor};
 
@@ -66,7 +66,7 @@ pub fn variable_declaration(i: &str) -> IResult<&str, VariableDeclaration> {
 mod tests {
     use super::variable_declaration;
     use crate::syntax::types::{
-        ArithmeticExpression, Atom, AtomicExpression, Expression, Factor, Term, VariableDeclaration,
+        Atom, AtomicExpression, Expression, Factor, Term, VariableDeclaration,
     };
 
     #[test]
@@ -92,7 +92,7 @@ mod tests {
             VariableDeclaration {
                 var_type: String::from("int"),
                 name: String::from("bing"),
-                expression: Some(Expression::Arithmetic(ArithmeticExpression {
+                expression: Some(Expression {
                     root_term: Term {
                         root_factor: Factor::Atomic(AtomicExpression {
                             atom: Atom::Integer(14),
@@ -101,7 +101,7 @@ mod tests {
                         trail: Vec::new()
                     },
                     trail: Vec::new()
-                }))
+                })
             }
         )
     }

@@ -45,8 +45,7 @@ pub fn if_expression(i: &str) -> IResult<&str, IfExpression> {
 mod tests {
     use super::{if_expression, IfExpression};
     use crate::syntax::types::{
-        ArithmeticExpression, Atom, AtomicExpression, Block, Expression, Factor, Statement, Term,
-        VariableDeclaration,
+        Atom, AtomicExpression, Block, Expression, Factor, Statement, Term, VariableDeclaration,
     };
 
     #[test]
@@ -62,7 +61,7 @@ mod tests {
         assert_eq!(
             if_expr,
             IfExpression {
-                condition: Expression::Arithmetic(ArithmeticExpression {
+                condition: Expression {
                     root_term: Term {
                         root_factor: Factor::Atomic(AtomicExpression {
                             atom: Atom::Integer(18),
@@ -71,7 +70,7 @@ mod tests {
                         trail: Vec::new()
                     },
                     trail: Vec::new()
-                }),
+                },
                 if_block: Block::new(),
                 else_block: None,
             }
@@ -85,7 +84,7 @@ mod tests {
         assert_eq!(
             if_expr,
             IfExpression {
-                condition: Expression::Arithmetic(ArithmeticExpression {
+                condition: Expression {
                     root_term: Term {
                         root_factor: Factor::Atomic(AtomicExpression {
                             atom: Atom::Integer(18),
@@ -94,12 +93,12 @@ mod tests {
                         trail: Vec::new()
                     },
                     trail: Vec::new()
-                }),
+                },
                 if_block: Block {
                     body: vec![Statement::VarDecl(VariableDeclaration {
                         var_type: String::from("int"),
                         name: String::from("a"),
-                        expression: Some(Expression::Arithmetic(ArithmeticExpression {
+                        expression: Some(Expression {
                             root_term: Term {
                                 root_factor: Factor::Atomic(AtomicExpression {
                                     atom: Atom::Integer(3),
@@ -108,7 +107,7 @@ mod tests {
                                 trail: Vec::new()
                             },
                             trail: Vec::new()
-                        }))
+                        })
                     })]
                 },
                 else_block: None,
@@ -127,7 +126,7 @@ mod tests {
         assert_eq!(
             if_expr,
             IfExpression {
-                condition: Expression::Arithmetic(ArithmeticExpression {
+                condition: Expression {
                     root_term: Term {
                         root_factor: Factor::Atomic(AtomicExpression {
                             atom: Atom::Integer(18),
@@ -136,12 +135,12 @@ mod tests {
                         trail: Vec::new()
                     },
                     trail: Vec::new()
-                }),
+                },
                 if_block: Block {
                     body: vec![Statement::VarDecl(VariableDeclaration {
                         var_type: String::from("int"),
                         name: String::from("a"),
-                        expression: Some(Expression::Arithmetic(ArithmeticExpression {
+                        expression: Some(Expression {
                             root_term: Term {
                                 root_factor: Factor::Atomic(AtomicExpression {
                                     atom: Atom::Integer(3),
@@ -150,7 +149,7 @@ mod tests {
                                 trail: Vec::new()
                             },
                             trail: Vec::new()
-                        }))
+                        })
                     })]
                 },
                 else_block: Some(Block::new()),
@@ -169,7 +168,7 @@ mod tests {
         assert_eq!(
             if_expr,
             IfExpression {
-                condition: Expression::Arithmetic(ArithmeticExpression {
+                condition: Expression {
                     root_term: Term {
                         root_factor: Factor::Atomic(AtomicExpression {
                             atom: Atom::Integer(18),
@@ -178,12 +177,12 @@ mod tests {
                         trail: Vec::new()
                     },
                     trail: Vec::new()
-                }),
+                },
                 if_block: Block {
                     body: vec![Statement::VarDecl(VariableDeclaration {
                         var_type: String::from("int"),
                         name: String::from("a"),
-                        expression: Some(Expression::Arithmetic(ArithmeticExpression {
+                        expression: Some(Expression {
                             root_term: Term {
                                 root_factor: Factor::Atomic(AtomicExpression {
                                     atom: Atom::Integer(3),
@@ -192,14 +191,14 @@ mod tests {
                                 trail: Vec::new()
                             },
                             trail: Vec::new()
-                        }))
+                        })
                     })]
                 },
                 else_block: Some(Block {
                     body: vec![Statement::VarDecl(VariableDeclaration {
                         var_type: String::from("int"),
                         name: String::from("a"),
-                        expression: Some(Expression::Arithmetic(ArithmeticExpression {
+                        expression: Some(Expression {
                             root_term: Term {
                                 root_factor: Factor::Atomic(AtomicExpression {
                                     atom: Atom::Integer(5),
@@ -208,7 +207,7 @@ mod tests {
                                 trail: Vec::new()
                             },
                             trail: Vec::new()
-                        }))
+                        })
                     })]
                 }),
             }

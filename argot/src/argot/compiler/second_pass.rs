@@ -123,7 +123,7 @@ impl SecondPassVisitor {
 impl Visitor for SecondPassVisitor {
     type Result = Result<()>;
 
-    fn visit_arithmetic_expression(&mut self, v: &mut ArithmeticExpression) -> Self::Result {
+    fn visit_expression(&mut self, v: &mut Expression) -> Self::Result {
         v.root_term.accept(self)?;
 
         for (term_operator, term) in v.trail.iter_mut() {
@@ -136,6 +136,7 @@ impl Visitor for SecondPassVisitor {
 
     fn visit_factor(&mut self, v: &mut Factor) -> Self::Result {
         match v {
+            Factor::FunctionCall(fn_call) => fn_call.accept(self),
             Factor::Atomic(atom) => atom.accept(self),
             Factor::Expression(expr) => expr.accept(self),
             Factor::Unary(unary_op, factor) => {
@@ -279,23 +280,6 @@ impl Visitor for SecondPassVisitor {
         Ok(())
     }
 
-    fn visit_expression(&mut self, v: &mut Expression) -> Self::Result {
-        match v {
-            Expression::Arithmetic(ar_exp) => ar_exp.accept(self),
-            Expression::FunctionCall(fn_name) => {
-                ensure!(
-                    self.functions.contains_key(fn_name),
-                    UnknownFunction {
-                        name: fn_name.clone()
-                    }
-                );
-                emit::fn_call(fn_name.as_ref(), &mut self.scopes)?;
-                // TODO: Get return value,
-                Ok(())
-            }
-        }
-    }
-
     fn visit_program(&mut self, v: &mut Program) -> Self::Result {
         let mut function_keys: Vec<String> =
             v.functions.iter().map(|(key, _v)| key.clone()).collect();
@@ -369,6 +353,19 @@ impl Visitor for SecondPassVisitor {
             }
         );
         emit::stack_var_set_sized(var.offset, reg, var.size, &mut self.scopes)?;
+        Ok(())
+    }
+
+    fn visit_function_call(&mut self, v: &mut FunctionCall) -> Self::Result {
+        ensure!(
+            self.functions.contains_key(&v.name),
+            UnknownFunction {
+                name: v.name.clone()
+            }
+        );
+        emit::fn_call(v.name.as_ref(), &mut self.scopes)?;
+
+        // TODO: Get return value,
         Ok(())
     }
 }

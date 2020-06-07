@@ -8,6 +8,7 @@ use nom::{
 
 use crate::syntax::{
     atom_expr::{atomic_expression, AtomicExpression},
+    call::{function_call, FunctionCall},
     common::whitespace,
     expression::{expression, Expression},
     operator::{unary_operator, UnaryOperator},
@@ -19,6 +20,7 @@ pub enum Factor {
     Atomic(AtomicExpression),
     Unary(UnaryOperator, Box<Factor>),
     Expression(Box<Expression>),
+    FunctionCall(FunctionCall),
 }
 
 impl Visitable for Factor {
@@ -30,9 +32,13 @@ impl Visitable for Factor {
 pub fn factor(i: &str) -> IResult<&str, Factor> {
     delimited(
         whitespace,
-        alt((unary_factor, expr_factor, atom_factor)),
+        alt((fn_call_factor, unary_factor, expr_factor, atom_factor)),
         whitespace,
     )(i)
+}
+
+fn fn_call_factor(i: &str) -> IResult<&str, Factor> {
+    map(function_call, Factor::FunctionCall)(i)
 }
 
 fn atom_factor(i: &str) -> IResult<&str, Factor> {

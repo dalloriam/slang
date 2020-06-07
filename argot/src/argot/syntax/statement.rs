@@ -11,8 +11,8 @@ use crate::{
     syntax::{
         common::whitespace,
         expression::expression,
+        types::{Expression, VariableAssignment, VariableDeclaration},
         var_decl::{variable_assignment, variable_declaration},
-        Expression, VariableAssignment, VariableDeclaration,
     },
     visitor::{Visitable, Visitor},
 };
@@ -52,8 +52,7 @@ mod tests {
 
     use super::statement;
     use crate::syntax::types::{
-        ArithmeticExpression, Atom, AtomicExpression, Expression, Factor, Statement, Term,
-        VariableDeclaration,
+        Atom, AtomicExpression, Expression, Factor, Statement, Term, VariableDeclaration,
     };
 
     #[test]
@@ -79,7 +78,7 @@ mod tests {
             Statement::VarDecl(VariableDeclaration {
                 name: String::from("i"),
                 var_type: String::from("int"),
-                expression: Some(Expression::Arithmetic(ArithmeticExpression {
+                expression: Some(Expression {
                     root_term: Term {
                         root_factor: Factor::Atomic(AtomicExpression {
                             atom: Atom::Integer(3),
@@ -88,7 +87,7 @@ mod tests {
                         trail: Vec::new(),
                     },
                     trail: Vec::new()
-                }))
+                })
             })
         );
     }
