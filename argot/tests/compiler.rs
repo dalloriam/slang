@@ -15,11 +15,12 @@ macro_rules! compiler_fts {
 }
 
 compiler_fts! {
-    empty_program,
     add,
+    fn_call_no_ret,
     mult,
     nested_math,
     var_decl,
     var_usage,
     neg_int,
+    var_ref,
 }

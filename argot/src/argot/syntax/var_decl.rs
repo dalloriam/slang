@@ -5,7 +5,7 @@ use nom::{
     IResult,
 };
 
-use crate::syntax::{common::whitespace, expression::expression, Expression};
+use crate::syntax::{common::whitespace, expression::expression, types::Expression};
 
 use crate::visitor::{Visitable, Visitor};
 
@@ -28,12 +28,27 @@ pub struct VariableAssignment {
     pub expression: Expression,
 }
 
+impl Visitable for VariableAssignment {
+    fn accept<V: Visitor>(&mut self, v: &mut V) -> V::Result {
+        v.visit_variable_assignment(self)
+    }
+}
+
 fn assign(i: &str) -> IResult<&str, Expression> {
     preceded(delimited(whitespace, char('='), whitespace), expression)(i)
 }
 
 pub fn identifier(i: &str) -> IResult<&str, &str> {
     delimited(whitespace, alpha1, whitespace)(i)
+}
+
+pub fn variable_assignment(i: &str) -> IResult<&str, VariableAssignment> {
+    map(tuple((identifier, assign)), |(name, ass)| {
+        VariableAssignment {
+            name: String::from(name),
+            expression: ass,
+        }
+    })(i)
 }
 
 pub fn variable_declaration(i: &str) -> IResult<&str, VariableDeclaration> {
@@ -50,7 +65,9 @@ pub fn variable_declaration(i: &str) -> IResult<&str, VariableDeclaration> {
 #[cfg(test)]
 mod tests {
     use super::variable_declaration;
-    use crate::syntax::{ArithmeticExpression, Expression, Factor, Term, VariableDeclaration};
+    use crate::syntax::types::{
+        Atom, AtomicExpression, Expression, Factor, Term, VariableDeclaration,
+    };
 
     #[test]
     fn int_decl() {
@@ -75,13 +92,16 @@ mod tests {
             VariableDeclaration {
                 var_type: String::from("int"),
                 name: String::from("bing"),
-                expression: Some(Expression::Arithmetic(ArithmeticExpression {
+                expression: Some(Expression {
                     root_term: Term {
-                        root_factor: Factor::Integer(14),
+                        root_factor: Factor::Atomic(AtomicExpression {
+                            atom: Atom::Integer(14),
+                            trailers: Vec::new()
+                        }),
                         trail: Vec::new()
                     },
-                    trail: Vec::new(),
-                }))
+                    trail: Vec::new()
+                })
             }
         )
     }

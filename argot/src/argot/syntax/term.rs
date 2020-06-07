@@ -40,7 +40,7 @@ pub fn term(i: &str) -> IResult<&str, Term> {
 mod tests {
 
     use super::{term, Factor, FactorOperator, Term};
-    use crate::syntax::operator::UnaryOperator;
+    use crate::syntax::types::{Atom, AtomicExpression, UnaryOperator};
 
     #[test]
     fn term_single_factor() {
@@ -49,7 +49,13 @@ mod tests {
         assert_eq!(
             t,
             Term {
-                root_factor: Factor::Unary(UnaryOperator::Minus, Box::new(Factor::Integer(26))),
+                root_factor: Factor::Unary(
+                    UnaryOperator::Minus,
+                    Box::new(Factor::Atomic(AtomicExpression {
+                        atom: Atom::Integer(26),
+                        trailers: Vec::new()
+                    }))
+                ),
                 trail: Vec::new()
             }
         )
@@ -62,12 +68,30 @@ mod tests {
         assert_eq!(
             t,
             Term {
-                root_factor: Factor::Unary(UnaryOperator::Minus, Box::new(Factor::Integer(26))),
+                root_factor: Factor::Unary(
+                    UnaryOperator::Minus,
+                    Box::new(Factor::Atomic(AtomicExpression {
+                        atom: Atom::Integer(26),
+                        trailers: Vec::new()
+                    }))
+                ),
                 trail: vec![
-                    (FactorOperator::Mult, Factor::Integer(42)),
+                    (
+                        FactorOperator::Mult,
+                        Factor::Atomic(AtomicExpression {
+                            atom: Atom::Integer(42),
+                            trailers: Vec::new()
+                        })
+                    ),
                     (
                         FactorOperator::Div,
-                        Factor::Unary(UnaryOperator::Minus, Box::new(Factor::Integer(3)))
+                        Factor::Unary(
+                            UnaryOperator::Minus,
+                            Box::new(Factor::Atomic(AtomicExpression {
+                                atom: Atom::Integer(3),
+                                trailers: Vec::new()
+                            }))
+                        )
                     ),
                 ]
             }

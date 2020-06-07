@@ -60,7 +60,13 @@ pub fn sb(src_reg: u8, addr: &Address, vm: &mut VM) {
 
     match addr.section {
         MemorySection::Heap => vm.heap_mut().memory_mut()[ptr] = value_to_write,
-        MemorySection::Stack => vm.stack_mut().memory_mut()[ptr] = value_to_write,
+        MemorySection::Stack => {
+            // This can cause stack growth, need to update the esp.
+            vm.stack_mut().safe_grow(ptr + 1);
+            vm.registers_mut()[STACK_POINTER_REGISTER] = vm.stack().len() as i32;
+
+            vm.stack_mut().memory_mut()[ptr] = value_to_write
+        }
     }
 }
 

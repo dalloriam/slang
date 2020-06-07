@@ -9,8 +9,10 @@ use nom::{
 
 use crate::{
     syntax::{
-        common::whitespace, expression::expression, var_decl::variable_declaration, Expression,
-        VariableAssignment, VariableDeclaration,
+        common::whitespace,
+        expression::expression,
+        types::{Expression, VariableAssignment, VariableDeclaration},
+        var_decl::{variable_assignment, variable_declaration},
     },
     visitor::{Visitable, Visitor},
 };
@@ -36,6 +38,7 @@ pub fn statement(i: &str) -> IResult<&str, Statement> {
             alt((
                 map(preceded(tag("return"), opt(expression)), Statement::Return),
                 map(variable_declaration, Statement::VarDecl),
+                map(variable_assignment, Statement::VarAssign),
                 map(expression, Statement::Expr),
             )),
             char(';'),
@@ -48,8 +51,8 @@ pub fn statement(i: &str) -> IResult<&str, Statement> {
 mod tests {
 
     use super::statement;
-    use crate::syntax::{
-        ArithmeticExpression, Expression, Factor, Statement, Term, VariableDeclaration,
+    use crate::syntax::types::{
+        Atom, AtomicExpression, Expression, Factor, Statement, Term, VariableDeclaration,
     };
 
     #[test]
@@ -75,13 +78,16 @@ mod tests {
             Statement::VarDecl(VariableDeclaration {
                 name: String::from("i"),
                 var_type: String::from("int"),
-                expression: Some(Expression::Arithmetic(ArithmeticExpression {
+                expression: Some(Expression {
                     root_term: Term {
-                        root_factor: Factor::Integer(3),
-                        trail: Vec::new()
+                        root_factor: Factor::Atomic(AtomicExpression {
+                            atom: Atom::Integer(3),
+                            trailers: Vec::new()
+                        }),
+                        trail: Vec::new(),
                     },
                     trail: Vec::new()
-                }))
+                })
             })
         );
     }

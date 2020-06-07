@@ -233,8 +233,8 @@ impl VM {
                     return false;
                 }
             }
-            Opcode::PUSH => op::stack::push(self.next_8_bits(), self),
-            Opcode::POP => op::stack::pop(self.next_8_bits(), self),
+            Opcode::PUSHW => op::stack::pushw(self.next_8_bits(), self),
+            Opcode::POPW => op::stack::popw(self.next_8_bits(), self),
             Opcode::MOV => op::reg::mov(self.next_8_bits(), self.next_8_bits(), self),
             Opcode::LCW => op::ro::lcw(self.next_8_bits(), self.next_16_bits(), self),
             Opcode::SW => op::memory::sw(self.next_8_bits(), &self.next_address(), self),
@@ -244,6 +244,8 @@ impl VM {
             Opcode::CALL => op::branch::call(self.next_16_bits(), self),
             Opcode::RET => op::branch::ret(self),
             Opcode::NEG => op::math::neg(self.next_8_bits(), self),
+            Opcode::PUSHB => op::stack::pushb(self.next_8_bits(), self),
+            Opcode::POPB => op::stack::popb(self.next_8_bits(), self),
             Opcode::IGL => {
                 println!("Illegal opcode. Terminating");
                 return false;

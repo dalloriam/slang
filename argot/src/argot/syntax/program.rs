@@ -38,7 +38,7 @@ mod test {
 
     use crate::syntax::{
         program::{program, Program},
-        FunctionDeclaration,
+        Block, FunctionDeclaration,
     };
 
     #[test]
@@ -64,7 +64,7 @@ mod test {
             FunctionDeclaration {
                 name: String::from("main"),
                 return_type: String::from("int"),
-                body: Vec::new(),
+                block: Block::new(),
             },
         );
         assert_eq!(prg, Program { functions: fn_hash })
@@ -81,7 +81,7 @@ mod test {
             FunctionDeclaration {
                 name: String::from("main"),
                 return_type: String::from("int"),
-                body: Vec::new(),
+                block: Block::new(),
             },
         );
         fn_hash.insert(
@@ -89,7 +89,7 @@ mod test {
             FunctionDeclaration {
                 name: String::from("hello"),
                 return_type: String::from("int"),
-                body: Vec::new(),
+                block: Block::new(),
             },
         );
         assert_eq!(prg, Program { functions: fn_hash })

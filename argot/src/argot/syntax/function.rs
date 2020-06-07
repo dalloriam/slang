@@ -1,15 +1,16 @@
 use nom::{
     bytes::complete::tag,
-    character::complete::{alpha1, char},
+    character::complete::alpha1,
     combinator::map,
-    multi::many0,
     sequence::{delimited, tuple},
     IResult,
 };
 
-use super::Statement;
 use crate::{
-    syntax::{common::whitespace, statement::statement},
+    syntax::{
+        block::{block, Block},
+        common::whitespace,
+    },
     visitor::{Visitable, Visitor},
 };
 
@@ -17,7 +18,7 @@ use crate::{
 pub struct FunctionDeclaration {
     pub return_type: String,
     pub name: String,
-    pub body: Vec<Statement>,
+    pub block: Block,
 }
 
 impl Visitable for FunctionDeclaration {
@@ -32,21 +33,13 @@ pub fn function_declaration(i: &str) -> IResult<&str, FunctionDeclaration> {
             tag("fn"),
             delimited(whitespace, alpha1, whitespace),
             tag("()"),
-            function_body,
+            block,
         )),
-        |(_f, name, _x, body)| FunctionDeclaration {
+        |(_f, name, _x, block)| FunctionDeclaration {
             return_type: String::from("int"),
             name: String::from(name),
-            body,
+            block,
         },
-    )(i)
-}
-
-fn function_body(i: &str) -> IResult<&str, Vec<Statement>> {
-    delimited(
-        whitespace,
-        delimited(char('{'), many0(statement), char('}')),
-        whitespace,
     )(i)
 }
 
@@ -55,7 +48,7 @@ mod tests {
 
     use super::function_declaration;
 
-    use crate::syntax::{FunctionDeclaration, Statement, VariableDeclaration};
+    use crate::syntax::{Block, FunctionDeclaration, Statement, VariableDeclaration};
 
     #[test]
     fn fn_decl_no_return_type_no_arg_no_body() {
@@ -66,7 +59,7 @@ mod tests {
             FunctionDeclaration {
                 return_type: String::from("int"),
                 name: String::from("hello"),
-                body: Vec::new()
+                block: Block::new(),
             }
         )
     }
@@ -80,11 +73,13 @@ mod tests {
             FunctionDeclaration {
                 return_type: String::from("int"),
                 name: String::from("hello"),
-                body: vec![Statement::VarDecl(VariableDeclaration {
-                    name: String::from("a"),
-                    var_type: String::from("int"),
-                    expression: None
-                })]
+                block: Block {
+                    body: vec![Statement::VarDecl(VariableDeclaration {
+                        name: String::from("a"),
+                        var_type: String::from("int"),
+                        expression: None
+                    })]
+                }
             }
         )
     }
