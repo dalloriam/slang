@@ -30,7 +30,7 @@ impl SecondPassVisitor {
 
         SecondPassVisitor {
             free_registers,
-            functions: functions,
+            functions,
             scopes: ScopeManager::new(),
             stack_size_tracker: 0,
             type_stack: Vec::new(),
@@ -270,7 +270,7 @@ impl Visitor for SecondPassVisitor {
             ensure!(
                 expr_type == var.var_type,
                 TypeMismatch {
-                    t1: expr_type.clone(),
+                    t1: expr_type,
                     t2: v.var_type.clone()
                 }
             );
@@ -348,7 +348,7 @@ impl Visitor for SecondPassVisitor {
         ensure!(
             expr_type == var.var_type,
             TypeMismatch {
-                t1: expr_type.clone(),
+                t1: expr_type,
                 t2: var.var_type.clone()
             }
         );

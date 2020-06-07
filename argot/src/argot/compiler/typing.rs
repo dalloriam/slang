@@ -40,9 +40,7 @@ impl TryFrom<String> for BuiltInType {
         match value.as_ref() {
             "int" => Ok(BuiltInType::Integer),
             "bool" => Ok(BuiltInType::Boolean),
-            _ => Err(UnknownType {
-                type_name: String::from(value),
-            }),
+            _ => Err(UnknownType { type_name: value }),
         }
     }
 }
