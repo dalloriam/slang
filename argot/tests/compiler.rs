@@ -23,4 +23,5 @@ compiler_fts! {
     var_usage,
     neg_int,
     var_ref,
+    simple_if,
 }

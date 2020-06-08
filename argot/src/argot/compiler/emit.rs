@@ -158,4 +158,14 @@ pub fn fn_call(fn_name: &str, scopes: &mut ScopeManager) -> Result<()> {
     Ok(())
 }
 
-pub fn if_condition() {}
+pub fn jump_to_else(
+    value_register: u8,
+    condition_label: &str,
+    scopes: &mut ScopeManager,
+) -> Result<()> {
+    scopes
+        .current_mut()?
+        .push_instruction(format!("jez ${} @{}", value_register, condition_label));
+
+    Ok(())
+}

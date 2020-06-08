@@ -6,7 +6,10 @@ use instructor::REGULAR_REGISTER_COUNT;
 use snafu::{ensure, ResultExt};
 
 use crate::{
-    compiler::{emit, error::*, first_pass::FunctionDecl, scope::ScopeManager, typing},
+    compiler::{
+        emit, error::*, first_pass::FunctionDecl, label::LabelGenerator, scope::ScopeManager,
+        typing,
+    },
     syntax::types::*,
     visitor::{Visitable, Visitor},
 };
@@ -14,6 +17,7 @@ use crate::{
 pub struct SecondPassVisitor {
     free_registers: Vec<u8>,
     functions: HashMap<String, FunctionDecl>,
+    labels: LabelGenerator,
     scopes: ScopeManager,
     stack_size_tracker: usize,
     type_stack: Vec<String>,
@@ -31,6 +35,7 @@ impl SecondPassVisitor {
         SecondPassVisitor {
             free_registers,
             functions,
+            labels: LabelGenerator::new(),
             scopes: ScopeManager::new(),
             stack_size_tracker: 0,
             type_stack: Vec::new(),
@@ -374,20 +379,13 @@ impl Visitor for SecondPassVisitor {
     fn visit_if_expression(&mut self, v: &mut IfExpression) -> Self::Result {
         v.condition.accept(self)?;
 
-        // After this, the value of the expression is stored on top of the compiler stack.
-        let expr_val_reg = self.pop_reg(0)?;
+        let cond_label = self.labels.next();
 
-        let cond_label = "condition";
-
-        self.scopes
-            .current_mut()?
-            .push_instruction(format!("jez ${} @{}", expr_val_reg, cond_label));
+        emit::jump_to_else(self.pop_reg(0)?, &cond_label, &mut self.scopes)?;
 
         v.if_block.accept(self)?;
 
-        self.scopes
-            .current_mut()?
-            .push_instruction(format!("{}:", cond_label));
+        emit::label(&cond_label, &mut self.scopes)?;
 
         if let Some(else_block) = &mut v.else_block {
             else_block.accept(self)?;

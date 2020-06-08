@@ -1,6 +1,7 @@
 mod emit;
 mod error;
 mod first_pass;
+mod label;
 mod operator;
 mod root;
 mod scope;
