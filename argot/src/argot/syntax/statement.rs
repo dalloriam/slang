@@ -11,6 +11,7 @@ use crate::{
     syntax::{
         common::whitespace,
         expression::expression,
+        if_expr::{if_expression, IfExpression},
         types::{Expression, VariableAssignment, VariableDeclaration},
         var_decl::{variable_assignment, variable_declaration},
     },
@@ -22,6 +23,7 @@ pub enum Statement {
     VarDecl(VariableDeclaration),
     VarAssign(VariableAssignment),
     Return(Option<Expression>),
+    IfExpression(IfExpression),
     Expr(Expression),
 }
 
@@ -31,7 +33,7 @@ impl Visitable for Statement {
     }
 }
 
-pub fn statement(i: &str) -> IResult<&str, Statement> {
+fn semicolon_statement(i: &str) -> IResult<&str, Statement> {
     delimited(
         whitespace,
         terminated(
@@ -45,6 +47,18 @@ pub fn statement(i: &str) -> IResult<&str, Statement> {
         ),
         whitespace,
     )(i)
+}
+
+pub fn block_statement(i: &str) -> IResult<&str, Statement> {
+    delimited(
+        whitespace,
+        map(if_expression, Statement::IfExpression),
+        whitespace,
+    )(i)
+}
+
+pub fn statement(i: &str) -> IResult<&str, Statement> {
+    alt((block_statement, semicolon_statement))(i)
 }
 
 #[cfg(test)]

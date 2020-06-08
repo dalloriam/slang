@@ -157,3 +157,5 @@ pub fn fn_call(fn_name: &str, scopes: &mut ScopeManager) -> Result<()> {
         .push_instruction(format!("call @{}", fn_name));
     Ok(())
 }
+
+pub fn if_condition() {}

@@ -11,6 +11,7 @@ use crate::syntax::{
     call::{function_call, FunctionCall},
     common::whitespace,
     expression::{expression, Expression},
+    if_expr::{if_expression, IfExpression},
     operator::{unary_operator, UnaryOperator},
 };
 use crate::visitor::{Visitable, Visitor};
@@ -21,6 +22,7 @@ pub enum Factor {
     Unary(UnaryOperator, Box<Factor>),
     Expression(Box<Expression>),
     FunctionCall(FunctionCall),
+    IfExpression(IfExpression),
 }
 
 impl Visitable for Factor {
@@ -32,9 +34,19 @@ impl Visitable for Factor {
 pub fn factor(i: &str) -> IResult<&str, Factor> {
     delimited(
         whitespace,
-        alt((fn_call_factor, unary_factor, expr_factor, atom_factor)),
+        alt((
+            if_expression_factor,
+            fn_call_factor,
+            unary_factor,
+            expr_factor,
+            atom_factor,
+        )),
         whitespace,
     )(i)
+}
+
+fn if_expression_factor(i: &str) -> IResult<&str, Factor> {
+    map(if_expression, Factor::IfExpression)(i)
 }
 
 fn fn_call_factor(i: &str) -> IResult<&str, Factor> {

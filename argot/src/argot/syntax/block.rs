@@ -35,7 +35,11 @@ pub fn block(i: &str) -> IResult<&str, Block> {
     map(
         delimited(
             whitespace,
-            delimited(char('{'), many0(statement), char('}')),
+            delimited(
+                char('{'),
+                delimited(whitespace, many0(statement), whitespace),
+                char('}'),
+            ),
             whitespace,
         ),
         |v| Block { body: v },

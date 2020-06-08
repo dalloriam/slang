@@ -22,4 +22,5 @@ pub trait Visitor {
     fn visit_block(&mut self, v: &mut Block) -> Self::Result;
     fn visit_variable_assignment(&mut self, v: &mut VariableAssignment) -> Self::Result;
     fn visit_function_call(&mut self, v: &mut FunctionCall) -> Self::Result;
+    fn visit_if_expression(&mut self, v: &mut IfExpression) -> Self::Result;
 }

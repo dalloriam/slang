@@ -246,6 +246,7 @@ impl VM {
             Opcode::NEG => op::math::neg(self.next_8_bits(), self),
             Opcode::PUSHB => op::stack::pushb(self.next_8_bits(), self),
             Opcode::POPB => op::stack::popb(self.next_8_bits(), self),
+            Opcode::JEZ => op::branch::jez(self.next_8_bits(), self.next_16_bits(), self),
             Opcode::IGL => {
                 println!("Illegal opcode. Terminating");
                 return false;

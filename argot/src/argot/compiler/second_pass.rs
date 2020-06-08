@@ -143,6 +143,7 @@ impl Visitor for SecondPassVisitor {
                 factor.accept(self)?;
                 unary_op.accept(self)
             }
+            Factor::IfExpression(if_expr) => if_expr.accept(self),
         }
     }
 
@@ -249,6 +250,7 @@ impl Visitor for SecondPassVisitor {
             }
             Statement::VarAssign(assignment) => assignment.accept(self),
             Statement::VarDecl(declaration) => declaration.accept(self),
+            Statement::IfExpression(if_expr) => if_expr.accept(self),
         }
     }
 
@@ -366,6 +368,31 @@ impl Visitor for SecondPassVisitor {
         emit::fn_call(v.name.as_ref(), &mut self.scopes)?;
 
         // TODO: Get return value,
+        Ok(())
+    }
+
+    fn visit_if_expression(&mut self, v: &mut IfExpression) -> Self::Result {
+        v.condition.accept(self)?;
+
+        // After this, the value of the expression is stored on top of the compiler stack.
+        let expr_val_reg = self.pop_reg(0)?;
+
+        let cond_label = "condition";
+
+        self.scopes
+            .current_mut()?
+            .push_instruction(format!("jez ${} @{}", expr_val_reg, cond_label));
+
+        v.if_block.accept(self)?;
+
+        self.scopes
+            .current_mut()?
+            .push_instruction(format!("{}:", cond_label));
+
+        if let Some(else_block) = &mut v.else_block {
+            else_block.accept(self)?;
+        }
+
         Ok(())
     }
 }

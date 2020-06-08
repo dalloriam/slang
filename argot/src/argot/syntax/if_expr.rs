@@ -12,11 +12,19 @@ use crate::syntax::{
     expression::{expression, Expression},
 };
 
+use crate::visitor::{Visitable, Visitor};
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct IfExpression {
-    condition: Expression,
-    if_block: Block,
-    else_block: Option<Block>,
+    pub condition: Box<Expression>,
+    pub if_block: Block,
+    pub else_block: Option<Block>,
+}
+
+impl Visitable for IfExpression {
+    fn accept<V: Visitor>(&mut self, visitor: &mut V) -> V::Result {
+        visitor.visit_if_expression(self)
+    }
 }
 
 pub fn if_expression(i: &str) -> IResult<&str, IfExpression> {
@@ -34,7 +42,7 @@ pub fn if_expression(i: &str) -> IResult<&str, IfExpression> {
             opt(preceded(tag("else"), block)),
         )),
         |(condition, if_block, else_block)| IfExpression {
-            condition,
+            condition: Box::new(condition),
             if_block,
             else_block,
         },
@@ -61,7 +69,7 @@ mod tests {
         assert_eq!(
             if_expr,
             IfExpression {
-                condition: Expression {
+                condition: Box::new(Expression {
                     root_term: Term {
                         root_factor: Factor::Atomic(AtomicExpression {
                             atom: Atom::Integer(18),
@@ -70,7 +78,7 @@ mod tests {
                         trail: Vec::new()
                     },
                     trail: Vec::new()
-                },
+                }),
                 if_block: Block::new(),
                 else_block: None,
             }
@@ -84,7 +92,7 @@ mod tests {
         assert_eq!(
             if_expr,
             IfExpression {
-                condition: Expression {
+                condition: Box::new(Expression {
                     root_term: Term {
                         root_factor: Factor::Atomic(AtomicExpression {
                             atom: Atom::Integer(18),
@@ -93,7 +101,7 @@ mod tests {
                         trail: Vec::new()
                     },
                     trail: Vec::new()
-                },
+                }),
                 if_block: Block {
                     body: vec![Statement::VarDecl(VariableDeclaration {
                         var_type: String::from("int"),
@@ -126,7 +134,7 @@ mod tests {
         assert_eq!(
             if_expr,
             IfExpression {
-                condition: Expression {
+                condition: Box::new(Expression {
                     root_term: Term {
                         root_factor: Factor::Atomic(AtomicExpression {
                             atom: Atom::Integer(18),
@@ -135,7 +143,7 @@ mod tests {
                         trail: Vec::new()
                     },
                     trail: Vec::new()
-                },
+                }),
                 if_block: Block {
                     body: vec![Statement::VarDecl(VariableDeclaration {
                         var_type: String::from("int"),
@@ -168,7 +176,7 @@ mod tests {
         assert_eq!(
             if_expr,
             IfExpression {
-                condition: Expression {
+                condition: Box::new(Expression {
                     root_term: Term {
                         root_factor: Factor::Atomic(AtomicExpression {
                             atom: Atom::Integer(18),
@@ -177,7 +185,7 @@ mod tests {
                         trail: Vec::new()
                     },
                     trail: Vec::new()
-                },
+                }),
                 if_block: Block {
                     body: vec![Statement::VarDecl(VariableDeclaration {
                         var_type: String::from("int"),
