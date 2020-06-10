@@ -100,6 +100,9 @@ pub enum Opcode {
 
     // Pop byte - Pops a byte from the stack.
     POPB,
+
+    /// Jump if zero. Jumps to the specified offset if the value of the specified register is zero.
+    JEZ,
 }
 
 impl Opcode {
@@ -137,6 +140,7 @@ impl Opcode {
             Opcode::NEG => 2,
             Opcode::PUSHB => 2,
             Opcode::POPB => 2,
+            Opcode::JEZ => 4,
             Opcode::IGL => 1,
         }
     }
@@ -177,6 +181,7 @@ impl<'a> From<&'a str> for Opcode {
             "neg" => Opcode::NEG,
             "pushb" => Opcode::PUSHB,
             "popb" => Opcode::POPB,
+            "jez" => Opcode::JEZ,
             _ => Opcode::IGL,
         }
     }
@@ -217,6 +222,7 @@ impl From<u8> for Opcode {
             30 => Opcode::NEG,
             31 => Opcode::PUSHB,
             32 => Opcode::POPB,
+            33 => Opcode::JEZ,
             _ => Opcode::IGL,
         }
     }

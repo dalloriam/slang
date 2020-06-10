@@ -1,3 +1,7 @@
 fn main() {
-  int a = 2 + 2 + 2 + 2 + 2;
+  if (false) {
+    int a = 8;
+  } else {
+    int b = 6;
+  }
 }

@@ -38,6 +38,15 @@ fn opcode_instr(opcode: Opcode, lbl: Option<String>, rest: &str) -> IResult<&str
                 ..Default::default()
             })(rest)?
         }
+        Opcode::JEZ => map(tuple((operand::register, operand::offset)), |(r, o)| {
+            Instruction {
+                label: lbl.clone(),
+                opcode: Some(opcode),
+                operand_1: Some(r),
+                operand_2: Some(o),
+                ..Default::default()
+            }
+        })(rest)?,
         Opcode::EQ
         | Opcode::NEQ
         | Opcode::GT

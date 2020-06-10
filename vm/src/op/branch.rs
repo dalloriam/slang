@@ -40,6 +40,17 @@ pub fn jeq(target_addr: u16, vm: &mut VM) {
 }
 
 #[inline]
+pub fn jez(register: u8, target_addr: u16, vm: &mut VM) {
+    if vm.registers()[register as usize] == 0 {
+        vm.equal_flag = true;
+        vm.pc = target_addr as usize;
+    } else {
+        vm.equal_flag = false;
+    }
+    log::trace!("jez ${} {:#06x}", register, target_addr);
+}
+
+#[inline]
 pub fn call(target_addr: u16, vm: &mut VM) {
     log::trace!("call {:#06x}", target_addr);
 

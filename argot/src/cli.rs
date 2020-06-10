@@ -5,8 +5,6 @@ use anyhow::Result;
 
 use clap::Clap;
 
-use argot::Compiler;
-
 const DEFAULT_OUTPUT_NAME: &str = "a.out";
 
 #[derive(Clap, Debug)]
@@ -25,10 +23,10 @@ impl CLIRoot {
         let prg_src = fs::read_to_string(&self.file)?;
 
         if self.asm {
-            let asm_src = Compiler::new().compile_asm(&prg_src)?;
-            println!("{}", asm_src);
+            let asm = argot::compile_asm(&prg_src)?;
+            println!("{}", asm);
         } else {
-            let compiled = Compiler::new().compile(&prg_src)?;
+            let compiled = argot::compile(&prg_src)?;
 
             let path = match self.output.as_ref() {
                 Some(p) => p.clone(),

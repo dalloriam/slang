@@ -1,5 +1,3 @@
-use argot::Compiler;
-
 macro_rules! compiler_fts {
     ($($name:ident,)*) => {
         $(
@@ -7,7 +5,7 @@ macro_rules! compiler_fts {
             fn $name() {
                 const SOURCE: &str = include_str!(concat!("data/", stringify!($name), ".gt"));
                 const EXPECTED_ASM: &str = include_str!(concat!("data/", stringify!($name), ".asm"));
-                let actual_asm = Compiler::new().compile_asm(SOURCE).unwrap();
+                let actual_asm = argot::compile_asm(SOURCE).unwrap();
                 assert_eq!(EXPECTED_ASM.trim(), actual_asm.trim());
             }
         )*
@@ -23,4 +21,5 @@ compiler_fts! {
     var_usage,
     neg_int,
     var_ref,
+    simple_if,
 }

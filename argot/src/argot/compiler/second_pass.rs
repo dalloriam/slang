@@ -6,7 +6,10 @@ use instructor::REGULAR_REGISTER_COUNT;
 use snafu::{ensure, ResultExt};
 
 use crate::{
-    compiler::{emit, error::*, first_pass::FunctionDecl, scope::ScopeManager, typing},
+    compiler::{
+        emit, error::*, first_pass::FunctionDecl, label::LabelGenerator, scope::ScopeManager,
+        typing,
+    },
     syntax::types::*,
     visitor::{Visitable, Visitor},
 };
@@ -14,6 +17,7 @@ use crate::{
 pub struct SecondPassVisitor {
     free_registers: Vec<u8>,
     functions: HashMap<String, FunctionDecl>,
+    labels: LabelGenerator,
     scopes: ScopeManager,
     stack_size_tracker: usize,
     type_stack: Vec<String>,
@@ -31,6 +35,7 @@ impl SecondPassVisitor {
         SecondPassVisitor {
             free_registers,
             functions,
+            labels: LabelGenerator::new(),
             scopes: ScopeManager::new(),
             stack_size_tracker: 0,
             type_stack: Vec::new(),
@@ -143,6 +148,7 @@ impl Visitor for SecondPassVisitor {
                 factor.accept(self)?;
                 unary_op.accept(self)
             }
+            Factor::IfExpression(if_expr) => if_expr.accept(self),
         }
     }
 
@@ -185,7 +191,7 @@ impl Visitor for SecondPassVisitor {
         // Typecheck.
         let t1 = self.pop_type()?;
         let t2 = self.pop_type()?;
-        typing::typecheck_binary_operator::<FactorOperator>(&t1, &t2)?;
+        typing::typecheck_binary_operator::<TermOperator>(&t1, &t2)?;
 
         // Execution
         let o1 = self.pop_reg(0)?;
@@ -249,6 +255,7 @@ impl Visitor for SecondPassVisitor {
             }
             Statement::VarAssign(assignment) => assignment.accept(self),
             Statement::VarDecl(declaration) => declaration.accept(self),
+            Statement::IfExpression(if_expr) => if_expr.accept(self),
         }
     }
 
@@ -366,6 +373,24 @@ impl Visitor for SecondPassVisitor {
         emit::fn_call(v.name.as_ref(), &mut self.scopes)?;
 
         // TODO: Get return value,
+        Ok(())
+    }
+
+    fn visit_if_expression(&mut self, v: &mut IfExpression) -> Self::Result {
+        v.condition.accept(self)?;
+
+        let cond_label = self.labels.next().unwrap();
+
+        emit::jump_to_else(self.pop_reg(0)?, &cond_label, &mut self.scopes)?;
+
+        v.if_block.accept(self)?;
+
+        emit::label(&cond_label, &mut self.scopes)?;
+
+        if let Some(else_block) = &mut v.else_block {
+            else_block.accept(self)?;
+        }
+
         Ok(())
     }
 }
