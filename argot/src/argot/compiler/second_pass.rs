@@ -191,7 +191,7 @@ impl Visitor for SecondPassVisitor {
         // Typecheck.
         let t1 = self.pop_type()?;
         let t2 = self.pop_type()?;
-        typing::typecheck_binary_operator::<FactorOperator>(&t1, &t2)?;
+        typing::typecheck_binary_operator::<TermOperator>(&t1, &t2)?;
 
         // Execution
         let o1 = self.pop_reg(0)?;
@@ -379,7 +379,7 @@ impl Visitor for SecondPassVisitor {
     fn visit_if_expression(&mut self, v: &mut IfExpression) -> Self::Result {
         v.condition.accept(self)?;
 
-        let cond_label = self.labels.next();
+        let cond_label = self.labels.next().unwrap();
 
         emit::jump_to_else(self.pop_reg(0)?, &cond_label, &mut self.scopes)?;
 
