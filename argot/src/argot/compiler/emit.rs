@@ -158,6 +158,13 @@ pub fn fn_call(fn_name: &str, scopes: &mut ScopeManager) -> Result<()> {
     Ok(())
 }
 
+pub fn jump_to_label(label: &str, scopes: &mut ScopeManager) -> Result<()> {
+    scopes
+        .current_mut()?
+        .push_instruction(format!("jmp @{}", label));
+    Ok(())
+}
+
 pub fn jump_to_else(
     value_register: u8,
     condition_label: &str,

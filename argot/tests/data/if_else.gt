@@ -1,0 +1,7 @@
+fn main() {
+    if (true) {
+        int a = 42;
+    } else {
+        int b = 24;
+    }
+}

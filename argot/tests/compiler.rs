@@ -22,4 +22,5 @@ compiler_fts! {
     neg_int,
     var_ref,
     simple_if,
+    if_else,
 }
