@@ -73,4 +73,10 @@ mod tests {
         const SOURCE: &str = include_str!("./data/prints.asm");
         let _vm = execute_test(SOURCE, 16);
     }
+
+    #[test]
+    fn ft_dyn_str() {
+        const SOURCE: &str = include_str!("./data/dyn_str.asm");
+        let _vm = execute_test(SOURCE, 64);
+    }
 }

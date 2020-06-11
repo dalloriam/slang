@@ -379,16 +379,28 @@ impl Visitor for SecondPassVisitor {
     fn visit_if_expression(&mut self, v: &mut IfExpression) -> Self::Result {
         v.condition.accept(self)?;
 
-        let cond_label = self.labels.next().unwrap();
+        let else_label = self.labels.next().unwrap();
 
-        emit::jump_to_else(self.pop_reg(0)?, &cond_label, &mut self.scopes)?;
+        emit::jump_to_else(self.pop_reg(0)?, &else_label, &mut self.scopes)?;
 
         v.if_block.accept(self)?;
 
-        emit::label(&cond_label, &mut self.scopes)?;
-
         if let Some(else_block) = &mut v.else_block {
+            // If we have an else expression, we need to generate an
+            // additional label (the exit label), and jump to it at the end of the
+            // if block to prevent falling through to the else case.
+            let end_label = self.labels.next().unwrap();
+            emit::jump_to_label(&end_label, &mut self.scopes)?;
+
+            emit::label(&else_label, &mut self.scopes)?;
+
             else_block.accept(self)?;
+
+            emit::label(&end_label, &mut self.scopes)?;
+        } else {
+            // If we don't have an else expression, the else
+            // label acts as our exit label.
+            emit::label(&else_label, &mut self.scopes)?;
         }
 
         Ok(())
