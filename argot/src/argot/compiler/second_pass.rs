@@ -148,7 +148,10 @@ impl Visitor for SecondPassVisitor {
                 factor.accept(self)?;
                 unary_op.accept(self)
             }
-            Factor::IfExpression(if_expr) => if_expr.accept(self),
+            Factor::IfExpression(if_expr) => {
+                ensure!(if_expr.else_block.is_some(), NotAllPathsReturnAValue);
+                if_expr.accept(self)
+            }
         }
     }
 
