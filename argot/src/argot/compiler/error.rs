@@ -35,6 +35,7 @@ pub enum CompileError {
     MissingEntryPoint,
     MissingScope,
     MissingType,
+    NotAllPathsReturnAValue,
     NoUsedRegisters,
     TypeMismatch {
         t1: String,

@@ -23,4 +23,5 @@ compiler_fts! {
     var_ref,
     simple_if,
     if_else,
+    stack_fallback,
 }
