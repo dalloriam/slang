@@ -159,7 +159,7 @@ impl Visitor for SecondPassVisitor {
         // Typecheck.
         let t1 = self.pop_type()?;
         let t2 = self.pop_type()?;
-        typing::typecheck_binary_operator::<FactorOperator>(&t1, &t2)?;
+        typing::typecheck_binary_operator(v, &t1, &t2)?;
 
         // Execution.
         let o1 = self.pop_reg(0)?;
@@ -194,7 +194,7 @@ impl Visitor for SecondPassVisitor {
         // Typecheck.
         let t1 = self.pop_type()?;
         let t2 = self.pop_type()?;
-        typing::typecheck_binary_operator::<TermOperator>(&t1, &t2)?;
+        typing::typecheck_binary_operator(v, &t1, &t2)?;
 
         // Execution
         let o1 = self.pop_reg(0)?;
@@ -217,7 +217,7 @@ impl Visitor for SecondPassVisitor {
     fn visit_unary_operator(&mut self, v: &mut UnaryOperator) -> Self::Result {
         // Typecheck.
         let t = self.pop_type()?;
-        typing::typecheck_unary_operator::<UnaryOperator>(&t)?;
+        typing::typecheck_unary_operator(v, &t)?;
 
         // Execution.
         let register = self.pop_reg(0)?;
@@ -226,6 +226,10 @@ impl Visitor for SecondPassVisitor {
             UnaryOperator::Minus => {
                 emit::register_operation("neg", register, &mut self.scopes)?;
                 self.save_reg(register)?;
+            }
+            UnaryOperator::Not => {
+                // Perform logical negation.
+                unimplemented!();
             }
             UnaryOperator::Unknown => panic!("unknown unary operator"),
         }

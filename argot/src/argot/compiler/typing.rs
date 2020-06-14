@@ -45,13 +45,13 @@ impl TryFrom<String> for BuiltInType {
     }
 }
 
-pub fn typecheck_unary_operator<T: Operator>(t: &str) -> Result<()> {
-    ensure!(T::defined_for(t), InvalidOperator { t });
+pub fn typecheck_unary_operator<T: Operator>(op: &T, t: &str) -> Result<()> {
+    ensure!(op.defined_for(t), InvalidOperator { t });
     Ok(())
 }
 
-pub fn typecheck_binary_operator<T: Operator>(t1: &str, t2: &str) -> Result<()> {
+pub fn typecheck_binary_operator<T: Operator>(op: &T, t1: &str, t2: &str) -> Result<()> {
     ensure!(t1 == t2, TypeMismatch { t1, t2 });
-    ensure!(T::defined_for(t1), InvalidOperator { t: t1 });
+    ensure!(op.defined_for(t1), InvalidOperator { t: t1 });
     Ok(())
 }
