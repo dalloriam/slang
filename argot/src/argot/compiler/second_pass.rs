@@ -229,7 +229,8 @@ impl Visitor for SecondPassVisitor {
             }
             UnaryOperator::Not => {
                 // Perform logical negation.
-                unimplemented!();
+                emit::negation(register, &mut self.scopes)?;
+                self.save_reg(register)?;
             }
             UnaryOperator::Unknown => panic!("unknown unary operator"),
         }

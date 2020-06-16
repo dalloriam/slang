@@ -1,7 +1,4 @@
 fn main() {
-  if (false) {
-    int a = 8;
-  } else {
-    int b = 6;
-  }
+  bool b = true;
+  bool a = !b;
 }

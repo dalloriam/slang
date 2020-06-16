@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 
 use snafu::ResultExt;
 
-use crate::compiler::{error::*, label::LabelGenerator, scope::ScopeManager, typing};
+use crate::compiler::{error::*, scope::ScopeManager, typing};
 
 pub fn save_to_register(value_to_save: i32, register: u8, scopes: &mut ScopeManager) -> Result<()> {
     scopes
@@ -177,25 +177,46 @@ pub fn jump_to_else(
     Ok(())
 }
 
-pub fn negation(
-    register: u8,
-    labels: &mut LabelGenerator,
-    scopes: &mut ScopeManager,
-) -> Result<()> {
-    let mut current_scope = scopes.current_mut()?;
-    let x = 18;
-    let a = !x;
+pub fn rshift(val_register: u8, amt_register: u8, scopes: &mut ScopeManager) -> Result<()> {
+    scopes
+        .current_mut()?
+        .push_instruction(format!("shr ${} ${}", val_register, amt_register));
+    Ok(())
+}
 
-    // Structure of the negation subroutine:
-    // jez $reg @if_zero
-    // ld $reg 0
-    // jmp @exit
-    // @if_zero
-    // ld $reg 1
-    // @exit
+pub fn bitwise_not(register: u8, scopes: &mut ScopeManager) -> Result<()> {
+    scopes
+        .current_mut()?
+        .push_instruction(format!("not ${}", register));
+    Ok(())
+}
 
-    let if_zero_label = labels.next().unwrap();
-    let exit_label = labels.next().unwrap();
+pub fn negation(value_register: u8, scopes: &mut ScopeManager) -> Result<()> {
+    // Logical negation of 32-bit signed integers using bitwise operators:
+    // (!(x >> 1) + x) >> 31
+
+    let swap_register = 5;
+    let one_register = 1;
+    let thirty_one = 2;
+
+    // Load our shift amounts in temporary registers.
+    save_to_register(1, one_register, scopes)?;
+    save_to_register(31, thirty_one, scopes)?;
+
+    // Insert x in swap_register to get a copy
+    mov(value_register, swap_register, scopes)?;
+
+    // Perform the first right shift by one.
+    rshift(value_register, one_register, scopes)?;
+
+    // Negate the result.
+    bitwise_not(value_register, scopes)?;
+
+    // Add back x.
+    binary_operation("add", value_register, swap_register, value_register, scopes)?;
+
+    // Shift the result by 31.
+    rshift(value_register, thirty_one, scopes)?;
 
     Ok(())
 }
