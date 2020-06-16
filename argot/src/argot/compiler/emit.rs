@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 
 use snafu::ResultExt;
 
-use crate::compiler::{error::*, scope::ScopeManager, typing};
+use crate::compiler::{error::*, label::LabelGenerator, scope::ScopeManager, typing};
 
 pub fn save_to_register(value_to_save: i32, register: u8, scopes: &mut ScopeManager) -> Result<()> {
     scopes
@@ -173,6 +173,29 @@ pub fn jump_to_else(
     scopes
         .current_mut()?
         .push_instruction(format!("jez ${} @{}", value_register, condition_label));
+
+    Ok(())
+}
+
+pub fn negation(
+    register: u8,
+    labels: &mut LabelGenerator,
+    scopes: &mut ScopeManager,
+) -> Result<()> {
+    let mut current_scope = scopes.current_mut()?;
+    let x = 18;
+    let a = !x;
+
+    // Structure of the negation subroutine:
+    // jez $reg @if_zero
+    // ld $reg 0
+    // jmp @exit
+    // @if_zero
+    // ld $reg 1
+    // @exit
+
+    let if_zero_label = labels.next().unwrap();
+    let exit_label = labels.next().unwrap();
 
     Ok(())
 }

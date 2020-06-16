@@ -101,6 +101,21 @@ pub enum Opcode {
     // Pop byte - Pops a byte from the stack.
     POPB,
 
+    // Bitwise logical negation.
+    NOT,
+
+    // Left Bitshift
+    SHIFTL,
+
+    // Right Bitshift
+    SHIFTR,
+
+    // Bitwise and.
+    AND,
+
+    // Bitwise OR.
+    OR,
+
     /// Jump if zero. Jumps to the specified offset if the value of the specified register is zero.
     JEZ,
 }
@@ -141,6 +156,11 @@ impl Opcode {
             Opcode::PUSHB => 2,
             Opcode::POPB => 2,
             Opcode::JEZ => 4,
+            Opcode::NOT => 2,
+            Opcode::SHIFTL => 3,
+            Opcode::SHIFTR => 3,
+            Opcode::AND => 3,
+            Opcode::OR => 3,
             Opcode::IGL => 1,
         }
     }
@@ -182,6 +202,11 @@ impl<'a> From<&'a str> for Opcode {
             "pushb" => Opcode::PUSHB,
             "popb" => Opcode::POPB,
             "jez" => Opcode::JEZ,
+            "not" => Opcode::NOT,
+            "shl" => Opcode::SHIFTL,
+            "shr" => Opcode::SHIFTR,
+            "and" => Opcode::AND,
+            "or" => Opcode::OR,
             _ => Opcode::IGL,
         }
     }
@@ -223,6 +248,11 @@ impl From<u8> for Opcode {
             31 => Opcode::PUSHB,
             32 => Opcode::POPB,
             33 => Opcode::JEZ,
+            34 => Opcode::NOT,
+            35 => Opcode::SHIFTL,
+            36 => Opcode::SHIFTR,
+            37 => Opcode::AND,
+            38 => Opcode::OR,
             _ => Opcode::IGL,
         }
     }

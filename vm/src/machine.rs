@@ -247,6 +247,11 @@ impl VM {
             Opcode::PUSHB => op::stack::pushb(self.next_8_bits(), self),
             Opcode::POPB => op::stack::popb(self.next_8_bits(), self),
             Opcode::JEZ => op::branch::jez(self.next_8_bits(), self.next_16_bits(), self),
+            Opcode::NOT => op::bitwise::not(self.next_8_bits(), self),
+            Opcode::SHIFTL => op::bitwise::shiftl(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::SHIFTR => op::bitwise::shiftr(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::AND => op::bitwise::and(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::OR => op::bitwise::or(self.next_8_bits(), self.next_8_bits(), self),
             Opcode::IGL => {
                 println!("Illegal opcode. Terminating");
                 return false;

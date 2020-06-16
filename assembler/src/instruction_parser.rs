@@ -53,6 +53,10 @@ fn opcode_instr(opcode: Opcode, lbl: Option<String>, rest: &str) -> IResult<&str
         | Opcode::GTQ
         | Opcode::LT
         | Opcode::LTQ
+        | Opcode::SHIFTL
+        | Opcode::SHIFTR
+        | Opcode::AND
+        | Opcode::OR
         | Opcode::MOV => map(tuple((operand::register, operand::register)), |(a, b)| {
             Instruction {
                 label: lbl.clone(),
@@ -69,6 +73,7 @@ fn opcode_instr(opcode: Opcode, lbl: Option<String>, rest: &str) -> IResult<&str
         | Opcode::PUSHB
         | Opcode::POPW
         | Opcode::POPB
+        | Opcode::NOT
         | Opcode::NEG => map(operand::register, |r| Instruction {
             label: lbl.clone(),
             opcode: Some(opcode),
