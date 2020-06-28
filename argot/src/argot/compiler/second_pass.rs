@@ -328,14 +328,14 @@ impl Visitor for SecondPassVisitor {
                 self.save_val(*i)?;
             }
             Atom::Identifier(i) => {
-                let offset = {
+                let (offset, size) = {
                     let var = self.scopes.current()?.get_variable(i.as_ref())?;
                     self.type_stack.push(var.var_type.clone());
-                    var.offset
+                    (var.offset, var.size)
                 };
 
                 let result_register = self.get_writeable_register()?;
-                emit::stack_offset_load(offset, result_register, &mut self.scopes)?;
+                emit::stack_var_load_sized(offset, result_register, size, &mut self.scopes)?;
                 self.save_reg_maybe(result_register)?;
             }
         }

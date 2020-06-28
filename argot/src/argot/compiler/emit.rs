@@ -49,10 +49,38 @@ pub fn mov(src_reg: u8, dst_reg: u8, scopes: &mut ScopeManager) -> Result<()> {
     Ok(())
 }
 
-pub fn stack_offset_load(offset: usize, register: u8, scopes: &mut ScopeManager) -> Result<()> {
+pub fn stack_offset_load_word(
+    offset: usize,
+    register: u8,
+    scopes: &mut ScopeManager,
+) -> Result<()> {
     let scope = scopes.current_mut()?;
     scope.push_instruction(format!("lw ${} {}[$ebp]", register, offset));
     Ok(())
+}
+pub fn stack_offset_load_byte(
+    offset: usize,
+    register: u8,
+    scopes: &mut ScopeManager,
+) -> Result<()> {
+    let scope = scopes.current_mut()?;
+    scope.push_instruction(format!("lb ${} {}[$ebp]", register, offset));
+    Ok(())
+}
+
+pub fn stack_var_load_sized(
+    offset: usize,
+    register: u8,
+    size: usize,
+    scopes: &mut ScopeManager,
+) -> Result<()> {
+    if size == 4 {
+        stack_offset_load_word(offset, register, scopes)
+    } else if size == 1 {
+        stack_offset_load_byte(offset, register, scopes)
+    } else {
+        panic!("Bad alloc size")
+    }
 }
 
 pub fn stack_offset_set_word(offset: usize, register: u8, scopes: &mut ScopeManager) -> Result<()> {
