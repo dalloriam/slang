@@ -15,7 +15,7 @@ fn op_shiftl() {
     let mut vm = VM::new();
     vm.registers_mut()[0] = 21;
     vm.registers_mut()[1] = 1;
-    bitwise::shiftl(1, 0, &mut vm);
+    bitwise::shiftl(0, 1, &mut vm);
 
     assert_eq!(vm.registers()[1], 1);
     assert_eq!(vm.registers()[0], 42)
@@ -26,7 +26,7 @@ fn op_shiftr() {
     let mut vm = VM::new();
     vm.registers_mut()[0] = 84;
     vm.registers_mut()[1] = 1;
-    bitwise::shiftr(1, 0, &mut vm);
+    bitwise::shiftr(0, 1, &mut vm);
 
     assert_eq!(vm.registers()[1], 1);
     assert_eq!(vm.registers()[0], 42)
