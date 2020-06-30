@@ -8,32 +8,32 @@ pub fn not(register: u8, vm: &mut VM) {
 }
 
 #[inline]
-pub fn shiftl(register_src: u8, register_dst: u8, vm: &mut VM) {
+pub fn shiftl(register_dst: u8, register_src: u8, vm: &mut VM) {
     let val = vm.registers()[register_dst as usize];
     let shift_amt = vm.registers()[register_src as usize];
-    vm.registers_mut()[register_dst as usize] = val << shift_amt;
+    vm.registers_mut()[register_dst as usize] = val.checked_shl(shift_amt as u32).unwrap_or(0);
     log::trace!(
         "shl ${}/{:#06x} << ${}/{:#06x} -> {:#06x}",
         register_dst,
         val,
         register_src,
         shift_amt,
-        val << shift_amt
+        val.checked_shl(shift_amt as u32).unwrap_or(0)
     );
 }
 
 #[inline]
-pub fn shiftr(register_src: u8, register_dst: u8, vm: &mut VM) {
+pub fn shiftr(register_dst: u8, register_src: u8, vm: &mut VM) {
     let val = vm.registers()[register_dst as usize];
     let shift_amt = vm.registers()[register_src as usize];
-    vm.registers_mut()[register_dst as usize] = val >> shift_amt;
+    vm.registers_mut()[register_dst as usize] = val.checked_shr(shift_amt as u32).unwrap_or(0);
     log::trace!(
         "shr ${}/{:#06x} >> ${}/{:#06x} -> {:#06x}",
         register_dst,
         val,
         register_src,
         shift_amt,
-        val >> shift_amt
+        val.checked_shr(shift_amt as u32).unwrap_or(0)
     );
 }
 

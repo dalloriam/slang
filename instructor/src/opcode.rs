@@ -155,12 +155,12 @@ impl Opcode {
             Opcode::NEG => 2,
             Opcode::PUSHB => 2,
             Opcode::POPB => 2,
-            Opcode::JEZ => 4,
             Opcode::NOT => 2,
             Opcode::SHIFTL => 3,
             Opcode::SHIFTR => 3,
             Opcode::AND => 3,
             Opcode::OR => 3,
+            Opcode::JEZ => 4,
             Opcode::IGL => 1,
         }
     }
@@ -201,12 +201,12 @@ impl<'a> From<&'a str> for Opcode {
             "neg" => Opcode::NEG,
             "pushb" => Opcode::PUSHB,
             "popb" => Opcode::POPB,
-            "jez" => Opcode::JEZ,
             "not" => Opcode::NOT,
             "shl" => Opcode::SHIFTL,
             "shr" => Opcode::SHIFTR,
             "and" => Opcode::AND,
             "or" => Opcode::OR,
+            "jez" => Opcode::JEZ,
             _ => Opcode::IGL,
         }
     }
@@ -247,12 +247,12 @@ impl From<u8> for Opcode {
             30 => Opcode::NEG,
             31 => Opcode::PUSHB,
             32 => Opcode::POPB,
-            33 => Opcode::JEZ,
-            34 => Opcode::NOT,
-            35 => Opcode::SHIFTL,
-            36 => Opcode::SHIFTR,
-            37 => Opcode::AND,
-            38 => Opcode::OR,
+            33 => Opcode::NOT,
+            34 => Opcode::SHIFTL,
+            35 => Opcode::SHIFTR,
+            36 => Opcode::AND,
+            37 => Opcode::OR,
+            38 => Opcode::JEZ,
             _ => Opcode::IGL,
         }
     }
