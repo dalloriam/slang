@@ -651,6 +651,76 @@ mod tests {
         assert_eq!(test_vm.registers()[10], 42);
         assert_eq!(test_vm.stack().len(), 0);
     }
+
+    #[test]
+    fn test_opcode_not() {
+        let mut test_vm = VM::new();
+
+        test_vm.program = vec![33, 15];
+        test_vm.registers_mut()[15] = 0x0000002a;
+        test_vm.run_once();
+        assert_eq!(test_vm.registers()[15], -43);
+    }
+
+    #[test]
+    fn test_opcode_shiftl() {
+        let mut test_vm = VM::new();
+
+        test_vm.program = vec![34, 15, 10];
+
+        test_vm.registers_mut()[15] = 21;
+        test_vm.registers_mut()[10] = 1;
+
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers_mut()[10], 1);
+        assert_eq!(test_vm.registers_mut()[15], 42);
+    }
+
+    #[test]
+    fn test_opcode_shiftr() {
+        let mut test_vm = VM::new();
+
+        test_vm.program = vec![35, 15, 10];
+
+        test_vm.registers_mut()[15] = 84;
+        test_vm.registers_mut()[10] = 1;
+
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers_mut()[10], 1);
+        assert_eq!(test_vm.registers_mut()[15], 42);
+    }
+
+    #[test]
+    fn test_opcode_and() {
+        let mut test_vm = VM::new();
+
+        test_vm.program = vec![36, 15, 10];
+
+        test_vm.registers_mut()[15] = 59;
+        test_vm.registers_mut()[10] = 46;
+
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers_mut()[10], 46);
+        assert_eq!(test_vm.registers_mut()[15], 42);
+    }
+
+    #[test]
+    fn test_opcode_or() {
+        let mut test_vm = VM::new();
+
+        test_vm.program = vec![37, 15, 10];
+
+        test_vm.registers_mut()[15] = 8;
+        test_vm.registers_mut()[10] = 34;
+
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers_mut()[10], 34);
+        assert_eq!(test_vm.registers_mut()[15], 42);
+    }
 }
 
 impl Default for VM {

@@ -1,3 +1,5 @@
+use std::mem;
+
 use crate::op::bitwise;
 use crate::VM;
 
@@ -22,6 +24,19 @@ fn op_shiftl() {
 }
 
 #[test]
+fn op_shiftl_overflow() {
+    const OVERFLOW_SHIFT_AMT: i32 = 8 * mem::size_of::<i32>() as i32;
+
+    let mut vm = VM::new();
+    vm.registers_mut()[0] = 0x00000001;
+    vm.registers_mut()[1] = OVERFLOW_SHIFT_AMT;
+    bitwise::shiftl(0, 1, &mut vm);
+
+    assert_eq!(vm.registers()[1], OVERFLOW_SHIFT_AMT);
+    assert_eq!(vm.registers()[0], 0);
+}
+
+#[test]
 fn op_shiftr() {
     let mut vm = VM::new();
     vm.registers_mut()[0] = 84;
@@ -33,6 +48,21 @@ fn op_shiftr() {
 }
 
 #[test]
+fn op_shiftr_overflow() {
+    const OVERFLOW_SHIFT_AMT: i32 = 8 * mem::size_of::<i32>() as i32;
+
+    let mut vm = VM::new();
+
+    vm.registers_mut()[0] = 0x0f000000;
+    vm.registers_mut()[1] = OVERFLOW_SHIFT_AMT;
+
+    bitwise::shiftr(0, 1, &mut vm);
+
+    assert_eq!(vm.registers()[1], OVERFLOW_SHIFT_AMT);
+    assert_eq!(vm.registers()[0], 0);
+}
+
+#[test]
 fn op_and() {
     // 42: 101010
     // 46: 101110
@@ -40,7 +70,7 @@ fn op_and() {
     let mut vm = VM::new();
     vm.registers_mut()[0] = 46;
     vm.registers_mut()[1] = 59;
-    bitwise::and(0, 1, &mut vm);
+    bitwise::and(1, 0, &mut vm);
 
     assert_eq!(vm.registers()[0], 46);
     assert_eq!(vm.registers()[1], 42);
@@ -53,7 +83,7 @@ fn op_or() {
     let mut vm = VM::new();
     vm.registers_mut()[0] = 34;
     vm.registers_mut()[1] = 8;
-    bitwise::or(0, 1, &mut vm);
+    bitwise::or(1, 0, &mut vm);
 
     assert_eq!(vm.registers()[0], 34);
     assert_eq!(vm.registers()[1], 42);

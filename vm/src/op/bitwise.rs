@@ -38,7 +38,7 @@ pub fn shiftr(register_dst: u8, register_src: u8, vm: &mut VM) {
 }
 
 #[inline]
-pub fn and(register_src: u8, register_dst: u8, vm: &mut VM) {
+pub fn and(register_dst: u8, register_src: u8, vm: &mut VM) {
     let src_val = vm.registers()[register_src as usize];
     let dst_val = vm.registers()[register_dst as usize];
     vm.registers_mut()[register_dst as usize] = src_val & dst_val;
@@ -53,7 +53,7 @@ pub fn and(register_src: u8, register_dst: u8, vm: &mut VM) {
 }
 
 #[inline]
-pub fn or(register_src: u8, register_dst: u8, vm: &mut VM) {
+pub fn or(register_dst: u8, register_src: u8, vm: &mut VM) {
     let src_val = vm.registers()[register_src as usize];
     let dst_val = vm.registers()[register_dst as usize];
     vm.registers_mut()[register_dst as usize] = src_val | dst_val;
