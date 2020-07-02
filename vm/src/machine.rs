@@ -627,6 +627,30 @@ mod tests {
         test_vm.run_once();
         assert_eq!(test_vm.registers()[15], -18);
     }
+
+    #[test]
+    fn test_opcode_pushb() {
+        let mut test_vm = VM::new();
+
+        test_vm.registers_mut()[15] = 14;
+        test_vm.program = vec![31, 15];
+        test_vm.run_once();
+        assert_eq!(test_vm.stack().memory(), vec![14].as_slice());
+    }
+
+    #[test]
+    fn test_opcode_popb() {
+        let mut test_vm = VM::new();
+
+        test_vm.stack_mut().push_u8(42);
+        test_vm.registers_mut()[STACK_POINTER_REGISTER] = 1;
+
+        test_vm.program = vec![32, 10];
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers()[10], 42);
+        assert_eq!(test_vm.stack().len(), 0);
+    }
 }
 
 impl Default for VM {
