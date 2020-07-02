@@ -7,6 +7,7 @@ use crate::visitor::{Visitable, Visitor};
 pub enum UnaryOperator {
     Plus,
     Minus,
+    Not,
 
     Unknown,
 }
@@ -22,6 +23,7 @@ impl From<String> for UnaryOperator {
         match c.as_ref() {
             "+" => UnaryOperator::Plus,
             "-" => UnaryOperator::Minus,
+            "!" => UnaryOperator::Not,
             _ => UnaryOperator::Unknown,
         }
     }
@@ -87,7 +89,11 @@ impl From<String> for FactorOperator {
 
 pub fn unary_operator(i: &str) -> IResult<&str, UnaryOperator> {
     map(
-        delimited(whitespace, alt((char('+'), char('-'))), whitespace),
+        delimited(
+            whitespace,
+            alt((char('+'), char('-'), char('!'))),
+            whitespace,
+        ),
         |c| UnaryOperator::from(c.to_string()),
     )(i)
 }
@@ -113,10 +119,24 @@ mod tests {
     };
 
     #[test]
-    fn unary_op_valid() {
+    fn unary_op_plus() {
+        let (rest, op) = unary_operator("  + ").unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(op, UnaryOperator::Plus);
+    }
+
+    #[test]
+    fn unary_op_minus() {
         let (rest, op) = unary_operator("  - ").unwrap();
         assert_eq!(rest, "");
         assert_eq!(op, UnaryOperator::Minus);
+    }
+
+    #[test]
+    fn unary_op_not() {
+        let (rest, op) = unary_operator("  ! ").unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(op, UnaryOperator::Not);
     }
 
     #[test]

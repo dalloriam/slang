@@ -79,4 +79,10 @@ mod tests {
         const SOURCE: &str = include_str!("./data/dyn_str.asm");
         let _vm = execute_test(SOURCE, 64);
     }
+
+    #[test]
+    fn ft_bool_expr() {
+        const SOURCE: &str = include_str!("./data/bool_expr.asm");
+        let _vm = execute_test(SOURCE, 64);
+    }
 }

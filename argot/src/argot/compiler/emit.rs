@@ -49,10 +49,38 @@ pub fn mov(src_reg: u8, dst_reg: u8, scopes: &mut ScopeManager) -> Result<()> {
     Ok(())
 }
 
-pub fn stack_offset_load(offset: usize, register: u8, scopes: &mut ScopeManager) -> Result<()> {
+pub fn stack_offset_load_word(
+    offset: usize,
+    register: u8,
+    scopes: &mut ScopeManager,
+) -> Result<()> {
     let scope = scopes.current_mut()?;
     scope.push_instruction(format!("lw ${} {}[$ebp]", register, offset));
     Ok(())
+}
+pub fn stack_offset_load_byte(
+    offset: usize,
+    register: u8,
+    scopes: &mut ScopeManager,
+) -> Result<()> {
+    let scope = scopes.current_mut()?;
+    scope.push_instruction(format!("lb ${} {}[$ebp]", register, offset));
+    Ok(())
+}
+
+pub fn stack_var_load_sized(
+    offset: usize,
+    register: u8,
+    size: usize,
+    scopes: &mut ScopeManager,
+) -> Result<()> {
+    if size == 4 {
+        stack_offset_load_word(offset, register, scopes)
+    } else if size == 1 {
+        stack_offset_load_byte(offset, register, scopes)
+    } else {
+        panic!("Bad alloc size")
+    }
 }
 
 pub fn stack_offset_set_word(offset: usize, register: u8, scopes: &mut ScopeManager) -> Result<()> {
@@ -173,6 +201,50 @@ pub fn jump_to_else(
     scopes
         .current_mut()?
         .push_instruction(format!("jez ${} @{}", value_register, condition_label));
+
+    Ok(())
+}
+
+pub fn rshift(val_register: u8, amt_register: u8, scopes: &mut ScopeManager) -> Result<()> {
+    scopes
+        .current_mut()?
+        .push_instruction(format!("shr ${} ${}", val_register, amt_register));
+    Ok(())
+}
+
+pub fn bitwise_not(register: u8, scopes: &mut ScopeManager) -> Result<()> {
+    scopes
+        .current_mut()?
+        .push_instruction(format!("not ${}", register));
+    Ok(())
+}
+
+pub fn negation(value_register: u8, scopes: &mut ScopeManager) -> Result<()> {
+    // Logical negation of 32-bit signed integers using bitwise operators:
+    // (!(x >> 1) + x) >> 31
+
+    let swap_register = 5;
+    let one_register = 1;
+    let thirty_one = 2;
+
+    // Load our shift amounts in temporary registers.
+    save_to_register(1, one_register, scopes)?;
+    save_to_register(31, thirty_one, scopes)?;
+
+    // Insert x in swap_register to get a copy
+    mov(value_register, swap_register, scopes)?;
+
+    // Perform the first right shift by one.
+    rshift(value_register, one_register, scopes)?;
+
+    // Negate the result.
+    bitwise_not(value_register, scopes)?;
+
+    // Add back x.
+    binary_operation("add", value_register, swap_register, value_register, scopes)?;
+
+    // Shift the result by 31.
+    rshift(value_register, thirty_one, scopes)?;
 
     Ok(())
 }

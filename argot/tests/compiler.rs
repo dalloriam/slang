@@ -14,6 +14,8 @@ macro_rules! compiler_fts {
 
 compiler_fts! {
     add,
+    bool_negation,
+    bool_usage,
     fn_call_no_ret,
     mult,
     nested_math,

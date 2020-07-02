@@ -1,3 +1,4 @@
+mod bitwise;
 mod branch;
 mod math;
 mod memory;

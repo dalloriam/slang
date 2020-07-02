@@ -247,6 +247,11 @@ impl VM {
             Opcode::PUSHB => op::stack::pushb(self.next_8_bits(), self),
             Opcode::POPB => op::stack::popb(self.next_8_bits(), self),
             Opcode::JEZ => op::branch::jez(self.next_8_bits(), self.next_16_bits(), self),
+            Opcode::NOT => op::bitwise::not(self.next_8_bits(), self),
+            Opcode::SHIFTL => op::bitwise::shiftl(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::SHIFTR => op::bitwise::shiftr(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::AND => op::bitwise::and(self.next_8_bits(), self.next_8_bits(), self),
+            Opcode::OR => op::bitwise::or(self.next_8_bits(), self.next_8_bits(), self),
             Opcode::IGL => {
                 println!("Illegal opcode. Terminating");
                 return false;
@@ -621,6 +626,100 @@ mod tests {
         test_vm.program = vec![30, 15];
         test_vm.run_once();
         assert_eq!(test_vm.registers()[15], -18);
+    }
+
+    #[test]
+    fn test_opcode_pushb() {
+        let mut test_vm = VM::new();
+
+        test_vm.registers_mut()[15] = 14;
+        test_vm.program = vec![31, 15];
+        test_vm.run_once();
+        assert_eq!(test_vm.stack().memory(), vec![14].as_slice());
+    }
+
+    #[test]
+    fn test_opcode_popb() {
+        let mut test_vm = VM::new();
+
+        test_vm.stack_mut().push_u8(42);
+        test_vm.registers_mut()[STACK_POINTER_REGISTER] = 1;
+
+        test_vm.program = vec![32, 10];
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers()[10], 42);
+        assert_eq!(test_vm.stack().len(), 0);
+    }
+
+    #[test]
+    fn test_opcode_not() {
+        let mut test_vm = VM::new();
+
+        test_vm.program = vec![33, 15];
+        test_vm.registers_mut()[15] = 0x0000002a;
+        test_vm.run_once();
+        assert_eq!(test_vm.registers()[15], -43);
+    }
+
+    #[test]
+    fn test_opcode_shiftl() {
+        let mut test_vm = VM::new();
+
+        test_vm.program = vec![34, 15, 10];
+
+        test_vm.registers_mut()[15] = 21;
+        test_vm.registers_mut()[10] = 1;
+
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers_mut()[10], 1);
+        assert_eq!(test_vm.registers_mut()[15], 42);
+    }
+
+    #[test]
+    fn test_opcode_shiftr() {
+        let mut test_vm = VM::new();
+
+        test_vm.program = vec![35, 15, 10];
+
+        test_vm.registers_mut()[15] = 84;
+        test_vm.registers_mut()[10] = 1;
+
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers_mut()[10], 1);
+        assert_eq!(test_vm.registers_mut()[15], 42);
+    }
+
+    #[test]
+    fn test_opcode_and() {
+        let mut test_vm = VM::new();
+
+        test_vm.program = vec![36, 15, 10];
+
+        test_vm.registers_mut()[15] = 59;
+        test_vm.registers_mut()[10] = 46;
+
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers_mut()[10], 46);
+        assert_eq!(test_vm.registers_mut()[15], 42);
+    }
+
+    #[test]
+    fn test_opcode_or() {
+        let mut test_vm = VM::new();
+
+        test_vm.program = vec![37, 15, 10];
+
+        test_vm.registers_mut()[15] = 8;
+        test_vm.registers_mut()[10] = 34;
+
+        test_vm.run_once();
+
+        assert_eq!(test_vm.registers_mut()[10], 34);
+        assert_eq!(test_vm.registers_mut()[15], 42);
     }
 }
 
