@@ -21,6 +21,8 @@ jobs:
         with:
           version: '0.9.0'
           args: '-- --test-threads 1'
+          env:
+            RUST_LOG: trace
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1.0.7
