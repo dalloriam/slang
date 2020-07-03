@@ -37,8 +37,8 @@ mod test {
     use std::collections::HashMap;
 
     use crate::syntax::{
-        program::{program, Program},
-        Block, FunctionDeclaration,
+        program::program,
+        types::{ArgumentList, Block, FunctionDeclaration, Program},
     };
 
     #[test]
@@ -65,6 +65,7 @@ mod test {
                 name: String::from("main"),
                 return_type: String::from("int"),
                 block: Block::new(),
+                args: ArgumentList::default(),
             },
         );
         assert_eq!(prg, Program { functions: fn_hash })
@@ -82,6 +83,7 @@ mod test {
                 name: String::from("main"),
                 return_type: String::from("int"),
                 block: Block::new(),
+                args: ArgumentList::default(),
             },
         );
         fn_hash.insert(
@@ -90,6 +92,7 @@ mod test {
                 name: String::from("hello"),
                 return_type: String::from("int"),
                 block: Block::new(),
+                args: ArgumentList::default(),
             },
         );
         assert_eq!(prg, Program { functions: fn_hash })

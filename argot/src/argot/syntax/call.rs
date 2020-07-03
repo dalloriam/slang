@@ -1,11 +1,18 @@
-use nom::{bytes::complete::tag, combinator::map, sequence::terminated, IResult};
+use nom::{
+    character::complete::char,
+    combinator::map,
+    multi::separated_list,
+    sequence::{delimited, tuple},
+    IResult,
+};
 
-use crate::syntax::var_decl::identifier;
+use crate::syntax::{expression::expression, types::Expression, var_decl::identifier};
 use crate::visitor::{Visitable, Visitor};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FunctionCall {
     pub name: String,
+    pub arguments: Vec<Expression>,
 }
 
 impl Visitable for FunctionCall {
@@ -15,7 +22,14 @@ impl Visitable for FunctionCall {
 }
 
 pub fn function_call(i: &str) -> IResult<&str, FunctionCall> {
-    map(terminated(identifier, tag("()")), |fn_name| FunctionCall {
-        name: String::from(fn_name),
-    })(i)
+    map(
+        tuple((
+            identifier,
+            delimited(char('('), separated_list(char(','), expression), char(')')),
+        )),
+        |(fn_name, args)| FunctionCall {
+            name: String::from(fn_name),
+            arguments: args,
+        },
+    )(i)
 }

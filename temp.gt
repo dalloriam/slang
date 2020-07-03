@@ -1,7 +1,9 @@
+fn testfn(int b) {
+    int x = b + 1;
+}
+
 fn main() {
-    bool a = true && true;
-    bool b = false || true;
-    if (a && b) {
-        bool c = true;
-    }
+    int a = 42;
+    testfn(a);
+    int b = 4;
 }

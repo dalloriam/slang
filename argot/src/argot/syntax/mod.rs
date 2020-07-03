@@ -33,7 +33,7 @@ pub mod trailer;
 pub mod var_decl;
 
 pub mod types {
-    pub use super::argument_list::ArgumentList;
+    pub use super::argument_list::{Argument, ArgumentList};
     pub use super::atom::Atom;
     pub use super::atom_expr::AtomicExpression;
     pub use super::block::Block;

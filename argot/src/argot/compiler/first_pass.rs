@@ -4,10 +4,12 @@ use std::mem;
 use snafu::ensure;
 
 use crate::compiler::error::*;
-use crate::syntax::types::{FunctionDeclaration, Program};
+use crate::syntax::types::{Argument, FunctionDeclaration, Program};
 
+#[derive(Clone, Debug)]
 pub struct FunctionDecl {
     pub name: String,
+    pub arguments: Vec<Argument>,
     pub return_type: String,
 }
 
@@ -16,6 +18,7 @@ impl From<FunctionDeclaration> for FunctionDecl {
         FunctionDecl {
             name: d.name,
             return_type: d.return_type,
+            arguments: d.args.arguments,
         }
     }
 }

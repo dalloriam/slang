@@ -8,6 +8,7 @@ use nom::{
 
 use crate::{
     syntax::{
+        argument_list::{argument_list, ArgumentList},
         block::{block, Block},
         common::whitespace,
     },
@@ -19,6 +20,7 @@ pub struct FunctionDeclaration {
     pub return_type: String,
     pub name: String,
     pub block: Block,
+    pub args: ArgumentList,
 }
 
 impl Visitable for FunctionDeclaration {
@@ -32,13 +34,14 @@ pub fn function_declaration(i: &str) -> IResult<&str, FunctionDeclaration> {
         tuple((
             tag("fn"),
             delimited(whitespace, alpha1, whitespace),
-            tag("()"),
+            argument_list,
             block,
         )),
-        |(_f, name, _x, block)| FunctionDeclaration {
+        |(_f, name, args, block)| FunctionDeclaration {
             return_type: String::from("int"),
             name: String::from(name),
             block,
+            args,
         },
     )(i)
 }
@@ -48,7 +51,9 @@ mod tests {
 
     use super::function_declaration;
 
-    use crate::syntax::{Block, FunctionDeclaration, Statement, VariableDeclaration};
+    use crate::syntax::{
+        argument_list::ArgumentList, Block, FunctionDeclaration, Statement, VariableDeclaration,
+    };
 
     #[test]
     fn fn_decl_no_return_type_no_arg_no_body() {
@@ -60,6 +65,7 @@ mod tests {
                 return_type: String::from("int"),
                 name: String::from("hello"),
                 block: Block::new(),
+                args: ArgumentList::default()
             }
         )
     }
@@ -79,7 +85,8 @@ mod tests {
                         var_type: String::from("int"),
                         expression: None
                     })]
-                }
+                },
+                args: ArgumentList::default()
             }
         )
     }

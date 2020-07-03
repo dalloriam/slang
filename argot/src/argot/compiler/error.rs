@@ -29,6 +29,7 @@ pub enum CompileError {
     IncompleteParse {
         source: ParseError,
     },
+    InvalidArguments, // TODO: Details
     InvalidOperator {
         t: String,
     },

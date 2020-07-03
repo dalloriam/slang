@@ -49,27 +49,19 @@ pub fn mov(src_reg: u8, dst_reg: u8, scopes: &mut ScopeManager) -> Result<()> {
     Ok(())
 }
 
-pub fn stack_offset_load_word(
-    offset: usize,
-    register: u8,
-    scopes: &mut ScopeManager,
-) -> Result<()> {
+pub fn stack_offset_load_word(offset: i32, register: u8, scopes: &mut ScopeManager) -> Result<()> {
     let scope = scopes.current_mut()?;
     scope.push_instruction(format!("lw ${} {}[$ebp]", register, offset));
     Ok(())
 }
-pub fn stack_offset_load_byte(
-    offset: usize,
-    register: u8,
-    scopes: &mut ScopeManager,
-) -> Result<()> {
+pub fn stack_offset_load_byte(offset: i32, register: u8, scopes: &mut ScopeManager) -> Result<()> {
     let scope = scopes.current_mut()?;
     scope.push_instruction(format!("lb ${} {}[$ebp]", register, offset));
     Ok(())
 }
 
 pub fn stack_var_load_sized(
-    offset: usize,
+    offset: i32,
     register: u8,
     size: usize,
     scopes: &mut ScopeManager,
@@ -83,14 +75,14 @@ pub fn stack_var_load_sized(
     }
 }
 
-pub fn stack_offset_set_word(offset: usize, register: u8, scopes: &mut ScopeManager) -> Result<()> {
+pub fn stack_offset_set_word(offset: i32, register: u8, scopes: &mut ScopeManager) -> Result<()> {
     scopes
         .current_mut()?
         .push_instruction(format!("sw ${} {}[$ebp]", register, offset));
     Ok(())
 }
 
-pub fn stack_offset_set_byte(offset: usize, register: u8, scopes: &mut ScopeManager) -> Result<()> {
+pub fn stack_offset_set_byte(offset: i32, register: u8, scopes: &mut ScopeManager) -> Result<()> {
     scopes
         .current_mut()?
         .push_instruction(format!("sb ${} {}[$ebp]", register, offset));
@@ -98,7 +90,7 @@ pub fn stack_offset_set_byte(offset: usize, register: u8, scopes: &mut ScopeMana
 }
 
 pub fn stack_var_set_sized(
-    offset: usize,
+    offset: i32,
     register: u8,
     size: usize,
     scopes: &mut ScopeManager,
