@@ -171,6 +171,20 @@ mod tests {
     }
 
     #[test]
+    fn term_op_and() {
+        let (rest, op) = term_operator("  && ").unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(op, TermOperator::And);
+    }
+
+    #[test]
+    fn term_op_or() {
+        let (rest, op) = term_operator(" || ").unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(op, TermOperator::Or);
+    }
+
+    #[test]
     fn factor_op_mult() {
         let (rest, op) = factor_operator("  * ").unwrap();
         assert_eq!(rest, "");

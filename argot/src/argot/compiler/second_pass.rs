@@ -226,7 +226,6 @@ impl Visitor for SecondPassVisitor {
                 self.push_type(t1);
             }
             _ => {
-                println!("Emit op: {:?}", operation);
                 emit::inline_binary_op(operation, o2, o1, &mut self.scopes)?;
                 self.save_reg_maybe(o2)?;
                 self.push_type(t1)
