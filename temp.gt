@@ -1,4 +1,8 @@
 fn main() {
-  bool b = true;
-  bool a = !b;
+  bool a = true;
+  bool b = false;
+
+  if (a || b) {
+    int c = 42;
+  }
 }

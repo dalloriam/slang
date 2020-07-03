@@ -88,6 +88,16 @@ impl SecondPassVisitor {
     pub fn save_reg_maybe(&mut self, register: u8) -> Result<()> {
         if register < 8 {
             self.save_reg(register)?;
+        } else if self.free_registers.contains(&register) {
+            // If the value is already in a permanent register, mark it as still in use.
+            debug_assert!(!self.used_registers.contains(&register));
+            let pos = self
+                .free_registers
+                .iter()
+                .position(|f| *f == register)
+                .ok_or(CompileError::InvalidRegisterState)?;
+            self.free_registers.remove(pos);
+            self.used_registers.push(register);
         }
         Ok(())
     }
@@ -202,14 +212,26 @@ impl Visitor for SecondPassVisitor {
         let operation = match v {
             TermOperator::Plus => "add",
             TermOperator::Minus => "sub",
+            TermOperator::And => "and",
+            TermOperator::Or => "or",
             TermOperator::Unknown => panic!("Unknown operator"),
         };
 
-        let result_register = self.get_writeable_register()?;
-        emit::binary_operation(operation, o2, o1, result_register, &mut self.scopes)?;
-        self.save_reg_maybe(result_register)?;
+        match operation {
+            "add" | "sub" => {
+                let result_register = self.get_writeable_register()?;
+                emit::binary_operation(operation, o2, o1, result_register, &mut self.scopes)?;
+                self.save_reg_maybe(result_register)?;
 
-        self.push_type(t1);
+                self.push_type(t1);
+            }
+            _ => {
+                println!("Emit op: {:?}", operation);
+                emit::inline_binary_op(operation, o2, o1, &mut self.scopes)?;
+                self.save_reg_maybe(o2)?;
+                self.push_type(t1)
+            }
+        }
 
         Ok(())
     }

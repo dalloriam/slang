@@ -126,6 +126,20 @@ pub fn binary_operation(
     Ok(())
 }
 
+pub fn inline_binary_op(
+    operation: &str,
+    operand_reg_1: u8,
+    operand_reg_2: u8,
+    scopes: &mut ScopeManager,
+) -> Result<()> {
+    scopes.current_mut()?.push_instruction(format!(
+        "{} ${} ${}",
+        operation, operand_reg_1, operand_reg_2
+    ));
+
+    Ok(())
+}
+
 pub fn register_operation(operation: &str, register: u8, scopes: &mut ScopeManager) -> Result<()> {
     scopes
         .current_mut()?

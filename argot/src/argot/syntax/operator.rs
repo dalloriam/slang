@@ -1,4 +1,7 @@
-use nom::{branch::alt, character::complete::char, combinator::map, sequence::delimited, IResult};
+use nom::{
+    branch::alt, bytes::complete::tag, character::complete::char, combinator::map,
+    sequence::delimited, IResult,
+};
 
 use crate::syntax::common::whitespace;
 use crate::visitor::{Visitable, Visitor};
@@ -34,6 +37,9 @@ pub enum TermOperator {
     Plus,
     Minus,
 
+    And,
+    Or,
+
     Unknown,
 }
 
@@ -48,6 +54,8 @@ impl From<String> for TermOperator {
         match c.as_ref() {
             "+" => TermOperator::Plus,
             "-" => TermOperator::Minus,
+            "&&" => TermOperator::And,
+            "||" => TermOperator::Or,
             _ => TermOperator::Unknown,
         }
     }
@@ -100,7 +108,11 @@ pub fn unary_operator(i: &str) -> IResult<&str, UnaryOperator> {
 
 pub fn term_operator(i: &str) -> IResult<&str, TermOperator> {
     map(
-        delimited(whitespace, alt((char('+'), char('-'))), whitespace),
+        delimited(
+            whitespace,
+            alt((tag("+"), tag("-"), tag("&&"), tag("||"))),
+            whitespace,
+        ),
         |c| TermOperator::from(c.to_string()),
     )(i)
 }
