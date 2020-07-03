@@ -32,6 +32,7 @@ pub enum CompileError {
     InvalidOperator {
         t: String,
     },
+    InvalidRegisterState,
     MissingEntryPoint,
     MissingScope,
     MissingType,

@@ -12,7 +12,11 @@ impl Operator for FactorOperator {
 
 impl Operator for TermOperator {
     fn defined_for(&self, t: &str) -> bool {
-        t == "int"
+        match self {
+            TermOperator::Plus | TermOperator::Minus => t == "int",
+            TermOperator::And | TermOperator::Or => t == "bool",
+            TermOperator::Unknown => false,
+        }
     }
 }
 
