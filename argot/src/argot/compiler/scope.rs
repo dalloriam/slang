@@ -81,10 +81,6 @@ impl Scope {
         refs
     }
 
-    pub fn current_stack_offset(&self) -> usize {
-        self.local_stack_offset
-    }
-
     pub fn capture(
         &mut self,
         variable_name: String,

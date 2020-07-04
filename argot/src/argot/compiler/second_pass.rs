@@ -267,7 +267,7 @@ impl Visitor for SecondPassVisitor {
         let cur_scope = self.scopes.current_mut().unwrap();
 
         // Capture function arguments.
-        let mut capture_offset = mem::size_of::<i32>();
+        let mut capture_offset = 2 * mem::size_of::<i32>();
         for arg in v.args.arguments.iter() {
             let variable_type =
                 typing::BuiltInType::try_from(arg.arg_type.clone()).context(UnknownType {
@@ -424,7 +424,6 @@ impl Visitor for SecondPassVisitor {
             InvalidArguments
         );
 
-        let mut temp_offset = self.scopes.current_mut().unwrap().current_stack_offset();
         let mut sizes = Vec::with_capacity(v.arguments.len());
 
         for (expr, arg) in v.arguments.iter_mut().zip(&function.arguments).into_iter() {
@@ -443,8 +442,7 @@ impl Visitor for SecondPassVisitor {
                 .alloc_size();
 
             let value_reg = self.pop_reg(0)?;
-            emit::stack_var_set_sized(temp_offset as i32, value_reg, expr_size, &mut self.scopes)?;
-            temp_offset += expr_size;
+            emit::stack_push_sized(value_reg, expr_size, &mut self.scopes)?;
             sizes.push(expr_size);
         }
 

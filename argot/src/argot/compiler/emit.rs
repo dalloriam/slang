@@ -104,6 +104,22 @@ pub fn stack_var_set_sized(
     }
 }
 
+pub fn stack_push_sized(register: u8, size: usize, scopes: &mut ScopeManager) -> Result<()> {
+    if size == 4 {
+        scopes
+            .current_mut()?
+            .push_instruction(format!("pushw ${}", register));
+    } else if size == 1 {
+        scopes
+            .current_mut()?
+            .push_instruction(format!("pushb ${}", register));
+    } else {
+        panic!("Bad alloc size")
+    }
+
+    Ok(())
+}
+
 pub fn binary_operation(
     operation: &str,
     operand_reg_1: u8,
