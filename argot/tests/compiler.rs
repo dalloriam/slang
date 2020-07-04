@@ -17,6 +17,7 @@ compiler_fts! {
     bool_negation,
     bool_op,
     bool_usage,
+    fn_arg,
     fn_call_no_ret,
     mult,
     nested_math,
