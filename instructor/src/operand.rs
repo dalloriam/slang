@@ -1,3 +1,5 @@
+use std::mem;
+
 use byteorder::{LittleEndian, WriteBytesExt};
 
 use crate::LabelConverter;
@@ -29,13 +31,13 @@ impl From<u8> for MemorySection {
 
 #[derive(Debug, PartialEq)]
 pub struct Address {
-    pub offset: u8,
+    pub offset: i32,
     pub register: u8,
     pub section: MemorySection,
 }
 
 impl Address {
-    pub fn new_heap(register: u8, offset: u8) -> Address {
+    pub fn new_heap(register: u8, offset: i32) -> Address {
         Address {
             register,
             offset,
@@ -43,7 +45,7 @@ impl Address {
         }
     }
 
-    pub fn new_stack(register: u8, offset: u8) -> Address {
+    pub fn new_stack(register: u8, offset: i32) -> Address {
         Address {
             register,
             offset,
@@ -95,10 +97,14 @@ impl Operand {
                 2
             }
             Operand::Address(addr) => {
+                let mut wtr = Vec::with_capacity(mem::size_of::<i32>());
                 w.push(addr.register);
-                w.push(addr.offset);
+                wtr.write_i32::<LittleEndian>(addr.offset).unwrap(); // TODO: Handle.
+                for i in 0..mem::size_of::<i32>() {
+                    w.push(wtr[i])
+                }
                 w.push(addr.section.into());
-                3
+                mem::size_of::<i32>() + 2
             }
             Operand::Str(_s) => panic!(
                 "String operands should never be written. They should be stripped beforehand."

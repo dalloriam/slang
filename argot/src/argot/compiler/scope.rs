@@ -9,7 +9,7 @@ use crate::compiler::error::*;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Variable {
     pub name: String,
-    pub offset: usize,
+    pub offset: i32,
     pub var_type: String,
     pub size: usize,
 }
@@ -81,6 +81,30 @@ impl Scope {
         refs
     }
 
+    pub fn capture(
+        &mut self,
+        variable_name: String,
+        var_type: String,
+        size: usize,
+        offset: i32,
+    ) -> Result<()> {
+        ensure!(
+            !self.local_variables.contains_key(&variable_name),
+            VariableAlreadyDefined {
+                name: String::from(variable_name)
+            }
+        );
+
+        let v = Variable {
+            name: variable_name.clone(),
+            offset,
+            size,
+            var_type,
+        };
+        self.local_variables.insert(variable_name, v);
+        Ok(())
+    }
+
     pub fn variable_with_size(
         &mut self,
         variable_name: &str,
@@ -99,7 +123,7 @@ impl Scope {
 
         let v = Variable {
             name: String::from(variable_name),
-            offset: self.local_stack_offset,
+            offset: self.local_stack_offset as i32,
             size,
             var_type,
         };

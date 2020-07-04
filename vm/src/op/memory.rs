@@ -6,7 +6,7 @@ use crate::VM;
 
 #[inline]
 pub fn sw(src_reg: u8, addr: &Address, vm: &mut VM) {
-    let ptr = vm.registers()[addr.register as usize] as usize + addr.offset as usize;
+    let ptr = (vm.registers()[addr.register as usize] + addr.offset) as usize;
 
     let value_to_write = vm.registers()[src_reg as usize];
 
@@ -31,7 +31,7 @@ pub fn sw(src_reg: u8, addr: &Address, vm: &mut VM) {
 
 #[inline]
 pub fn lw(dst_reg: u8, addr: &Address, vm: &mut VM) {
-    let ptr = vm.registers()[addr.register as usize] as usize + addr.offset as usize;
+    let ptr = (vm.registers()[addr.register as usize] + addr.offset) as usize;
 
     let mut memory_slice = match addr.section {
         MemorySection::Heap => &vm.heap().memory()[ptr..ptr + 4],
@@ -54,7 +54,7 @@ pub fn sb(src_reg: u8, addr: &Address, vm: &mut VM) {
     // Set byte.
     let value_to_write = vm.registers()[src_reg as usize] as u8; // TODO: Ensure < 256
 
-    let ptr = vm.registers()[addr.register as usize] as usize + addr.offset as usize;
+    let ptr = (vm.registers()[addr.register as usize] + addr.offset) as usize;
 
     log::trace!("sb ${}/{:#04x} => @{:#06x}", src_reg, value_to_write, ptr);
 
@@ -72,7 +72,7 @@ pub fn sb(src_reg: u8, addr: &Address, vm: &mut VM) {
 
 #[inline]
 pub fn lb(dst_reg: u8, addr: &Address, vm: &mut VM) {
-    let ptr = vm.registers()[addr.register as usize] as usize + addr.offset as usize;
+    let ptr = (vm.registers()[addr.register as usize] + addr.offset) as usize;
 
     let val = match addr.section {
         MemorySection::Heap => vm.heap().memory()[ptr],

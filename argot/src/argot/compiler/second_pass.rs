@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::mem;
 
 use instructor::REGULAR_REGISTER_COUNT;
 
@@ -262,6 +263,25 @@ impl Visitor for SecondPassVisitor {
 
     fn visit_function_declaration(&mut self, v: &mut FunctionDeclaration) -> Self::Result {
         emit::label(&v.name, &mut self.scopes)?;
+        self.scopes.push();
+        let cur_scope = self.scopes.current_mut().unwrap();
+
+        // Capture function arguments.
+        let mut capture_offset = 2 * mem::size_of::<i32>();
+        for arg in v.args.arguments.iter() {
+            let variable_type =
+                typing::BuiltInType::try_from(arg.arg_type.clone()).context(UnknownType {
+                    name: arg.arg_type.clone(),
+                })?;
+            capture_offset += variable_type.alloc_size();
+            cur_scope.capture(
+                arg.name.clone(),
+                arg.arg_type.clone(),
+                variable_type.alloc_size(),
+                -(capture_offset as i32),
+            )?;
+        }
+
         v.block.accept(self)?;
 
         if v.name == "main" {
@@ -364,8 +384,6 @@ impl Visitor for SecondPassVisitor {
     }
 
     fn visit_block(&mut self, v: &mut Block) -> Self::Result {
-        self.scopes.push();
-
         for statement in v.body.iter_mut() {
             statement.accept(self)?;
         }
@@ -393,13 +411,47 @@ impl Visitor for SecondPassVisitor {
     }
 
     fn visit_function_call(&mut self, v: &mut FunctionCall) -> Self::Result {
+        let function = self
+            .functions
+            .get(&v.name)
+            .ok_or(CompileError::UnknownFunction {
+                name: v.name.clone(),
+            })?
+            .clone();
+
         ensure!(
-            self.functions.contains_key(&v.name),
-            UnknownFunction {
-                name: v.name.clone()
-            }
+            v.arguments.len() == function.arguments.len(),
+            InvalidArguments
         );
+
+        let mut sizes = Vec::with_capacity(v.arguments.len());
+
+        for (expr, arg) in v.arguments.iter_mut().zip(&function.arguments).into_iter() {
+            // Evaluate the expression.
+            expr.accept(self)?;
+
+            // Typecheck.
+            let expr_type = self.pop_type()?;
+            ensure!(expr_type == arg.arg_type, InvalidArguments);
+
+            // Copy.
+            let expr_size = typing::BuiltInType::try_from(arg.arg_type.clone())
+                .context(UnknownType {
+                    name: arg.arg_type.clone(),
+                })?
+                .alloc_size();
+
+            let value_reg = self.pop_reg(0)?;
+            emit::stack_push_sized(value_reg, expr_size, &mut self.scopes)?;
+            sizes.push(expr_size);
+        }
+
         emit::fn_call(v.name.as_ref(), &mut self.scopes)?;
+
+        // Destroy the arguments after the function call.
+        for size in sizes.into_iter() {
+            emit::stack_pop_sized(0, size, &mut self.scopes)?;
+        }
 
         // TODO: Get return value,
         Ok(())
@@ -412,6 +464,7 @@ impl Visitor for SecondPassVisitor {
 
         emit::jump_to_else(self.pop_reg(0)?, &else_label, &mut self.scopes)?;
 
+        self.scopes.push();
         v.if_block.accept(self)?;
 
         if let Some(else_block) = &mut v.else_block {
@@ -423,6 +476,7 @@ impl Visitor for SecondPassVisitor {
 
             emit::label(&else_label, &mut self.scopes)?;
 
+            self.scopes.push();
             else_block.accept(self)?;
 
             emit::label(&end_label, &mut self.scopes)?;

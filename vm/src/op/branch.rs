@@ -57,7 +57,6 @@ pub fn call(target_addr: u16, vm: &mut VM) {
     // Push the return address (which is the current pc) on the stack.
     // Function arguments must be pushed on the stack before calling call().
     let return_address = vm.pc;
-    log::trace!("PUSHING RETURN ADDRESS: {:#06x}", return_address);
     vm.stack_mut().push_i32(return_address as i32);
     vm.registers_mut()[STACK_POINTER_REGISTER] += mem::size_of::<i32>() as i32;
 
@@ -85,6 +84,5 @@ pub fn ret(vm: &mut VM) {
 
     let return_address = vm.stack_mut().pop_i32() as usize;
     vm.registers_mut()[STACK_POINTER_REGISTER] -= mem::size_of::<i32>() as i32;
-    log::trace!("LOADED RETURN ADDRESS: {:#06x}", return_address);
     vm.pc = return_address;
 }

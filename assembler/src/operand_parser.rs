@@ -4,7 +4,7 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_till},
     character::complete::{char, digit1, hex_digit1},
-    combinator::{map, map_res},
+    combinator::{map, map_res, opt},
     sequence::{delimited, preceded, tuple},
     IResult,
 };
@@ -82,10 +82,17 @@ pub fn string(i: &str) -> IResult<&str, Operand> {
     )(i)
 }
 
-pub fn byte(i: &str) -> IResult<&str, u8> {
-    map_res(delimited(whitespace, digit1, whitespace), |b_val: &str| {
-        b_val.parse::<u8>()
-    })(i)
+pub fn byte(i: &str) -> IResult<&str, i32> {
+    map_res(
+        delimited(whitespace, tuple((opt(char('-')), digit1)), whitespace),
+        |(ch_maybe, b_val)| {
+            (match ch_maybe {
+                Some(ch) => ch.to_string(),
+                None => String::from(""),
+            } + b_val)
+                .parse::<i32>()
+        },
+    )(i)
 }
 
 /// Offset can be either an int or a label usage.
@@ -157,7 +164,14 @@ mod tests {
     fn parse_address() {
         let (rest, addr) = address(" 18($3 ) ").unwrap();
         assert_eq!(rest, "");
-        assert_eq!(addr, Operand::Address(Address{offset: 18, register: 3, section: MemorySection::Heap}))
+        assert_eq!(
+            addr,
+            Operand::Address(Address {
+                offset: 18,
+                register: 3,
+                section: MemorySection::Heap
+            })
+        )
     }
 
     #[test]
