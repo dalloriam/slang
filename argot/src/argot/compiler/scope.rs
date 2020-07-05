@@ -91,7 +91,7 @@ impl Scope {
         ensure!(
             !self.local_variables.contains_key(&variable_name),
             VariableAlreadyDefined {
-                name: String::from(variable_name)
+                name: variable_name.clone()
             }
         );
 
