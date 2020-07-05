@@ -1,0 +1,39 @@
+name: Validate & Release
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Install latest stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Bootstrap Landlord
+        run: |
+          sudo wget https://github.com/purposed/landlord/releases/download/v0.1.7/landlord-linux-amd64.zip -O /usr/local/bin/landlord.zip
+          cd /usr/local/bin && sudo unzip landlord.zip
+          sudo chmod +x /usr/local/bin/landlord
+      - name: Mount build cache
+        uses: actions/cache@v1
+        with:
+          path: "target"
+          key: slang-cache
+      - name: Landlord Release
+        run: |
+          landlord validate
+          landlord release --nozip
+      - name: Release
+        uses: docker://softprops/action-gh-release
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: artifacts/linux-amd64/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

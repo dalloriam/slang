@@ -1,0 +1,20 @@
+name = "slang"
+version = "0.1.0"
+stack = "rust"
+artifact_directory = "artifacts"
+
+[[build]]
+architecture = "amd64"
+platform = "linux"
+
+[[artifact]]
+name = "slang"
+include_checksum = false
+path_template = "$(BUILD)/slang"
+target_name_template = "slang-$(PLATFORM)-$(ARCHITECTURE)"
+
+[[artifact]]
+name = "argotc"
+include_checksum = false
+path_template = "$(BUILD)/argotc"
+target_name_template = "argotc-$(PLATFORM)-$(ARCHITECTURE)"
