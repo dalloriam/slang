@@ -100,8 +100,8 @@ impl Operand {
                 let mut wtr = Vec::with_capacity(mem::size_of::<i32>());
                 w.push(addr.register);
                 wtr.write_i32::<LittleEndian>(addr.offset).unwrap(); // TODO: Handle.
-                for i in 0..mem::size_of::<i32>() {
-                    w.push(wtr[i])
+                for item in wtr.iter().take(mem::size_of::<i32>()) {
+                    w.push(*item);
                 }
                 w.push(addr.section.into());
                 mem::size_of::<i32>() + 2
