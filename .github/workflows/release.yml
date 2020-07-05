@@ -20,6 +20,7 @@ jobs:
         run: |
           sudo wget https://github.com/purposed/landlord/releases/download/v0.1.7/landlord-linux-amd64.zip -O /usr/local/bin/landlord.zip
           cd /usr/local/bin && sudo unzip landlord.zip
+          sudo mv /usr/local/bin/landlord-linux-amd64 /usr/local/bin/landlord
           sudo chmod +x /usr/local/bin/landlord
       - name: Mount build cache
         uses: actions/cache@v1
