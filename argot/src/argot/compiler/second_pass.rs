@@ -22,6 +22,7 @@ pub struct SecondPassVisitor {
     scopes: ScopeManager,
     stack_size_tracker: usize,
     type_stack: Vec<String>,
+    ret_label_stack: Vec<String>,
     used_registers: Vec<u8>,
 }
 
@@ -40,6 +41,7 @@ impl SecondPassVisitor {
             scopes: ScopeManager::new(),
             stack_size_tracker: 0,
             type_stack: Vec::new(),
+            ret_label_stack: Vec::new(),
             used_registers: Vec::new(),
         }
     }
@@ -299,7 +301,8 @@ impl Visitor for SecondPassVisitor {
                 if let Some(ret) = ret_maybe {
                     ret.accept(self)?;
                 }
-                emit::ret(&mut self.scopes)
+                ensure!(!self.ret_label_stack.is_empty(), InvalidLabelStackState);
+                emit::jump_to_label(self.ret_label_stack.last().unwrap(), &mut self.scopes)
             }
             Statement::VarAssign(assignment) => assignment.accept(self),
             Statement::VarDecl(declaration) => declaration.accept(self),
@@ -383,11 +386,14 @@ impl Visitor for SecondPassVisitor {
     }
 
     fn visit_block(&mut self, v: &mut Block) -> Self::Result {
+        let stack_ret_label = self.labels.next().unwrap();
+        self.ret_label_stack.push(stack_ret_label.clone());
+
         for statement in v.body.iter_mut() {
             statement.accept(self)?;
         }
 
-        emit::scope_declaration(&mut self.scopes)?;
+        emit::scope_declaration(&mut self.scopes, stack_ret_label)?;
         Ok(())
     }
 

@@ -34,6 +34,7 @@ pub enum CompileError {
         t: String,
     },
     InvalidRegisterState,
+    InvalidLabelStackState,
     MissingEntryPoint,
     MissingScope,
     MissingType,

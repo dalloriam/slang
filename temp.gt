@@ -4,4 +4,5 @@ fn main() {
 
 fn getint() -> int {
     return 42;
+    int a = 3;
 }
