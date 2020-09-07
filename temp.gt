@@ -3,6 +3,11 @@ fn main() {
 }
 
 fn getint() -> int {
-    return 42;
-    int a = 3;
+    bool x = true;
+
+    if (x) {
+        return 8;
+    } else {
+        return 42;
+    }
 }

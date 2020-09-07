@@ -1,0 +1,7 @@
+fn main() {
+    int b = getnumber();
+}
+
+fn getnumber() {
+    return 3;
+}

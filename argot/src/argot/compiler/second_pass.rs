@@ -23,6 +23,7 @@ pub struct SecondPassVisitor {
     stack_size_tracker: usize,
     type_stack: Vec<String>,
     ret_label_stack: Vec<String>,
+    current_label_used: bool, // not super elegant, would be nice to refactor
     used_registers: Vec<u8>,
 }
 
@@ -42,6 +43,7 @@ impl SecondPassVisitor {
             stack_size_tracker: 0,
             type_stack: Vec::new(),
             ret_label_stack: Vec::new(),
+            current_label_used: false,
             used_registers: Vec::new(),
         }
     }
@@ -56,6 +58,13 @@ impl SecondPassVisitor {
 
     fn push_type(&mut self, t: String) {
         self.type_stack.push(t);
+    }
+
+    fn peek_type(&mut self) -> Result<String> {
+        self.type_stack
+            .last()
+            .cloned()
+            .ok_or(CompileError::MissingType)
     }
 
     fn pop_type(&mut self) -> Result<String> {
@@ -286,6 +295,19 @@ impl Visitor for SecondPassVisitor {
 
         v.block.accept(self)?;
 
+        if let Some(r_type) = &v.return_type {
+            // Need to typecheck the function return type.
+            let declared_return_type = r_type.clone();
+            let actual_return_type = self.peek_type()?;
+            ensure!(
+                r_type.clone() == actual_return_type,
+                TypeMismatch {
+                    t1: declared_return_type,
+                    t2: actual_return_type
+                }
+            );
+        }
+
         if v.name == "main" {
             emit::syscall(2, &mut self.scopes)?;
         } else {
@@ -302,6 +324,7 @@ impl Visitor for SecondPassVisitor {
                     ret.accept(self)?;
                 }
                 ensure!(!self.ret_label_stack.is_empty(), InvalidLabelStackState);
+                self.current_label_used = true; // we just used the current label.
                 emit::jump_to_label(self.ret_label_stack.last().unwrap(), &mut self.scopes)
             }
             Statement::VarAssign(assignment) => assignment.accept(self),
@@ -388,12 +411,19 @@ impl Visitor for SecondPassVisitor {
     fn visit_block(&mut self, v: &mut Block) -> Self::Result {
         let stack_ret_label = self.labels.next().unwrap();
         self.ret_label_stack.push(stack_ret_label.clone());
+        self.current_label_used = false; // reset the use count.
 
         for statement in v.body.iter_mut() {
             statement.accept(self)?;
         }
 
-        emit::scope_declaration(&mut self.scopes, stack_ret_label)?;
+        let stack_lbl_maybe = if self.current_label_used {
+            Some(stack_ret_label)
+        } else {
+            None
+        };
+
+        emit::scope_declaration(&mut self.scopes, stack_lbl_maybe)?;
         Ok(())
     }
 

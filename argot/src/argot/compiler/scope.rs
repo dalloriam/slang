@@ -49,10 +49,6 @@ impl Scope {
         }
     }
 
-    pub fn instructions_count(&self) -> usize {
-        self.instruction_buffer.len()
-    }
-
     pub fn take_instructions(&mut self) -> Vec<String> {
         let mut new_v = Vec::new();
         mem::swap(&mut self.instruction_buffer, &mut new_v);
@@ -95,7 +91,7 @@ impl Scope {
         ensure!(
             !self.local_variables.contains_key(&variable_name),
             VariableAlreadyDefined {
-                name: variable_name.clone()
+                name: variable_name
             }
         );
 

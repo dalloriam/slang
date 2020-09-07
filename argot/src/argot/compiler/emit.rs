@@ -178,7 +178,7 @@ pub fn ret(scopes: &mut ScopeManager) -> Result<()> {
     Ok(())
 }
 
-pub fn scope_declaration(scopes: &mut ScopeManager, scope_pop_label: String) -> Result<()> {
+pub fn scope_declaration(scopes: &mut ScopeManager, scope_pop_label: Option<String>) -> Result<()> {
     let mut last_scope = scopes.pop()?;
     for var in last_scope.sorted_variables().into_iter() {
         let var_type =
@@ -190,7 +190,10 @@ pub fn scope_declaration(scopes: &mut ScopeManager, scope_pop_label: String) -> 
 
     scopes.current_mut()?.extend(&mut last_scope);
 
-    label(&scope_pop_label, scopes)?;
+    if let Some(pop_lbl) = scope_pop_label {
+        label(&pop_lbl, scopes)?;
+    }
+
     for var in last_scope.sorted_variables().into_iter().rev() {
         let var_type =
             typing::BuiltInType::try_from(var.var_type.clone()).context(UnknownType {
