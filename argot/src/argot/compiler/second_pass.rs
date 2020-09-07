@@ -297,10 +297,9 @@ impl Visitor for SecondPassVisitor {
             Statement::Expr(expr) => expr.accept(self),
             Statement::Return(ret_maybe) => {
                 if let Some(ret) = ret_maybe {
-                    ret.accept(self)
-                } else {
-                    Ok(())
+                    ret.accept(self)?;
                 }
+                emit::ret(&mut self.scopes)
             }
             Statement::VarAssign(assignment) => assignment.accept(self),
             Statement::VarDecl(declaration) => declaration.accept(self),

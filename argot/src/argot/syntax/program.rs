@@ -63,7 +63,7 @@ mod test {
             String::from("main"),
             FunctionDeclaration {
                 name: String::from("main"),
-                return_type: String::from("int"),
+                return_type: None,
                 block: Block::new(),
                 args: ArgumentList::default(),
             },
@@ -81,7 +81,7 @@ mod test {
             String::from("main"),
             FunctionDeclaration {
                 name: String::from("main"),
-                return_type: String::from("int"),
+                return_type: None,
                 block: Block::new(),
                 args: ArgumentList::default(),
             },
@@ -90,7 +90,7 @@ mod test {
             String::from("hello"),
             FunctionDeclaration {
                 name: String::from("hello"),
-                return_type: String::from("int"),
+                return_type: None,
                 block: Block::new(),
                 args: ArgumentList::default(),
             },

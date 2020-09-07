@@ -1,8 +1,8 @@
 use nom::{
     bytes::complete::tag,
     character::complete::alpha1,
-    combinator::map,
-    sequence::{delimited, tuple},
+    combinator::{map, opt},
+    sequence::{delimited, preceded, tuple},
     IResult,
 };
 
@@ -11,13 +11,14 @@ use crate::{
         argument_list::{argument_list, ArgumentList},
         block::{block, Block},
         common::whitespace,
+        var_decl::identifier,
     },
     visitor::{Visitable, Visitor},
 };
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FunctionDeclaration {
-    pub return_type: String,
+    pub return_type: Option<String>,
     pub name: String,
     pub block: Block,
     pub args: ArgumentList,
@@ -29,16 +30,25 @@ impl Visitable for FunctionDeclaration {
     }
 }
 
+fn return_type(i: &str) -> IResult<&str, &str> {
+    delimited(
+        whitespace,
+        preceded(delimited(whitespace, tag("->"), whitespace), identifier),
+        whitespace,
+    )(i)
+}
+
 pub fn function_declaration(i: &str) -> IResult<&str, FunctionDeclaration> {
     map(
         tuple((
             tag("fn"),
             delimited(whitespace, alpha1, whitespace),
             argument_list,
+            opt(return_type),
             block,
         )),
-        |(_f, name, args, block)| FunctionDeclaration {
-            return_type: String::from("int"),
+        |(_f, name, args, ret_maybe, block)| FunctionDeclaration {
+            return_type: ret_maybe.map(String::from),
             name: String::from(name),
             block,
             args,
@@ -62,12 +72,32 @@ mod tests {
         assert_eq!(
             decl,
             FunctionDeclaration {
-                return_type: String::from("int"),
+                return_type: None,
                 name: String::from("hello"),
                 block: Block::new(),
                 args: ArgumentList::default()
             }
         )
+    }
+
+    #[test]
+    fn fn_decl_return_type() {
+        let (rest, decl) = function_declaration("fn hello() -> int {}").unwrap();
+        assert_eq!(rest, "");
+        assert_eq!(
+            decl,
+            FunctionDeclaration {
+                return_type: Some(String::from("int")),
+                name: String::from("hello"),
+                block: Block::new(),
+                args: ArgumentList::default()
+            }
+        )
+    }
+
+    #[test]
+    fn fn_decl_incomplete_return() {
+        assert!(function_declaration("fn hello() -> {}").is_err());
     }
 
     #[test]
@@ -77,7 +107,7 @@ mod tests {
         assert_eq!(
             decl,
             FunctionDeclaration {
-                return_type: String::from("int"),
+                return_type: None,
                 name: String::from("hello"),
                 block: Block {
                     body: vec![Statement::VarDecl(VariableDeclaration {

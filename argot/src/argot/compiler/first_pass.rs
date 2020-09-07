@@ -10,7 +10,7 @@ use crate::syntax::types::{Argument, FunctionDeclaration, Program};
 pub struct FunctionDecl {
     pub name: String,
     pub arguments: Vec<Argument>,
-    pub return_type: String,
+    pub return_type: Option<String>,
 }
 
 impl From<FunctionDeclaration> for FunctionDecl {
