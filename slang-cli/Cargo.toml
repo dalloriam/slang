@@ -8,10 +8,10 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0"
-clap = "3.0.0-beta.1"
+clap = "3.0.0-beta.2"
 
 assembler = {path = "../assembler"}
-env_logger = "0.7"
+env_logger = "0.8"
 instructor = {path = "../instructor"}
 log = {version = "0.4.8", features = ["std", "release_max_level_error", "max_level_trace"]}
 vm = {path = "../vm"}
