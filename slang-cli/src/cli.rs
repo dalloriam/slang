@@ -13,7 +13,7 @@ use crate::repl::repl_loop;
 #[clap(version = "0.1.0", author = "William Dussault")]
 pub struct CLIRoot {
     /// Path to the .asm file to run. Starts the REPL if unspecified.
-    #[clap(short = "f", long = "file")]
+    #[clap(short = 'f', long = "file")]
     file: Option<PathBuf>,
 }
 
