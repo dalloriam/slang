@@ -1,7 +1,7 @@
 use nom::{
     character::complete::char,
     combinator::map,
-    multi::separated_list,
+    multi::separated_list0,
     sequence::{delimited, tuple},
     IResult,
 };
@@ -31,7 +31,7 @@ pub fn argument_list(i: &str) -> IResult<&str, ArgumentList> {
     map(
         delimited(
             char('('),
-            separated_list(
+            separated_list0(
                 char(','),
                 delimited(whitespace, tuple((identifier, identifier)), whitespace),
             ),
