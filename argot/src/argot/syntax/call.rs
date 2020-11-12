@@ -1,7 +1,7 @@
 use nom::{
     character::complete::char,
     combinator::map,
-    multi::separated_list,
+    multi::separated_list0,
     sequence::{delimited, tuple},
     IResult,
 };
@@ -25,7 +25,7 @@ pub fn function_call(i: &str) -> IResult<&str, FunctionCall> {
     map(
         tuple((
             identifier,
-            delimited(char('('), separated_list(char(','), expression), char(')')),
+            delimited(char('('), separated_list0(char(','), expression), char(')')),
         )),
         |(fn_name, args)| FunctionCall {
             name: String::from(fn_name),

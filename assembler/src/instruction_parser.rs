@@ -110,7 +110,7 @@ pub fn instruction(i: &str) -> IResult<&str, Instruction> {
         Some(opc) => opcode_instr(opc, lbl, rest),
         None => {
             if lbl.is_none() {
-                return Err(NErr::Error((i, ErrorKind::Verify)));
+                return Err(NErr::Error(nom::error::Error::new(i, ErrorKind::Verify)));
             }
             Ok((
                 rest,
