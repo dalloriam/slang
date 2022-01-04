@@ -23,4 +23,4 @@ env_logger = "0.9"
 log = {version = "0.4.8", features = ["std"]}
 instructor = {path = "../instructor"}
 nom = "7"
-snafu = "0.6.8"
+snafu = "0.7.0"
