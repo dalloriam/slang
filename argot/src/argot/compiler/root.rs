@@ -12,7 +12,7 @@ pub fn compile_asm(source: &str) -> Result<String> {
         .map_err(|e| ParseError {
             message: e.to_string(),
         })
-        .context(IncompleteParse)?;
+        .context(IncompleteParseSnafu)?;
 
     assert_eq!(rest, "");
 
@@ -26,5 +26,5 @@ pub fn compile(source: &str) -> Result<Vec<u8>> {
     let assembly_source = compile_asm(source)?;
     Assembler::new()
         .assemble(&assembly_source)
-        .context(AssemblyFailed)
+        .context(AssemblySnafu)
 }

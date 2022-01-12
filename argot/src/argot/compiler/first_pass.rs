@@ -47,7 +47,7 @@ impl FirstPassVisitor {
         for (_function_name, function_decl) in program.functions.iter_mut() {
             self.visit_function_declaration(function_decl.clone());
         }
-        ensure!(self.functions.contains_key("main"), MissingEntryPoint);
+        ensure!(self.functions.contains_key("main"), MissingEntryPointSnafu);
 
         let mut functions = HashMap::new();
 

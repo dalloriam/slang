@@ -60,7 +60,7 @@ fn parse_program(src: &str) -> Result<Program> {
             message: String::from("Parse Error"),
         })?;
 
-    if rest != "" {
+    if !rest.is_empty() {
         Err(AssemblerError::ParseError {
             message: format!("Incomplete parse: {}", rest),
         })
@@ -102,7 +102,7 @@ impl Assembler {
 
         ensure!(
             section != Section::Unknown,
-            UnknownSectionHeader {
+            UnknownSectionHeaderSnafu {
                 name: String::from(header_name)
             }
         );
@@ -205,13 +205,13 @@ impl Assembler {
                 // We have a label
                 ensure!(
                     self.current_section.is_some(),
-                    LabelOutsideOfSection {
+                    LabelOutsideOfSectionSnafu {
                         label: name.clone()
                     }
                 );
                 ensure!(
                     !self.symbols.has_symbol(name),
-                    SymbolAlreadyDefined { name: name.clone() }
+                    SymbolAlreadyDefinedSnafu { name: name.clone() }
                 );
                 let symbol =
                     Symbol::new(String::from(name), SymbolType::Label, current_label_offset);
@@ -254,11 +254,11 @@ impl Assembler {
         // 4 other bytes for the length of the data block.
         program_vector
             .write_u32::<LittleEndian>(self.readonly_block.len() as u32)
-            .context(InvalidReadonlyBlockLength)?;
+            .context(InvalidReadonlyBlockLengthSnafu)?;
 
         // Padding the remaining header length.
         for _i in 8..ELIS_HEADER_LENGTH {
-            program_vector.push(0 as u8);
+            program_vector.push(0_u8);
         }
 
         Ok(())

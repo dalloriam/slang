@@ -160,7 +160,7 @@ impl Visitor for SecondPassVisitor {
                 unary_op.accept(self)
             }
             Factor::IfExpression(if_expr) => {
-                ensure!(if_expr.else_block.is_some(), NotAllPathsReturnAValue);
+                ensure!(if_expr.else_block.is_some(), NotAllPathsReturnAValueSnafu);
                 if_expr.accept(self)
             }
         }
@@ -270,7 +270,7 @@ impl Visitor for SecondPassVisitor {
         let mut capture_offset = 2 * mem::size_of::<i32>();
         for arg in v.args.arguments.iter() {
             let variable_type =
-                typing::BuiltInType::try_from(arg.arg_type.clone()).context(UnknownType {
+                typing::BuiltInType::try_from(arg.arg_type.clone()).context(UnknownTypeSnafu {
                     name: arg.arg_type.clone(),
                 })?;
             capture_offset += variable_type.alloc_size();
@@ -310,7 +310,7 @@ impl Visitor for SecondPassVisitor {
 
     fn visit_variable_declaration(&mut self, v: &mut VariableDeclaration) -> Self::Result {
         let variable_type =
-            typing::BuiltInType::try_from(v.var_type.clone()).context(UnknownType {
+            typing::BuiltInType::try_from(v.var_type.clone()).context(UnknownTypeSnafu {
                 name: v.var_type.clone(),
             })?;
 
@@ -325,7 +325,7 @@ impl Visitor for SecondPassVisitor {
             let expr_type = self.pop_type()?;
             ensure!(
                 expr_type == var.var_type,
-                TypeMismatch {
+                TypeMismatchSnafu {
                     t1: expr_type,
                     t2: v.var_type.clone()
                 }
@@ -401,7 +401,7 @@ impl Visitor for SecondPassVisitor {
         let var = self.scopes.current_mut()?.get_variable(&v.name)?;
         ensure!(
             expr_type == var.var_type,
-            TypeMismatch {
+            TypeMismatchSnafu {
                 t1: expr_type,
                 t2: var.var_type.clone()
             }
@@ -421,22 +421,22 @@ impl Visitor for SecondPassVisitor {
 
         ensure!(
             v.arguments.len() == function.arguments.len(),
-            InvalidArguments
+            InvalidArgumentsSnafu
         );
 
         let mut sizes = Vec::with_capacity(v.arguments.len());
 
-        for (expr, arg) in v.arguments.iter_mut().zip(&function.arguments).into_iter() {
+        for (expr, arg) in v.arguments.iter_mut().zip(&function.arguments) {
             // Evaluate the expression.
             expr.accept(self)?;
 
             // Typecheck.
             let expr_type = self.pop_type()?;
-            ensure!(expr_type == arg.arg_type, InvalidArguments);
+            ensure!(expr_type == arg.arg_type, InvalidArgumentsSnafu);
 
             // Copy.
             let expr_size = typing::BuiltInType::try_from(arg.arg_type.clone())
-                .context(UnknownType {
+                .context(UnknownTypeSnafu {
                     name: arg.arg_type.clone(),
                 })?
                 .alloc_size();

@@ -90,7 +90,7 @@ impl Operand {
             }
             Operand::Label(s) => {
                 let mut wtr = Vec::with_capacity(2);
-                let offset = converter.offset_of(&s).unwrap(); // TODO: Handle error;
+                let offset = converter.offset_of(s).unwrap(); // TODO: Handle error;
                 wtr.write_u16::<LittleEndian>(offset).unwrap(); // TODO: Handle.
                 w.push(wtr[1]);
                 w.push(wtr[0]);

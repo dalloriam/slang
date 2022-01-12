@@ -1,7 +1,7 @@
 use crate::{LabelConverter, Opcode, Operand};
 
 /// A single Slang instruction.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Instruction {
     /// The opcode of this instruction.
     ///
@@ -91,18 +91,5 @@ impl Instruction {
             .map(|op| Instruction::write_operand(*op, w, converter))
             .sum::<usize>();
         debug_assert_eq!(self.opcode.as_ref().unwrap().width() - 1, *cur_size as u16);
-    }
-}
-
-impl Default for Instruction {
-    fn default() -> Instruction {
-        Instruction {
-            opcode: None,
-            operand_1: None,
-            operand_2: None,
-            operand_3: None,
-            label: None,
-            directive: None,
-        }
     }
 }

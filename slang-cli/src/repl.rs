@@ -84,7 +84,7 @@ pub fn repl_loop() -> Result<()> {
                 }
             }
             Err(e) => {
-                eprintln!("REPL Error: {}", e.to_string());
+                eprintln!("REPL Error: {}", e);
             }
         }
     }

@@ -18,9 +18,9 @@ impl fmt::Display for ParseError {
 impl std::error::Error for ParseError {}
 
 #[derive(Debug, Snafu)]
-#[snafu(visibility = "pub")]
+#[snafu(visibility(pub))]
 pub enum CompileError {
-    AssemblyFailed {
+    AssemblyError {
         source: AssemblerError,
     },
     DuplicateFunction {

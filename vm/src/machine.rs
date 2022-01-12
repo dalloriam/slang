@@ -14,7 +14,7 @@ use crate::syscall::execute_syscall;
 
 #[derive(Debug, Snafu)]
 pub enum VMError {
-    LoadingFailed { source: crate::loader::LoadError },
+    LoadingError { source: crate::loader::LoadError },
 }
 
 type Result<T> = std::result::Result<T, VMError>;
@@ -50,9 +50,10 @@ impl VM {
     }
 
     pub fn with_ro_block(ro: Vec<u8>) -> VM {
-        let mut vm = VM::default();
-        vm.ro_block = ro;
-        vm
+        VM {
+            ro_block: ro,
+            ..Default::default()
+        }
     }
 
     pub fn program(&self) -> &[u8] {
@@ -112,7 +113,7 @@ impl VM {
     }
 
     pub fn load_bytecode(&mut self, bytecode: Vec<u8>) -> Result<()> {
-        let program = crate::loader::Program::new(bytecode).context(LoadingFailed)?;
+        let program = crate::loader::Program::new(bytecode).context(LoadingSnafu)?;
 
         // TODO: Use program struct directly instead of unpacking.
         self.program = program.program_text;
