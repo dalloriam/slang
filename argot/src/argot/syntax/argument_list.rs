@@ -14,17 +14,9 @@ pub struct Argument {
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct ArgumentList {
     pub arguments: Vec<Argument>,
-}
-
-impl Default for ArgumentList {
-    fn default() -> Self {
-        ArgumentList {
-            arguments: Vec::new(),
-        }
-    }
 }
 
 pub fn argument_list(i: &str) -> IResult<&str, ArgumentList> {

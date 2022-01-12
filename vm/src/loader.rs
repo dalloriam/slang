@@ -20,7 +20,7 @@ pub struct Header {
 
 impl Header {
     pub fn from_bytes(data: &[u8]) -> Result<Header> {
-        ensure!(data[0..4] == ELIS_HEADER_PREFIX, BadMagicNumber);
+        ensure!(data[0..4] == ELIS_HEADER_PREFIX, BadMagicNumberSnafu);
         let ro_block_size = (&data[4..8]).read_u32::<LittleEndian>().unwrap() as usize;
 
         Ok(Header { ro_block_size })
@@ -35,12 +35,12 @@ pub struct Program {
 
 impl Program {
     pub fn new(data: Vec<u8>) -> Result<Program> {
-        ensure!(data.len() >= ELIS_HEADER_LENGTH, InvalidHeaderLength);
+        ensure!(data.len() >= ELIS_HEADER_LENGTH, InvalidHeaderLengthSnafu);
         let header = Header::from_bytes(&data[0..ELIS_HEADER_LENGTH])?;
 
         ensure!(
             (header.ro_block_size + ELIS_HEADER_LENGTH) as usize <= data.len(),
-            ReadOnlySectionTooLong
+            ReadOnlySectionTooLongSnafu
         );
 
         let ro_block = &data[ELIS_HEADER_LENGTH..ELIS_HEADER_LENGTH + header.ro_block_size];

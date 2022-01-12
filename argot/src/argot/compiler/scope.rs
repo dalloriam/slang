@@ -90,8 +90,8 @@ impl Scope {
     ) -> Result<()> {
         ensure!(
             !self.local_variables.contains_key(&variable_name),
-            VariableAlreadyDefined {
-                name: variable_name.clone()
+            VariableAlreadyDefinedSnafu {
+                name: variable_name
             }
         );
 
@@ -113,7 +113,7 @@ impl Scope {
     ) -> Result<Variable> {
         ensure!(
             !self.local_variables.contains_key(variable_name),
-            VariableAlreadyDefined {
+            VariableAlreadyDefinedSnafu {
                 name: String::from(variable_name)
             }
         );

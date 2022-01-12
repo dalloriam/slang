@@ -9,14 +9,14 @@ pub enum SymbolType {
 pub struct Symbol {
     name: String,
     offset: u16,
-    symbol_type: SymbolType,
+    //symbol_type: SymbolType,
 }
 
 impl Symbol {
-    pub fn new(name: String, symbol_type: SymbolType, offset: u16) -> Symbol {
+    pub fn new(name: String, _symbol_type: SymbolType, offset: u16) -> Symbol {
         Symbol {
             name,
-            symbol_type,
+            //symbol_type,
             offset,
         }
     }

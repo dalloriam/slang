@@ -130,7 +130,7 @@ pub fn register(i: &str) -> IResult<&str, Operand> {
             map_res(
                 delimited(whitespace, preceded(char('$'), digit1), whitespace),
                 |byte_val: &str| {
-                    let v = byte_val.parse::<u8>().context(InvalidRegisterNumber)?;
+                    let v = byte_val.parse::<u8>().context(InvalidRegisterNumberSnafu)?;
                     if v > 31 {
                         return Err(ParseError::InvalidRegisterRange);
                     }
@@ -140,15 +140,15 @@ pub fn register(i: &str) -> IResult<&str, Operand> {
             ),
             map(
                 delimited(whitespace, preceded(char('$'), tag("v0")), whitespace),
-                |_val| 32 as u8,
+                |_val| 32_u8,
             ),
             map(
                 delimited(whitespace, preceded(char('$'), tag("esp")), whitespace),
-                |_val| 33 as u8,
+                |_val| 33_u8,
             ),
             map(
                 delimited(whitespace, preceded(char('$'), tag("ebp")), whitespace),
-                |_val| 34 as u8,
+                |_val| 34_u8,
             ),
         )),
         Operand::Register,

@@ -182,7 +182,7 @@ pub fn scope_declaration(scopes: &mut ScopeManager) -> Result<()> {
     let mut last_scope = scopes.pop()?;
     for var in last_scope.sorted_variables().into_iter() {
         let var_type =
-            typing::BuiltInType::try_from(var.var_type.clone()).context(UnknownType {
+            typing::BuiltInType::try_from(var.var_type.clone()).context(UnknownTypeSnafu {
                 name: var.var_type.clone(),
             })?;
         stack_var_set_sized(var.offset, 0, var_type.alloc_size(), scopes)?;
@@ -192,7 +192,7 @@ pub fn scope_declaration(scopes: &mut ScopeManager) -> Result<()> {
 
     for var in last_scope.sorted_variables().into_iter().rev() {
         let var_type =
-            typing::BuiltInType::try_from(var.var_type.clone()).context(UnknownType {
+            typing::BuiltInType::try_from(var.var_type.clone()).context(UnknownTypeSnafu {
                 name: var.var_type.clone(),
             })?;
         stack_pop_sized(0, var_type.alloc_size(), scopes)?;
