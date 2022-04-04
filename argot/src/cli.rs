@@ -3,11 +3,11 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 
-use clap::Clap;
+use clap::Parser;
 
 const DEFAULT_OUTPUT_NAME: &str = "a.out";
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(version = "0.1.0", author = "William Dussault")]
 pub struct CLIRoot {
     file: PathBuf,

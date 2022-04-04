@@ -2,7 +2,7 @@ mod cli;
 mod load;
 mod repl;
 
-use clap::Clap;
+use clap::Parser;
 
 fn init_logger() {
     env_logger::init();

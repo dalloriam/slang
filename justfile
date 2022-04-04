@@ -18,7 +18,7 @@ release:
     @just build --release
 
 test:
-    cargo test
+    cargo nextest run
 
 argotc +args="":
     @cargo run --bin argotc -- {{args}}

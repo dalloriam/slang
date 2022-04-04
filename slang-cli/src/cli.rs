@@ -2,14 +2,14 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 
-use clap::Clap;
+use clap::Parser;
 
 use vm::VM;
 
 use crate::load::load_program;
 use crate::repl::repl_loop;
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(version = "0.1.0", author = "William Dussault")]
 pub struct CLIRoot {
     /// Path to the .asm file to run. Starts the REPL if unspecified.
