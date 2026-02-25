@@ -69,12 +69,12 @@ pub enum FactorOperator {
     Unknown, // TODO: Get more detail.
 }
 
-impl ToString for FactorOperator {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for FactorOperator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FactorOperator::Div => String::from("/"),
-            FactorOperator::Mult => String::from("*"),
-            FactorOperator::Unknown => String::from("IGL"),
+            FactorOperator::Div => write!(f, "/"),
+            FactorOperator::Mult => write!(f, "*"),
+            FactorOperator::Unknown => write!(f, "IGL"),
         }
     }
 }

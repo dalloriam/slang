@@ -338,7 +338,7 @@ impl Visitor for SecondPassVisitor {
 
     fn visit_program(&mut self, v: &mut Program) -> Self::Result {
         let mut function_keys: Vec<String> =
-            v.functions.iter().map(|(key, _v)| key.clone()).collect();
+            v.functions.keys().cloned().collect();
         function_keys.sort();
 
         for fn_name in function_keys.into_iter() {

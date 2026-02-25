@@ -2,7 +2,7 @@
 name = "argot"
 version = "0.1.2"
 authors = ["William Dussault <dalloriam@gmail.com>"]
-edition = "2018"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,12 +15,12 @@ name = "argot"
 path = "src/argot/lib.rs"
 
 [dependencies]
-anyhow = "1.0"
-clap = {version = "4.0.18", features = ["derive"]}
+anyhow = "1"
+clap = {version = "4", features = ["derive"]}
 
 assembler = {path = "../assembler"}
-env_logger = "0.9"
-log = {version = "0.4.8", features = ["std"]}
+env_logger = "0.11"
+log = {version = "0.4", features = ["std"]}
 instructor = {path = "../instructor"}
 nom = "7"
-snafu = "0.7.0"
+snafu = "0.8"

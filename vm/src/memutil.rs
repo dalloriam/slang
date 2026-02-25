@@ -14,7 +14,7 @@ pub const WORD_WIDTH: usize = mem::size_of::<usize>();
 /// ```
 #[inline]
 pub fn align(i: usize) -> usize {
-    ((i + WORD_WIDTH - 1) / WORD_WIDTH) * WORD_WIDTH
+    i.div_ceil(WORD_WIDTH) * WORD_WIDTH
 }
 
 #[cfg(test)]

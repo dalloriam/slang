@@ -11,6 +11,6 @@ fn main() {
 
     let root = cli::CLIRoot::parse();
     if let Err(e) = root.run() {
-        log::error!("{}", e.to_string());
+        log::error!("{}", e);
     }
 }

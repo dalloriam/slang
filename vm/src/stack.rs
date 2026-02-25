@@ -24,11 +24,11 @@ impl Stack {
 
     #[inline]
     pub fn pop_i32(&mut self) -> i32 {
-        if self.data.len() < (mem::size_of::<i32>() as usize) {
+        if self.data.len() < mem::size_of::<i32>() {
             return 0;
         }
 
-        let stack_idx = self.data.len() - (mem::size_of::<i32>() as usize);
+        let stack_idx = self.data.len() - mem::size_of::<i32>();
         let value = (&self.data[stack_idx..])
             .read_i32::<LittleEndian>()
             .unwrap(); // Impossible b/c length is at least size_of<i32>

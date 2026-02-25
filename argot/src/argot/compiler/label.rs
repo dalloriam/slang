@@ -25,13 +25,13 @@ impl Iterator for LabelGenerator {
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.current_count != 0 && self.current_count % ASCII_LOWERCASE.len() == 0 {
+        if self.current_count != 0 && self.current_count.is_multiple_of(ASCII_LOWERCASE.len()) {
             let prefix = if let Some(x) = self.sub_endless.as_mut() {
                 x.next().unwrap()
             } else {
-                let mut gen = Box::new(LabelGenerator::new());
-                let prefix = gen.next().unwrap();
-                self.sub_endless = Some(gen);
+                let mut generator = Box::new(LabelGenerator::new());
+                let prefix = generator.next().unwrap();
+                self.sub_endless = Some(generator);
                 prefix
             };
 

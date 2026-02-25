@@ -22,7 +22,7 @@ impl CLIRoot {
         match self.file.as_ref() {
             Some(f) => {
                 // Compile & load the program, and start the VM.
-                let program = load_program(&f)?;
+                let program = load_program(f)?;
                 let mut vm = VM::new();
                 vm.load_bytecode(program)?;
                 vm.run();

@@ -8,8 +8,10 @@ use crate::syntax::types::{Argument, FunctionDeclaration, Program};
 
 #[derive(Clone, Debug)]
 pub struct FunctionDecl {
+    #[allow(dead_code)]
     pub name: String,
     pub arguments: Vec<Argument>,
+    #[allow(dead_code)]
     pub return_type: String,
 }
 

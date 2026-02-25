@@ -88,7 +88,7 @@ impl Instruction {
         // Write all instructions to the stream & gather byte count.
         let cur_size = &[&self.operand_1, &self.operand_2, &self.operand_3]
             .iter()
-            .map(|op| Instruction::write_operand(*op, w, converter))
+            .map(|op| Instruction::write_operand(op, w, converter))
             .sum::<usize>();
         debug_assert_eq!(self.opcode.as_ref().unwrap().width() - 1, *cur_size as u16);
     }

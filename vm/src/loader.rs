@@ -28,6 +28,7 @@ impl Header {
 }
 
 pub struct Program {
+    #[allow(dead_code)]
     pub header: Header,
     pub ro_block: Vec<u8>,
     pub program_text: Vec<u8>,
@@ -39,7 +40,7 @@ impl Program {
         let header = Header::from_bytes(&data[0..ELIS_HEADER_LENGTH])?;
 
         ensure!(
-            (header.ro_block_size + ELIS_HEADER_LENGTH) as usize <= data.len(),
+            (header.ro_block_size + ELIS_HEADER_LENGTH) <= data.len(),
             ReadOnlySectionTooLongSnafu
         );
 

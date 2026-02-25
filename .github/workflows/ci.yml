@@ -1,31 +1,15 @@
 name: CI
 
-on:
-  push: {}
+on: [push, pull_request]
 
 jobs:
-  bazel:
+  test:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-
-      - name: Mount build cache
-        uses: actions/cache@v1
-        with:
-          path: "target"
-          key: slang-cache
-
-      - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-
-      - name: Lint
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all-features
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test
+      - run: cargo clippy --all-features -- -D warnings
